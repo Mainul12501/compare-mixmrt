@@ -1,9 +1,5 @@
 @extends('layouts.vendor.app')
-@if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-@section('title',translate('messages.company_view'))
-    @else
-    @section('title',translate('messages.store_view'))
-@endif
+@section('title',translate('messages.store_view'))
 @push('css_or_js')
     <!-- Custom styles for this page -->
 @endpush
@@ -15,21 +11,11 @@
             <h2 class="page-header-title text-capitalize my-2">
                 <img class="w--26" src="{{asset('/public/assets/admin/img/store.png')}}" alt="public">
                 <span>
-                    @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'store')
                     {{translate('messages.my_store_info')}}
-                    @else
-                    {{translate('messages.my_company_info')}}
-                    @endif
                 </span>
             </h2>
             <div class="my-2">
-                <a class="btn btn--primary" href="{{route('vendor.shop.edit')}}"><i class="tio-edit"></i>
-                    @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-                    {{translate('messages.edit_company_information')}}
-                    @else
-                    {{translate('messages.edit_store_information')}}
-                    @endif
-                </a>
+                <a class="btn btn--primary" href="{{route('vendor.shop.edit')}}"><i class="tio-edit"></i>{{translate('messages.edit_store_information')}}</a>
             </div>
         </div>
     </div>
@@ -37,7 +23,7 @@
         <div class="card-body p-0">
             @if($shop->cover_photo)
             <div>
-                <img class="my-restaurant-img onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($shop,'cover_photo', asset('storage/app/public/store/cover/').'/'.$shop->cover_photo, asset('public/assets/admin/img/900x400/img1.jpg'), 'store/cover/') }}"
+                <img class="my-restaurant-img onerror-image" src="{{ $shop->cover_photo_full_url }}"
                 data-onerror-image="{{asset('public/assets/admin/img/900x400/img1.jpg')}}">
             </div>
             @endif
@@ -51,7 +37,7 @@
                 </div>
                 @else
                     <div class="my-resturant--avatar onerror-image">
-                        <img src="{{\App\CentralLogics\Helpers::get_image_helper($shop,'logo', asset('storage/app/public/store/').'/'.$shop->logo, asset('public/assets/admin/img/160x160/img1.jpg'), 'store/') }}"
+                        <img src="{{ $shop->logo_full_url }}"
                         class="border" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}" alt="">
                     </div>
                 @endif
@@ -70,7 +56,6 @@
                         <strong>{{translate('messages.Business_Plan')}} : </strong> {{translate($shop->store_business_model)}}
                     </span>
                     <span class="d-block mb-1 pb-1">
-                        @if(\App\CentralLogics\Helpers::get_store_data()->store_type != 'company')
                         @if ($shop->store_business_model == 'commission')
 
                         <strong>{{translate('messages.admin_commission')}} : </strong> {{(isset($shop->comission)? $shop->comission:\App\Models\BusinessSetting::where('key','admin_commission')->first()->value)}}%
@@ -78,26 +63,15 @@
 
                         <strong>{{translate('Subscription_plan')}} : </strong> {{ $shop?->store_sub_update_application?->package?->package_name}}
                         @endif
-@else
-                        <strong>{{translate('messages.admin_commission')}} : </strong>
-                        @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-                        {{ \App\Models\BusinessSetting::where('key','parcel_commission_dm')->first() ? (100 - \App\Models\BusinessSetting::where('key','parcel_commission_dm')->first()->value) :0 }}%
-                        @else
-                        {{(isset($shop->comission)? $shop->comission:\App\Models\BusinessSetting::where('key','admin_commission')->first()->value)}}%
 
-                        @endif
-                        @endif
                     </span>
                     <span class="d-block mb-1 pb-1">
-                        @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'store')
                         <strong>{{translate('messages.vat/tax')}} : </strong> {{$shop->tax}}%</span>
-                        @endif
                     </span>
                 </div>
             </div>
         </div>
     </div>
-    @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'store')
     <div class="card border-0 mt-2">
         <div class="card-header">
             <h5 class="card-title toggle-switch toggle-switch-sm d-flex justify-content-between">
@@ -135,6 +109,5 @@
             </form>
         </div>
     </div>
-    @endif
 </div>
 @endsection

@@ -89,7 +89,7 @@
                                     </div>
                                     <div class="avatar avatar-sm avatar-circle">
                                         <img class="avatar-img  onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper(\App\CentralLogics\Helpers::get_loggedin_user(),'image', asset('storage/app/public/vendor/').'/'.\App\CentralLogics\Helpers::get_loggedin_user()->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'vendor/') }}"
+                                        src="{{ \App\CentralLogics\Helpers::get_loggedin_user()->toArray()['image_full_url'] }}"
                                             alt="Image Description">
                                         <span class="avatar-status avatar-sm-status avatar-status-success"></span>
                                     </div>
@@ -102,7 +102,7 @@
                                     <div class="media align-items-center">
                                         <div class="avatar avatar-sm avatar-circle mr-2">
                                             <img class="avatar-img  onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                            src="{{\App\CentralLogics\Helpers::get_image_helper(\App\CentralLogics\Helpers::get_loggedin_user(),'image', asset('storage/app/public/vendor/').'/'.\App\CentralLogics\Helpers::get_loggedin_user()->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'vendor/') }}"
+                                            src="{{ \App\CentralLogics\Helpers::get_loggedin_user()->toArray()['image_full_url'] }}"
                                                  alt="Owner image">
                                         </div>
                                         <div class="media-body">
@@ -183,7 +183,7 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
             $pers=10;
             if($store_data?->store_sub){
                 $validity=$store_data?->store_sub?->validity;
-                    $remaining_days= Carbon\Carbon::now()->subDays(1)->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false);
+                    $remaining_days= Carbon\Carbon::now()->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false);
                     $pers=  $validity-$remaining_days > 0  ? (($validity-$remaining_days) /$validity) *100 : 1;
                     $pers=  439.6 * $pers / 100;
             }
@@ -250,7 +250,7 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
                                 <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff20" stroke-width="12px"></circle>
                                 <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff" stroke-width="12px" stroke-dasharray="439.6px" stroke-dashoffset="{{ $pers }}px"></circle>
                             </svg>
-                            {{ Carbon\Carbon::now()->subDays(1)->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false) }}
+                            {{ Carbon\Carbon::now()->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false) }}
                         </span>
                         {{translate('Days_left_in_free_trial')}}
                     </a>
@@ -271,9 +271,6 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
                 <div class="modal-content">
                     <div class="modal-body p-0">
                         <div class="trial-ended-modal-wrapper">
-                            {{-- <button type="button" class="trial-ended-close-btn text-md-white" data-dismiss="modal">
-                                <i class="tio-clear-circle"></i>
-                            </button> --}}
                             <div class="trial-ended-modal-content align-self-center">
                                 <h3 class="title">{{ translate('Your_Free_Trial_Has_Been_Ended') }}</h3>
                                 <p class="mb-4">
@@ -308,9 +305,6 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
                 <div class="right">
                     <a href="{{route('vendor.subscriptionackage.subscriberDetail' ,['open_plans' => true])}}" class="btn btn-light">{{ translate('Choose_Subscription_Plan') }} <i class="tio-arrow-forward"></i></a>
                 </div>
-                {{-- <button type="button" class="trial-close">
-                    <i class="tio-clear-circle"></i>
-                </button> --}}
             </div>
         </div>
         @elseif ( Session::get('subscription_cancel_close_btn') !== true &&  $store_data?->store_sub  && $store_data?->store_sub?->is_canceled == 1)
@@ -330,7 +324,7 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
                                 <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff20" stroke-width="12px"></circle>
                                 <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff" stroke-width="12px" stroke-dasharray="439.6px" stroke-dashoffset="{{ $pers }}px"></circle>
                             </svg>
-                            {{ Carbon\Carbon::now()->subDays(1)->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false) }}
+                            {{ Carbon\Carbon::now()->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false) }}
                         </span>
                         {{translate('Days_left_in_this_subscription')}}
                     </a>
@@ -338,6 +332,35 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
                 </div>
 
                 <button type="button" data-id="subscription_cancel_close_btn" class="trial-close add-to-session ">
+                    <i class="tio-clear-circle"></i>
+                </button>
+            </div>
+        </div>
+        @elseif ( Session::get('subscription_plan_update_close_btn') !== true &&  $store_data?->store_sub  && $store_data?->store_sub?->package?->status != 1)
+        <div class="free-trial trial danger-bg">
+            <div class="inner-div">
+                <div class="left">
+                    <img src="{{asset('/public/assets/admin/img/timer-2.svg')}}" alt="">
+                    <div class="left-content">
+                        <h6>{{ translate('Your_Current_Subscription_Package_has_been_Disable_By_Admin.') }} </h6>
+                        <div>{{ translate('You_can_not_renew_this_Package_after') }} {{ \App\CentralLogics\Helpers::date_format($store_data?->store_sub?->expiry_date_parsed) }}. {{ translate('to_continue_your_subscription_please_chose_another_package.')  }}</div>
+                    </div>
+                </div>
+                <div class="right">
+                    <a href="" class="btn btn-2">
+                        <span class="circle-progress-container">
+                            <svg width="40" viewBox="0 0 160 160">
+                                <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff20" stroke-width="12px"></circle>
+                                <circle r="70" cx="80" cy="80" fill="transparent" stroke="#ffffff" stroke-width="12px" stroke-dasharray="439.6px" stroke-dashoffset="{{ $pers }}px"></circle>
+                            </svg>
+                            {{ Carbon\Carbon::now()->diffInDays($store_data?->store_sub?->expiry_date_parsed->format('Y-m-d'), false) }}
+                        </span>
+                        {{translate('Days_left_in_this_subscription')}}
+                    </a>
+                    <a href="{{route('vendor.subscriptionackage.subscriberDetail' ,['open_plans' => true])}}" class="btn btn-light">{{ translate('Change_Subscription_Plan') }} <i class="tio-arrow-forward"></i></a>
+                </div>
+
+                <button type="button" data-id="subscription_plan_update_close_btn" class="trial-close add-to-session ">
                     <i class="tio-clear-circle"></i>
                 </button>
             </div>
@@ -357,10 +380,6 @@ $val= (string) ($cash_in_hand_overflow_store_amount - (($cash_in_hand_overflow_s
 
                     <a href="{{route('vendor.subscriptionackage.subscriberDetail' ,['open_plans' => true])}}" class="btn btn-light">{{ translate('Change/Renew Subscription_Plan') }} <i class="tio-arrow-forward"></i></a>
                 </div>
-{{--
-                <button type="button" class="trial-close">
-                    <i class="tio-clear-circle"></i>
-                </button> --}}
             </div>
         </div>
 

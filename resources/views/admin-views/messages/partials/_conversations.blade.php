@@ -4,7 +4,7 @@
         <div class="chat-user-info w-100 d-flex align-items-center">
             <div class="chat-user-info-img">
                 <img class="avatar-img onerror-image"
-                src="{{\App\CentralLogics\Helpers::get_image_helper($user,'image', asset('storage/app/public/profile/').'/'.$user['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'profile/') }}"
+                src="{{ $user['image_full_url'] }}"
                     data-onerror-image="{{asset('public/assets/admin')}}/img/160x160/img1.jpg"
                     alt="Image Description">
             </div>
@@ -22,9 +22,6 @@
                 <li>
                     <a href="{{ route('admin.users.customer.view', [$user->user->id]) }}">{{ translate('View_Details') }}</a>
                 </li>
-{{--                <li>--}}
-{{--                    <a href="{{ route('admin.users.customer.view', [$user->user->id]) }}">{{ translate('view_order_list') }}</a>--}}
-{{--                </li>--}}
             </ul>
         </div>
     </div>
@@ -32,23 +29,81 @@
     <div class="card-body">
         <div class="scroll-down">
             @foreach($convs as $con)
-                @if($con->sender_id == $receiver->id)
+            @if($con->sender_id == $receiver->id)
+
+
+            @if ($con?->order)
+            <div class="conv-reply-1 p-0 m-0 bg-transparent">
+
+                <div class="card shadow-sm my-3" >
+                    <div class="card-body">
+                        <!-- Order ID and Status -->
+                        <div class="d-flex justify-content-between gap-2">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="card-title">{{ translate('Order ID') }} # {{ $con?->order?->id }}</h5>
+                                    @if (in_array($con?->order?->order_status ,['pending' ,'confirmed',
+                                    'accepted','processing','handover','picked_up']))
+                                    <span class="badge badge-soft-info">
+
+                                    @elseif (in_array($con?->order?->order_status ,['delivered' ]))
+
+                                    <span class="badge badge-soft-success">
+
+                                    @elseif (in_array($con?->order?->order_status ,['refund_requested', 'refunded', 'refund_request_canceled','canceled','failed' ]))
+
+                                    <span class="badge badge-soft-danger">
+
+                                        @endif
+
+                                        {{ translate($con?->order?->order_status) }}
+                                        </span>
+                                </div>
+                                <!-- Total Amount -->
+                                <p class="text-success font-weight-bold">{{ translate('Total') }}: {{ \App\CentralLogics\Helpers::format_currency($con?->order?->order_amount)  }}</p>
+                            </div>
+                            <!-- Order Date -->
+                                <p class="text-muted mb-2 text-right text-dark"> <span class="text-muted fs-12">{{ translate('Order Placed') }}</span> <br> {{ \App\CentralLogics\Helpers::date_format($con?->order?->created_at)  }}</p>
+                            </div>
+                            <br />
+                    <div class="d-flex justify-content-betweeen align-items-center">
+                        <div class="w-0 flex-grow-1">
+                            <!-- Delivery Address -->
+                            <h6 class="font-weight-bold"> {{ translate('Delivery Address') }}  </h6>
+                            @php
+                                $delivery_address = json_decode($con?->order?->delivery_address,true);
+                            @endphp
+                            <p class="mb-1">{{ data_get($delivery_address ,'contact_person_number') }}</p>
+                            <p>{{ data_get($delivery_address ,'address') }}</p>
+                        </div>
+                            <!-- Items count -->
+                            @if ($con?->order?->details_count > 0)
+                                <div class="d-flex justify-content-end">
+                                    <div class="border rounded p-2 text-center">
+                                        <p class="mb-0 font-weight-bold">{{ translate('Items') }}</p>
+                                        <h5 class="mb-0"> {{ $con?->order?->details_count }}</h5>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                @endif
                     <div class="pt1 pb-1">
                         <div class="conv-reply-1">
                                 <h6>{{$con->message}}</h6>
                                 @if($con->file!=null)
-                                @foreach (json_decode($con->file,true) as $img)
-                                @php($img = is_array($img)?$img:['img'=>$img,'storage'=>'public'])
+                                @foreach ($con->file_full_url as $img)
                                 <br>
                                     <img class="w-100 mb-3"
-                                         src="{{ \App\CentralLogics\Helpers::onerror_image_helper(
-                                        $img['img'],
-                                        asset('storage/app/public/conversation').'/'.$img['img'],
-                                        asset('public/assets/admin/img/160x160/img1.jpg'),
-                                        'conversation/',$img['storage']
-                                    ) }}">
+
+                                    src="{{$img }}"
+                                    >
                                     @endforeach
                                 @endif
+
                         </div>
                         <div class="pl-1">
                             <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
@@ -57,18 +112,14 @@
                 @else
                     <div class="pt-1 pb-1">
                         <div class="conv-reply-2">
-                            <h6>{{$con->message}}</h6>
+                            <h6>{{$con->message}} </h6>
                             @if($con->file!=null)
-                            @foreach (json_decode($con->file,true) as $img)
-                            @php($img = is_array($img)?$img:['img'=>$img,'storage'=>'public'])
+                            @foreach ($con->file_full_url as $img)
                             <br>
                                 <img class="w-100 mb-3"
-                                     src="{{ \App\CentralLogics\Helpers::onerror_image_helper(
-                                        $img['img'],
-                                        asset('storage/app/public/conversation').'/'.$img['img'],
-                                        asset('public/assets/admin/img/160x160/img1.jpg'),
-                                        'conversation/',$img['storage']
-                                    ) }}">
+
+                                src="{{$img }}"
+                                >
                                 @endforeach
                             @endif
                         </div>

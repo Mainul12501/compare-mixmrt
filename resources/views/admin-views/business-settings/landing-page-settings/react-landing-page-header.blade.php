@@ -182,12 +182,7 @@
                                     <div class="position-relative">
                                     <div class="img">
                                         <img
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $header_icon,'value',
-                                            asset('storage/app/public/header_icon').'/'.$header_icon['value'] ?? '',
-                                            asset('/public/assets/admin/img/aspect-1.png'),
-                                            'header_icon/'
-                                        ) }}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" class="img__aspect-1 mw-100 min-w-135px onerror-image" alt="">
+                                        src="{{\App\CentralLogics\Helpers::get_full_url('header_icon', $header_icon?->value?? '', $header_icon?->storage[0]?->value ?? 'public','aspect_1')}}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" class="img__aspect-1 mw-100 min-w-135px onerror-image" alt="">
                                     </div>
                                     <input type="file"  name="image" hidden>
                                        @if (isset($header_icon['value']))
@@ -212,12 +207,7 @@
                                     <div class="position-relative">
                                     <div class="img">
                                         <img
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $header_banner,'value',
-                                            asset('storage/app/public/header_banner').'/'.$header_banner['value'] ?? '',
-                                            asset('/public/assets/admin/img/aspect-1.png'),
-                                            'header_banner/'
-                                        ) }}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}"
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('header_banner', $header_banner?->value?? '', $header_banner?->storage[0]?->value ?? 'public','aspect_1')}}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}"
                                             class="img__aspect-1 mw-100 min-w-135px onerror-image" alt="">
                                     </div>
                                         <input type="file" name="banner_image"  hidden>
@@ -229,7 +219,7 @@
                     </div>
                 </div>
                 <div class="btn--container justify-content-end mt-3">
-                    <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                    <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                     <button type="submit"   class="btn btn--primary mb-2">{{translate('Save Information')}}</button>
                 </div>
             </form>

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Allergy;
+use App\Models\GenericName;
+use App\Models\Nutrition;
 use App\Models\Store;
 use App\Models\Campaign;
 use App\Models\Translation;
@@ -9,6 +12,7 @@ use Illuminate\Support\Str;
 use App\Models\ItemCampaign;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
+use Illuminate\Support\Facades\DB;
 use App\Exports\ItemCampaignExport;
 use App\Exports\BasicCampaignExport;
 use App\Http\Controllers\Controller;
@@ -263,6 +267,43 @@ class CampaignController extends Controller
 
         $campaign = new ItemCampaign;
 
+        $nutrition_ids = [];
+        if ($request->nutritions != null) {
+            $nutritions = $request->nutritions;
+        }
+        if (isset($nutritions)) {
+            foreach ($nutritions as $key => $value) {
+                $nutrition = Nutrition::firstOrNew(
+                    ['nutrition' => $value]
+                );
+                $nutrition->save();
+                array_push($nutrition_ids, $nutrition->id);
+            }
+        }
+        $allergy_ids = [];
+        if ($request->allergies != null) {
+            $allergies = $request->allergies;
+        }
+        if (isset($allergies)) {
+            foreach ($allergies as $key => $value) {
+                $allergy = Allergy::firstOrNew(
+                    ['allergy' => $value]
+                );
+                $allergy->save();
+                array_push($allergy_ids, $allergy->id);
+            }
+        }
+
+        $generic_ids = [];
+        if ($request->generic_name != null) {
+            $generic_name = GenericName::firstOrNew(
+                ['generic_name' => $request->generic_name]
+            );
+            $generic_name->save();
+            array_push($generic_ids, $generic_name->id);
+        }
+
+
         $category = [];
         if ($request->category_id != null) {
             array_push($category, [
@@ -387,6 +428,11 @@ class CampaignController extends Controller
         $campaign->stock= $request->current_stock;
         $campaign->unit_id = $request->unit;
         $campaign->save();
+        $campaign->nutritions()->sync($nutrition_ids);
+        $campaign->allergies()->sync($allergy_ids);
+        if($campaign->module->module_type == 'pharmacy') {
+            $campaign->generic()->sync($generic_ids);
+        }
 
         $data = [];
         $default_lang = str_replace('_', '-', app()->getLocale());
@@ -473,6 +519,43 @@ class CampaignController extends Controller
         if ($request['price'] <= $dis || $validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
+
+        $nutrition_ids = [];
+        if ($request->nutritions != null) {
+            $nutritions = $request->nutritions;
+        }
+        if (isset($nutritions)) {
+            foreach ($nutritions as $key => $value) {
+                $nutrition = Nutrition::firstOrNew(
+                    ['nutrition' => $value]
+                );
+                $nutrition->save();
+                array_push($nutrition_ids, $nutrition->id);
+            }
+        }
+        $allergy_ids = [];
+        if ($request->allergies != null) {
+            $allergies = $request->allergies;
+        }
+        if (isset($allergies)) {
+            foreach ($allergies as $key => $value) {
+                $allergy = Allergy::firstOrNew(
+                    ['allergy' => $value]
+                );
+                $allergy->save();
+                array_push($allergy_ids, $allergy->id);
+            }
+        }
+
+        $generic_ids = [];
+        if ($request->generic_name != null) {
+            $generic_name = GenericName::firstOrNew(
+                ['generic_name' => $request->generic_name]
+            );
+            $generic_name->save();
+            array_push($generic_ids, $generic_name->id);
+        }
+
 
         $category = [];
         if ($request->category_id != null) {
@@ -593,6 +676,11 @@ class CampaignController extends Controller
         $campaign->maximum_cart_quantity = $request->maximum_cart_quantity;
         $campaign->stock= $request->current_stock;
         $campaign->save();
+        $campaign->nutritions()->sync($nutrition_ids);
+        $campaign->allergies()->sync($allergy_ids);
+        if($campaign->module->module_type == 'pharmacy') {
+            $campaign->generic()->sync($generic_ids);
+        }
         $default_lang = str_replace('_', '-', app()->getLocale());
 
         foreach ($request->lang as $index => $key) {
@@ -722,9 +810,9 @@ class CampaignController extends Controller
 
     public function delete(Campaign $campaign)
     {
-     
+
         Helpers::check_and_delete('campaign/' , $campaign->image);
-        
+
         $campaign->translations()->delete();
         $campaign->delete();
         Toastr::success(translate('messages.campaign_deleted_successfully'));
@@ -732,9 +820,9 @@ class CampaignController extends Controller
     }
     public function delete_item(ItemCampaign $campaign)
     {
-      
+
         Helpers::check_and_delete('campaign/' , $campaign->image);
-        
+
         $campaign->translations()->delete();
         $campaign?->carts()?->delete();
         $campaign->delete();
@@ -748,8 +836,32 @@ class CampaignController extends Controller
         $campaign->save();
         try
         {
-            $mail_status = Helpers::get_mail_status('campaign_deny_mail_status_store');
-            if(config('mail.status') && $mail_status == '1') {
+                    $push_notification_status= Helpers::getNotificationStatusData('store','store_campaign_join_rejaction','push_notification_status',$store->id);
+                    $store_push_notification_title= translate('Campaign_Request_Rejected') ;
+                    $store_push_notification_description= translate('Campaign_Request_Has_Been_Rejected_By_Admin') ;
+
+
+                if($push_notification_status  &&  $store?->vendor?->firebase_token){
+
+                    $data = [
+                        'title' => $store_push_notification_title,
+                        'description' => $store_push_notification_description,
+                        'order_id' => '',
+                        'image' => '',
+                        'data_id'=> $campaign->id,
+                        'type' => 'campaign',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $store->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+            if(config('mail.status') && Helpers::get_mail_status('campaign_deny_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_campaign_join_rejaction','mail_status',$store->id )) {
                 Mail::to($store->vendor->email)->send(new \App\Mail\VendorCampaignRequestMail($store->name,'denied'));
             }
         }
@@ -776,13 +888,45 @@ class CampaignController extends Controller
         try
         {
             $store=Store::find($store_id);
-            $mail_status = Helpers::get_mail_status('campaign_deny_mail_status_store');
-            if(config('mail.status') && $mail_status == '1' && $status == 'rejected') {
+
+            if ( $status == 'confirmed') {
+                    $push_notification_status= Helpers::getNotificationStatusData('store','store_campaign_join_approval','push_notification_status',$store->id);
+                    $store_push_notification_description= translate('Campaign_Request_Has_Been_Approved_By_Admin') ;
+                    $store_push_notification_title= translate('Campaign_Request_Approved') ;
+                }
+                else{
+                    $push_notification_status= Helpers::getNotificationStatusData('store','store_campaign_join_rejaction','push_notification_status',$store->id);
+                    $store_push_notification_title= translate('Campaign_Request_Rejected') ;
+                    $store_push_notification_description= translate('Campaign_Request_Has_Been_Rejected_By_Admin') ;
+                }
+
+                if($push_notification_status  &&  $store?->vendor?->firebase_token){
+
+                    $data = [
+                        'title' => $store_push_notification_title,
+                        'description' => $store_push_notification_description,
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'campaign',
+                        'data_id'=> $campaign->id,
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $store->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+
+
+            if(config('mail.status') && Helpers::get_mail_status('campaign_deny_mail_status_store') == '1' && $status == 'rejected' &&  Helpers::getNotificationStatusData('store','store_campaign_join_rejaction','mail_status',$store->id )) {
                 Mail::to($store->vendor->email)->send(new \App\Mail\VendorCampaignRequestMail($store->name,'denied'));
             }
 
-            $mail_status = Helpers::get_mail_status('campaign_approve_mail_status_store');
-            if(config('mail.status') && $mail_status == '1' && $status == 'confirmed') {
+            if(config('mail.status') && Helpers::get_mail_status('campaign_approve_mail_status_store') == '1' && $status == 'confirmed' &&  Helpers::getNotificationStatusData('store','store_campaign_join_approval','mail_status',$store->id )) {
                 Mail::to($store->vendor->email)->send(new \App\Mail\VendorCampaignRequestMail($store->name,'approved'));
             }
         }
@@ -794,32 +938,6 @@ class CampaignController extends Controller
         return back();
     }
 
-    // public function searchBasic(Request $request){
-    //     $key = explode(' ', $request['search']);
-    //     $campaigns=Campaign::where('module_id', Config::get('module.current_module_id'))
-    //     ->where(function ($q) use ($key) {
-    //         foreach ($key as $value) {
-    //             $q->orWhere('title', 'like', "%{$value}%");
-    //         }
-    //     })->limit(50)->get();
-    //     return response()->json([
-    //         'view'=>view('admin-views.campaign.basic.partials._table',compact('campaigns'))->render(),
-    //         'count'=>$campaigns->count()
-    //     ]);
-    // }
-    // public function searchItem(Request $request){
-
-
-    //     $key = explode(' ', $request['search']);
-    //     $campaigns=ItemCampaign::where('module_id', Config::get('module.current_module_id'))->where(function ($q) use ($key) {
-    //         foreach ($key as $value) {
-    //             $q->orWhere('title', 'like', "%{$value}%");
-    //         }
-    //     })->limit(50)->get();
-    //     return response()->json([
-    //         'view'=>view('admin-views.campaign.item.partials._table',compact('campaigns'))->render()
-    //     ]);
-    // }
 
     public function basic_campaign_export(Request $request){
         $key = explode(' ', $request['search']);

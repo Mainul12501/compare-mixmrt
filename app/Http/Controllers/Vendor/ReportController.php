@@ -9,9 +9,7 @@ use App\Models\WithdrawalMethod;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Exports\ExpenseReportExport;
-use App\Exports\ParcelReportExport;
 use App\Http\Controllers\Controller;
-use App\Models\OrderTransaction;
 use Maatwebsite\Excel\Facades\Excel;
 use Rap2hpoutre\FastExcel\FastExcel;
 
@@ -231,116 +229,6 @@ class ReportController extends Controller
             return Excel::download(new DisbursementVendorReportExport($data), 'DisbursementReport.csv');
         }
         return Excel::download(new DisbursementVendorReportExport($data), 'DisbursementReport.xlsx');
-
-    }
-    public function parcel_report(Request $request)
-    {
-        $from =  null;
-        $to = null;
-        $filter = $request->query('filter', 'all_time');
-        if($filter == 'custom'){
-            $from = $request->from ?? null;
-            $to = $request->to ?? null;
-        }
-        $key = explode(' ', $request['search']);
-        $order_transactions = OrderTransaction::has('order')->with('order', 'order.details', 'order.customer', 'order.store')
-        ->whereHas('order', function($query){
-            return $query->where('parcel_company_id',Helpers::get_store_id());
-        })
-        ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-            return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-        })
-        ->when(isset($filter) && $filter == 'this_year', function ($query) {
-            return $query->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'this_month', function ($query) {
-            return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'this_month', function ($query) {
-            return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-            return $query->whereYear('created_at', date('Y') - 1);
-        })
-        ->when(isset($filter) && $filter == 'this_week', function ($query) {
-            return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-        })
-        ->when( isset($key), function($query) use($key){
-            $query->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    $q->orWhere('order_id', 'like', "%{$value}%");
-                }
-            });
-        })
-        ->orderBy('created_at', 'desc')
-        ->paginate(config('default_pagination'))->withQueryString();
-        return view('vendor-views.report.parcel-report', compact('order_transactions','from','to','filter'));
-    }
-
-
-
-
-    public function parcel_export(Request $request)
-    {
-        $from =  null;
-        $to = null;
-        $filter = $request->query('filter', 'all_time');
-        if($filter == 'custom'){
-            $from = $request->from ?? null;
-            $to = $request->to ?? null;
-        }
-        $key = explode(' ', $request['search']);
-        $parcel_transactions =  OrderTransaction::has('order')->with('order', 'order.details', 'order.customer', 'order.store')
-        ->whereHas('order', function($query){
-            return $query->where('parcel_company_id',Helpers::get_store_id());
-        })
-        ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-            return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-        })
-        ->when(isset($filter) && $filter == 'this_year', function ($query) {
-            return $query->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'this_month', function ($query) {
-            return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'this_month', function ($query) {
-            return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-        })
-        ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-            return $query->whereYear('created_at', date('Y') - 1);
-        })
-        ->when(isset($filter) && $filter == 'this_week', function ($query) {
-            return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-        })
-        ->when( isset($key), function($query) use($key){
-            $query->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    $q->orWhere('order_id', 'like', "%{$value}%");
-                }
-            });
-        })
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-
-        $data = [
-            'parcel_transactions'=>$parcel_transactions,
-            'search'=>$request->search??null,
-            'from'=>(($filter == 'custom') && $from)?$from:null,
-            'to'=>(($filter == 'custom') && $to)?$to:null,
-            'zone'=>Helpers::get_zones_name(Helpers::get_store_data()->zone_id),
-            'store'=>Helpers::get_stores_name(Helpers::get_store_id()),
-            // 'customer'=>is_numeric($customer_id)?Helpers::get_customer_name($customer_id):null,
-            // 'module'=>request('module_id')?Helpers::get_module_name(request('module_id')):null,
-            'filter'=>$filter,
-            'type'=> 'store',
-        ];
-
-        if ($request->type == 'excel') {
-            return Excel::download(new ParcelReportExport($data), 'ParcelReport.xlsx');
-        } else if ($request->type == 'csv') {
-            return Excel::download(new ParcelReportExport($data), 'ParcelReport.csv');
-        }
 
     }
 

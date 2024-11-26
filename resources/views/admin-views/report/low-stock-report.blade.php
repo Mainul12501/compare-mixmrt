@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('low_stock_report'))
+@section('title',translate('stock_Update'))
 
 @section('content')
 
@@ -12,7 +12,7 @@
                 <img src="{{asset('public/assets/admin/img/report.png')}}" class="w--22" alt="">
             </span>
             <span>
-                {{translate('low_stock_report')}}
+                {{translate('stock update')}}
             </span>
         </h1>
     </div>
@@ -124,12 +124,7 @@
                             <a class="media align-items-center" href="{{route('admin.item.view',[$item['id'],'module_id'=>$item['module_id']])}}">
                                 <img class="avatar avatar-lg mr-3 onerror-image"
 
-                                 src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                    $item,'image',
-                                    asset('storage/app/public/product').'/'.$item['image'] ?? '',
-                                    asset('public/assets/admin/img/160x160/img2.jpg'),
-                                    'product/'
-                                ) }}"
+                                 src="{{ $item['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
 
                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->name}} image">
                                 <div class="media-body">
@@ -181,34 +176,31 @@
     </div>
     <!-- End Card -->
 </div>
-@endsection
-
-{{-- Stock Update Modal --}}
-<div class="modal fade" id="update-quantity" tabindex="-1">
-    <div class="modal-dialog">
-
+<div class="modal fade update-quantity-modal" id="update-quantity" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body py-3">
+            <div class="modal-body pt-0">
+
                 <form action="{{route('admin.item.stock-update')}}" method="post">
                     @csrf
-
                     <div class="mt-2 rest-part w-100"></div>
-                    <div class="btn--container justify-content-center">
-                        <button type="button" class="btn btn-soft-primary min-w-100px" data-dismiss="modal" aria-label="Close">
-                            {{translate('messages.close')}}
-                        </button>
-                        <button class="btn btn--primary min-w-100px" type="submit">{{translate('messages.update')}}</button>
+                    <div class="btn--container justify-content-end">
+                        <button type="reset" data-dismiss="modal" aria-label="Close" class="btn btn--reset">{{translate('cancel')}}</button>
+                        <button type="submit" id="submit_new_customer" class="btn btn--primary">{{translate('update_stock')}}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+
 
 
 @push('script_2')

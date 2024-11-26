@@ -213,7 +213,8 @@ width: 24px;
                     <div class="mb-1" id="mail-body">{!! $body?? translate('Hi_Sabrina,') !!}</div>
                     <span class="d-block text-center mb-3">
                         @if ($data?->button_url)
-                        <a href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+                                            <a type="button" href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+
                         @endif                    </span>
                     <table class="bg-section p-10 w-100">
                         <tbody>
@@ -221,7 +222,7 @@ width: 24px;
                                 <td class="p-10">
                                     <span class="d-block text-center">
                                         <img class="mb-2 mail-img-2"
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper( $data, 'logo', asset('storage/app/public/email_template/').'/'.data_get($data, 'logo'), asset('public/assets/admin/img/emai_demo_template_2.png'), 'email_template/') }}"
+                                        src="{{ $data['logo_full_url'] ?? asset('/public/assets/admin/img/blank1.png') }}"
 
                                         alt="">
                                         <h3 class="mb-3 mt-0">{{ translate('Order_Info') }}</h3>
@@ -442,6 +443,13 @@ width: 24px;
                         </tbody>
                     </table>
                     <hr>
+
+                @isset($url)
+                <div class="mb-2" >
+                    <a href="{{ $url }}" target="_blank" >{{ translate('Download Invoice') }}</a>
+                </div>
+                @endisset
+
                     <div class="mb-2" id="mail-footer">
                         {{ $footer_text??'Please contact us for any queries, we’re always happy to help. ' }}
                     </div>

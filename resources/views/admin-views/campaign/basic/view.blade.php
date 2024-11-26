@@ -19,7 +19,7 @@
             <div class="card-body">
                 <div class="row align-items-md-center gx-md-5">
                     <div class="col-md-4 mb-3 mb-md-0">
-                        <img class="rounded initial--5 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($campaign,'image', asset('storage/app/public/campaign/').'/'.$campaign->image, asset('public/assets/admin/img/160x160/img2.jpg'), 'campaign/') }}"
+                        <img class="rounded initial--5 onerror-image" src="{{ $campaign->image_full_url }}"
                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="Image Description">
                     </div>
 
@@ -88,7 +88,7 @@
                         <tr>
                             <td>{{$key+1}}</td>
                             <td>
-                                <img width="45" class="img--circle onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}" src="{{\App\CentralLogics\Helpers::get_image_helper($store,'logo', asset('storage/app/public/store/').'/'.$store['logo'], asset('public/assets/admin/img/160x160/img1.jpg'), 'store/') }}"
+                                <img width="45" class="img--circle onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}" src="{{ $store['logo_full_url'] }}"
                                 >
                             </td>
                             <td>

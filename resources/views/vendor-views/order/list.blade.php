@@ -8,7 +8,6 @@
 
 @section('content')
     <div class="content container-fluid">
-        @php($parcel_order = Request::is('store-panel/parcel/orders*'))
         <!-- Page Header -->
         <div class="page-header">
             <h1 class="page-header-title text-capitalize">
@@ -16,12 +15,7 @@
                     <img src="{{asset('public/assets/admin/img/order.png')}}" class="w--26" alt="">
                 </span>
                 <span>
-                    {{-- {{str_replace('_',' ',$status)}} {{translate('messages.orders')}}
-                    <span class="badge badge-soft-dark ml-2">{{$orders->total()}}</span> --}}
-                    @if ($parcel_order) {{translate('messages.parcel_orders')}}
-                    @elseif(Request::is('admin/refund/*') ) {{translate('messages.Refund')}}  {{translate(str_replace('_',' ',$status))}}
-                    @else {{translate(str_replace('_',' ',$status))}} {{translate('messages.orders')}}
-                    @endif
+                    {{translate(str_replace('_',' ',$status))}} {{translate('messages.orders')}}
                     <span class="badge badge-soft-dark ml-2">{{$orders->total()}}</span>
                 </span>
             </h1>
@@ -43,55 +37,53 @@
                             <!-- End Search -->
                         </form>
                         <!-- Unfold -->
-                       {{-- @if(!isset($parcel_route)) --}}
-                       <div class="hs-unfold mr-2">
-                        <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle h--40px" href="javascript:"
-                            data-hs-unfold-options='{
-                                "target": "#usersExportDropdown",
-                                "type": "css-animation"
-                            }'>
-                            <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
-                        </a>
+                        <div class="hs-unfold mr-2">
+                            <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle h--40px" href="javascript:"
+                                data-hs-unfold-options='{
+                                    "target": "#usersExportDropdown",
+                                    "type": "css-animation"
+                                }'>
+                                <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
+                            </a>
 
-                        <div id="usersExportDropdown"
-                                class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                            <span class="dropdown-header">{{translate('messages.options')}}</span>
-                            <a id="export-copy" class="dropdown-item" href="javascript:">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin/svg/illustrations/copy.svg')}}"
-                                        alt="Image Description">
-                                {{translate('messages.copy')}}
-                            </a>
-                            <a id="export-print" class="dropdown-item" href="javascript:">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin/svg/illustrations/print.svg')}}"
-                                        alt="Image Description">
-                                {{translate('messages.print')}}
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <span
-                                class="dropdown-header">{{translate('messages.download_options')}}</span>
-                            <a id="export-excel" class="dropdown-item" href="javascript:">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin/svg/components/excel.svg')}}"
-                                        alt="Image Description">
-                                {{translate('messages.excel')}}
-                            </a>
-                            <a id="export-csv" class="dropdown-item" href="javascript:">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin/svg/components/placeholder-csv-format.svg')}}"
-                                        alt="Image Description">
-                                .{{translate('messages.csv')}}
-                            </a>
-                            <a id="export-pdf" class="dropdown-item" href="javascript:">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin/svg/components/pdf.svg')}}"
-                                        alt="Image Description">
-                                {{translate('messages.pdf')}}
-                            </a>
+                            <div id="usersExportDropdown"
+                                    class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                                <span class="dropdown-header">{{translate('messages.options')}}</span>
+                                <a id="export-copy" class="dropdown-item" href="javascript:">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{asset('public/assets/admin/svg/illustrations/copy.svg')}}"
+                                            alt="Image Description">
+                                    {{translate('messages.copy')}}
+                                </a>
+                                <a id="export-print" class="dropdown-item" href="javascript:">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{asset('public/assets/admin/svg/illustrations/print.svg')}}"
+                                            alt="Image Description">
+                                    {{translate('messages.print')}}
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <span
+                                    class="dropdown-header">{{translate('messages.download_options')}}</span>
+                                <a id="export-excel" class="dropdown-item" href="javascript:">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{asset('public/assets/admin/svg/components/excel.svg')}}"
+                                            alt="Image Description">
+                                    {{translate('messages.excel')}}
+                                </a>
+                                <a id="export-csv" class="dropdown-item" href="javascript:">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{asset('public/assets/admin/svg/components/placeholder-csv-format.svg')}}"
+                                            alt="Image Description">
+                                    .{{translate('messages.csv')}}
+                                </a>
+                                <a id="export-pdf" class="dropdown-item" href="javascript:">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{asset('public/assets/admin/svg/components/pdf.svg')}}"
+                                            alt="Image Description">
+                                    {{translate('messages.pdf')}}
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                       {{-- @endif --}}
                         <!-- End Unfold -->
 
                         <!-- Unfold -->
@@ -223,7 +215,6 @@
                             <th class="border-0">{{translate('messages.order_date')}}</th>
                             <th class="border-0">{{translate('messages.customer_information')}}</th>
                             <th class="border-0">{{translate('messages.total_amount')}}</th>
-                            <th class="border-0 text-center">{{translate('messages.order_type')}}</th>
                             <th class="border-0 text-center">{{translate('messages.order_status')}}</th>
                             <th class="border-0 text-center">{{translate('messages.actions')}}</th>
                         </tr>
@@ -235,11 +226,8 @@
                                 <td class="">
                                     {{$key+$orders->firstItem()}}
                                 </td>
-                                {{-- <td class="table-column-pl-0">
-                                    <a href="{{route('vendor.order.details',['id'=>$order['id']])}}">{{$order['id']}}</a>
-                                </td> --}}
                                 <td class="table-column-pl-0">
-                                    <a href="{{route($parcel_order?'vendor.parcel.order.details':'vendor.order.details',['id'=>$order['id']])}}">{{$order['id']}}</a>
+                                    <a href="{{route('vendor.order.details',['id'=>$order['id']])}}">{{$order['id']}}</a>
                                 </td>
                                 <td>
                                     <div>
@@ -288,17 +276,6 @@
                                     </div>
                                 </td>
                                 <td class="text-capitalize text-center">
-                                    @if($order->order_type == 'parcel')
-                                  <span class="badge badge-info">
-                                    {{translate('messages.parcel')}}
-                                    </span>
-                                    @else
-                                    <span class="badge badge-soft-info">
-                                        {{translate('messages.store_order')}}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="text-capitalize text-center">
                                     @if($order['order_status']=='pending')
                                         <span class="badge badge-soft-info">
                                         {{translate('messages.pending')}}
@@ -340,16 +317,8 @@
                                 </td>
                                 <td>
                                     <div class="btn--container justify-content-center">
-                                    @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-                                    <a class="ml-2 btn btn-sm btn--warning btn-outline-warning action-btn" href="{{route($parcel_order?'vendor.parcel.order.details':'vendor.order.details',['id'=>$order['id']])}}">
-                                        <i class="tio-invisible"></i>
-                                    </a>
-                                    <a class="btn btn-sm btn--primary btn-outline-primary action-btn" target="_blank" href="{{route('vendor.parcel.generate-invoice',[$order['id']])}}"><i class="tio-print"></i></a>
-                                        @else
-                                            <a class="btn btn-sm btn--warning btn-outline-warning action-btn" href="{{route('vendor.order.details',['id'=>$order['id']])}}"><i class="tio-visible-outlined"></i></a>
-                                        
-                                            <a class="btn btn-sm btn--primary btn-outline-primary action-btn" target="_blank" href="{{route('vendor.order.generate-invoice',[$order['id']])}}"><i class="tio-print"></i></a>
-                                    @endif
+                                        <a class="btn btn-sm btn--warning btn-outline-warning action-btn" href="{{route('vendor.order.details',['id'=>$order['id']])}}"><i class="tio-visible-outlined"></i></a>
+                                        <a class="btn btn-sm btn--primary btn-outline-primary action-btn" target="_blank" href="{{route('vendor.order.generate-invoice',[$order['id']])}}"><i class="tio-print"></i></a>
                                     </div>
                                 </td>
                             </tr>
@@ -394,8 +363,7 @@
                         className: 'd-none',
                         action: function ()
                         {
-                            console.log('kjo');
-                            window.location.href = '{{isset($parcel_route) ? route("vendor.order.export",['status'=>$status,'file_type'=>'excel','type'=>'order','route_type'=>'parcel', request()->getQueryString()]) : route("vendor.order.export",['status'=>$status,'file_type'=>'excel','type'=>'order', request()->getQueryString()])}}';
+                            window.location.href = '{{route("vendor.order.export",['status'=>$status,'file_type'=>'excel','type'=>'order', request()->getQueryString()])}}';
                         }
                     },
                     {

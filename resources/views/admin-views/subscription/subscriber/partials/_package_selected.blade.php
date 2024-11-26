@@ -158,29 +158,6 @@
                 </label>
             </div>
 
-            {{-- @foreach ($payment_methods as $item)
-
-            <div class="col-md-6">
-                <label class="payment-item">
-                    <input type="radio" class="d-none" value="{{ $item['gateway'] }}" name="payment_gateway">
-                    <div class="payment-item-inner">
-                        <div class="check">
-                            <img src="{{asset('/public/assets/admin/img/check-1.png')}}" class="uncheck" alt="">
-                            <img src="{{asset('/public/assets/admin/img/check-2.png')}}" class="check" alt="">
-                        </div>
-                        <span>{{ $item['gateway_title'] }}</span>
-                        <img class="ml-auto" src="{{ \App\CentralLogics\Helpers::onerror_image_helper(
-                            $item['gateway_image'],
-                            asset('storage/app/public/payment_modules/gateway_image').'/'. $item['gateway_image'],
-                            asset('/public/assets/admin/img/payment/placeholder.png'),
-                            'payment_modules/gateway_image/'
-                        ) }}" width="30" alt="">
-                    </div>
-                </label>
-            </div>
-
-            @endforeach --}}
-
         </div>
         <div class="btn--container justify-content-end mt-3">
             <button type="reset" data-dismiss="modal" class="btn btn--reset">{{ translate('Cancel') }}</button>

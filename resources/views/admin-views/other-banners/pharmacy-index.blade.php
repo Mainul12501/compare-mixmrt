@@ -46,12 +46,7 @@
                                         <div class="img">
                                             <img class="onerror-image"
 
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $bottom_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner').'/'.$bottom_section_banner?->value ?? '',
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                'promotional_banner/'
-                                            ) }}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
+                                            src="{{ $bottom_section_banner?->value_full_url }}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>
                                         <div class="">
                                             <input type="file" name="image"  hidden>
@@ -128,12 +123,7 @@
                                         <div class="img">
                                             <img class="onerror-image"
 
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $basic_section_nearby,'value',
-                                                asset('storage/app/public/promotional_banner').'/'.$basic_section_nearby?->value ?? '',
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                'promotional_banner/'
-                                            ) }}"
+                                            src="{{ $basic_section_nearby?->value_full_url }}"
 
                                             data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>

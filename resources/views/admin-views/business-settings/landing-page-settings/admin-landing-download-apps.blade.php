@@ -102,7 +102,7 @@
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>
@@ -234,12 +234,7 @@
                                     <div class="position-relative">
                                     <div class="img">
                                         <img
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $download_user_app_image,'value',
-                                            asset('storage/app/public/download_user_app_image').'/'.$download_user_app_image['value'] ?? '',
-                                            asset('/public/assets/admin/img/aspect-1.png'),
-                                            'download_user_app_image/'
-                                        ) }}"
+                                        src="{{\App\CentralLogics\Helpers::get_full_url('download_user_app_image', $download_user_app_image?->value?? '', $download_user_app_image?->storage[0]?->value ?? 'public','aspect_1')}}"
 
                                         data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" alt="" class="img__aspect-1 min-w-187px max-w-187px onerror-image">
                                     </div>
@@ -325,7 +320,7 @@
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>

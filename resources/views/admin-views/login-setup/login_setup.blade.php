@@ -15,11 +15,20 @@
                     <img src="{{asset('public/assets/admin/img/app.png')}}" class="w--26" alt="">
                 </span>
                 <span>
-                    {{translate('messages.login_page_setup')}}
+                    {{translate('login_setup')}}
                 </span>
             </h1>
         </div>
         <!-- End Page Header -->
+
+        <ul class="nav nav-tabs border-0 nav--tabs nav--pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('admin.business-settings.login-settings.index') }}">{{translate('Customer_Login')}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('admin.business-settings.login_url_page') }}">{{translate('panel_login_page_Url')}}</a>
+            </li>
+        </ul>
 
 
         <form action="{{route('admin.business-settings.login_url_update')}}" method="post">

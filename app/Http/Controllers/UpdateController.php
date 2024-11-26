@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Setting;
 use App\Models\Store;
+use App\Models\Setting;
 use App\Models\DataSetting;
 
 ini_set('max_execution_time', 180);
@@ -13,8 +13,10 @@ use Illuminate\Http\Request;
 use App\Models\EmailTemplate;
 use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
+use App\Models\Coupon;
 use App\Traits\ActivationClass;
 use Illuminate\Support\Facades\DB;
+use App\Models\NotificationSetting;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
@@ -39,7 +41,7 @@ class UpdateController extends Controller
         Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username']);
         Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key']);
         Helpers::setEnvironmentValue('APP_MODE', 'live');
-        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '2.8.1');
+        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '2.12');
         Helpers::setEnvironmentValue('REACT_APP_KEY', '45370351');
         Helpers::setEnvironmentValue('APP_NAME', '6amMart' . time());
 
@@ -48,6 +50,10 @@ class UpdateController extends Controller
         if (!$this->actch()) {
             return redirect(base64_decode('aHR0cHM6Ly82YW10ZWNoLmNvbS9zb2Z0d2FyZS1hY3RpdmF0aW9u'));
         }
+
+        // version_2.11.1
+        Artisan::call('cache:table');
+        Helpers::setEnvironmentValue('CACHE_DRIVER', 'database');
 
         Artisan::call('migrate', ['--force' => true]);
         $previousRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.php');
@@ -173,6 +179,34 @@ class UpdateController extends Controller
             Helpers::insert_business_settings_key('landing_integration_type','none');
         }
         Helpers::insert_business_settings_key("dm_max_cash_in_hand" , "5000");
+
+        if(NotificationSetting::count() == 0 ){
+            Helpers::notificationDataSetup();
+        }
+        Helpers::updateAdminNotificationSetupDataSetup();
+        Helpers::addNewAdminNotificationSetupDataSetup();
+
+        Helpers::insert_business_settings_key('country_picker_status', '1');
+        Helpers::insert_business_settings_key('manual_login_status', '1');
+
+        $this->firebase_message_config_file_gen();
+
+        $recaptcha= BusinessSetting::where('key','recaptcha')->first();
+        if($recaptcha?->value){
+            $recaptcha_value=  json_decode($recaptcha->value,true);
+            $recaptcha->value = json_encode([
+                'status' => null,
+                'site_key' => $recaptcha_value['site_key'],
+                'secret_key' => $recaptcha_value['secret_key']
+            ]);
+            $recaptcha->save();
+        }
+
+        Coupon::where('coupon_type', 'store_wise')
+        ->whereNull('store_id')
+        ->update([
+            'store_id' => DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$[0]'))")
+        ]);
 
         $data = DataSetting::where('type', 'login_admin')->pluck('value')->first();
         return redirect('/login/'.$data);
@@ -423,6 +457,60 @@ class UpdateController extends Controller
                 'mode' => 'test',
                 'is_active' => 0,
             ]);
+        }
+    }
+
+    private function firebase_message_config_file_gen()
+    {
+        $config = Helpers::get_business_settings('fcm_credentials');
+
+        $apiKey = $config['apiKey'] ?? '';
+        $authDomain = $config['authDomain'] ?? '';
+        $projectId = $config['projectId'] ?? '';
+        $storageBucket = $config['storageBucket'] ?? '';
+        $messagingSenderId = $config['messagingSenderId'] ?? '';
+        $appId = $config['appId'] ?? '';
+        $measurementId = $config['measurementId'] ?? '';
+
+        $filePath = base_path('firebase-messaging-sw.js');
+
+        try {
+            if (file_exists($filePath) && !is_writable($filePath)) {
+                if (!chmod($filePath, 0644)) {
+                    throw new \Exception('File is not writable and permission change failed: ' . $filePath);
+                }
+            }
+
+            $fileContent = <<<JS
+                importScripts('https://www.gstatic.com/firebasejs/8.3.2/firebase-app.js');
+                importScripts('https://www.gstatic.com/firebasejs/8.3.2/firebase-messaging.js');
+
+                firebase.initializeApp({
+                    apiKey: "$apiKey",
+                    authDomain: "$authDomain",
+                    projectId: "$projectId",
+                    storageBucket: "$storageBucket",
+                    messagingSenderId: "$messagingSenderId",
+                    appId: "$appId",
+                    measurementId: "$measurementId"
+                });
+
+                const messaging = firebase.messaging();
+                messaging.setBackgroundMessageHandler(function (payload) {
+                    return self.registration.showNotification(payload.data.title, {
+                        body: payload.data.body ? payload.data.body : '',
+                        icon: payload.data.icon ? payload.data.icon : ''
+                    });
+                });
+                JS;
+
+
+            if (file_put_contents($filePath, $fileContent) === false) {
+                throw new \Exception('Failed to write to file: ' . $filePath);
+            }
+
+        } catch (\Exception $e) {
+            //
         }
     }
 

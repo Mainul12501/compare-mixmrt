@@ -124,7 +124,7 @@
                 <div class="col-md-12">
                     <div class="delivery_charge_options" id="delivery_charge_options">
                         <div class="row gy-1" id="mod-label">
-                            <div class="col-sm-2">
+                            <div class="col-sm-4">
                                 <label for="">{{ translate('messages.Module Name') }}</label>
                             </div>
                             <div class="col-sm-2">
@@ -139,15 +139,12 @@
                             <div class="col-sm-2">
                                 <label for="">{{ translate('maximum_cod_order_amount') }} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
                             </div>
-                            <div class="col-sm-2">
-                                <label for="">{{ translate('per_kg_charge') }} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
-                            </div>
                         </div>
                         @if (count($zone->modules) > 0)
                             @foreach ($zone->modules as $module)
                             @if ($module->module_type == 'parcel')
                             <div class="row gy-1 module-row" id="module_{{ $module->id }}">
-                                <div class="col-sm-2"><input type="text" class="form-control"
+                                <div class="col-sm-4"><input type="text" class="form-control"
                                         value="{{ $module->module_name }}"
                                         placeholder="{{ translate('messages.choice_title') }}" readonly></div>
                                 <div class="col-sm-2"><input type="number" class="form-control"
@@ -173,15 +170,10 @@
                                     placeholder="{{ translate('enter_Amount') }}"
                                     title="{{ translate('set_maximum_cod_order_amount') }}"
                                     value="{{ $module->pivot->maximum_cod_order_amount }}" readonly></div>
-                                <div class="col-sm-2"><input type="number" class="form-control"
-                                        name="module_data[{{ $module->id }}][per_kg_charge]" step=".01"
-                                        min="0" placeholder="{{ translate('Set charge from parcel category') }}"
-                                        data-toggle="tooltip" data-placement="right"
-                                        data-original-title="{{ translate('messages.You have to set category wise charge from parcel category') }}" readonly></div>
                             </div>
                             @else
                             <div class="row gy-1 module-row" id="module_{{ $module->id }}">
-                                <div class="col-sm-2"><input type="text" class="form-control"
+                                <div class="col-sm-4"><input type="text" class="form-control"
                                         value="{{ $module->module_name }}"
                                         placeholder="{{ translate('messages.choice_title') }}" readonly></div>
                                 <div class="col-sm-2"><input type="number" class="form-control"
@@ -201,18 +193,12 @@
                                         placeholder="{{ translate('messages.enter_Amount') }}"
                                         title="{{ translate('messages.maximum delivery charge') }}"
                                         value="{{ $module->pivot->maximum_shipping_charge }}" ></div>
-                                <div class="col-sm-2"><input  type="number" step=".01" min="0"
+                                <div class="col-sm-2"><input type="number" step=".01" min="0"
                                         class="form-control"
                                         name="module_data[{{ $module->id }}][maximum_cod_order_amount]"
                                         placeholder="{{ translate('enter_Amount') }}"
                                         title="{{ translate('set_maximum_cod_order_amount') }}"
                                         value="{{ $module->pivot->maximum_cod_order_amount }}"></div>
-
-                                        <div class="col-sm-2"><input required type="number" class="form-control"
-                                            name="module_data[{{ $module->id }}][per_kg_charge]" step=".01"
-                                            min="0" placeholder="{{ translate('enter_amount') }}"
-                                            data-toggle="tooltip" data-placement="right" value="{{ $module->pivot->per_kg_charge }}"
-                                            data-original-title="{{ translate('set_per_kg_charge')}}"></div>
                             </div>
                             @endif
                             @endforeach
@@ -272,8 +258,8 @@
 
                         add_parcel_module($(this).val(), name.trim());
                     }else{
-                        var ecommerce = 1;
-                        add_more_delivery_charge_option($(this).val(), name.trim(),ecommerce);
+
+                        add_more_delivery_charge_option($(this).val(), name.trim());
                     }
                 }
             });
@@ -286,13 +272,11 @@
             }
         });
 
-        function add_more_delivery_charge_option(i, name,com) {
+        function add_more_delivery_charge_option(i, name) {
             let n = name;
-            var placeholderText = com === 1 ? "{{ translate('enter_Amount') }}" : "{{ translate('Set charge only ecommerce') }}";
-            var readonly = com == 1 ? ' ' : 'readonly';
             $('#delivery_charge_options').append(
                 '<div class="row gy-1 module-row" id="module_' + i +
-                '"><div class="col-sm-2"><input type="text" class="form-control" value="' + n +
+                '"><div class="col-sm-4"><input type="text" class="form-control" value="' + n +
                 '" placeholder="{{ translate('messages.choice_title') }}" readonly></div><div class="col-sm-2"><input type="number" class="form-control" name="module_data[' +
                 i +
                 '][per_km_shipping_charge]" step=".01" min="0" placeholder="{{ translate('messages.enter_Amount') }}" title="{{ translate('messages.per_km_delivery_charge') }}" required></div><div class="col-sm-2"><input type="number" step=".01" min="0" class="form-control" name="module_data[' +
@@ -301,16 +285,14 @@
                 i +
                 '][maximum_shipping_charge]" placeholder="{{ translate('messages.enter_Amount') }}" title="{{ translate('messages.maximum delivery charge') }}"></div><div class="col-sm-2"><input type="number" step=".01" min="0" class="form-control" name="module_data[' +
                 i +
-                '][maximum_cod_order_amount]" placeholder="{{ translate('enter_Amount') }}" title="{{ translate('set_maximum_cod_order_amount') }}"></div><div class="col-sm-2"><input type="number" step=".01" min="0" class="form-control" name="module_data[' +
-                i +
-                '][per_kg_charge]" placeholder="' + placeholderText +'" title="{{ translate('set_maximum_cod_order_amount') }}" '+ readonly + '></div></div>'
+                '][maximum_cod_order_amount]" placeholder="{{ translate('enter_Amount') }}" title="{{ translate('set_maximum_cod_order_amount') }}"></div></div>'
             );
         }
         function add_parcel_module(i, name) {
             let n = name;
             $('#delivery_charge_options').append(
                 '<div class="row gy-1 module-row" id="module_' + i +
-                '"><div class="col-sm-2"><input type="text" class="form-control" value="' + n +
+                '"><div class="col-sm-4"><input type="text" class="form-control" value="' + n +
                 '" placeholder="{{ translate('messages.choice_title') }}" readonly></div><div class="col-sm-2"><input type="number" name="module_data[' +
                 i +
                 '][per_km_shipping_charge]" class="form-control" step=".01" min="0" placeholder="{{ translate('Set charge from parcel category') }}" value="" title="{{ translate('messages.per_km_delivery_charge') }}" readonly></div><div class="col-sm-2"><input type="number" name="module_data[' +
@@ -319,9 +301,7 @@
                 i +
                 '][maximum_shipping_charge]" step=".01" min="0" class="form-control" placeholder="{{ translate('Set charge from parcel category') }}" value="" title="{{ translate('messages.maximum delivery charge') }}" readonly></div><div class="col-sm-2"><input type="number" step=".01" min="0" class="form-control" name="module_data[' +
                 i +
-                '][maximum_cod_order_amount]" placeholder="{{ translate('enter_Amount') }}" title="{{ translate('set_maximum_cod_order_amount') }}" readonly></div><div class="col-sm-2"><input type="number" name="module_data[' +
-                i +
-                '][per_kg_charge]" step=".01" min="0" class="form-control" placeholder="{{ translate('Set charge from parcel category') }}" value="" title="{{ translate('messages.maximum delivery charge') }}" readonly></div></div>'
+                '][maximum_cod_order_amount]" placeholder="{{ translate('enter_Amount') }}" title="{{ translate('set_maximum_cod_order_amount') }}" readonly></div></div>'
             );
         }
     </script>

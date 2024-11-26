@@ -75,11 +75,17 @@
 
                     <div class="pl-xl-5 pl-xxl-0">
                         @if($language)
-                                <div class="form-group lang_form" id="default-form">
+                            <div class="row lang_form" id="default-form">
+                                <div class="form-group col-6">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{ translate('messages.default') }})</label>
                                     <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_zone')}}" maxlength="191" value="{{$zone?->getRawOriginal('name')}}"  >
                                 </div>
+                                <div class="form-group col-6">
+                                    <label class="input-label" for="exampleFormControlInput1">{{translate('messages.display_name')}} ({{ translate('messages.default') }})</label>
+                                    <input type="text" name="display_name[]" class="form-control" placeholder="{{translate('messages.display_name')}}" maxlength="191" value="{{$zone?->getRawOriginal('display_name')}}"  >
+                                </div>
                                 <input type="hidden" name="lang[]" value="default">
+                            </div>
                                 @foreach($language as $lang)
                                     <?php
                                         if(count($zone['translations'])){
@@ -89,21 +95,24 @@
                                                 if($t->locale == $lang && $t->key=="name"){
                                                     $translate[$lang]['name'] = $t->value;
                                                 }
+                                                if($t->locale == $lang && $t->key=="display_name"){
+                                                    $translate[$lang]['display_name'] = $t->value;
+                                                }
                                             }
                                         }
                                     ?>
-                                    <div class="form-group d-none lang_form" id="{{$lang}}-form">
+                                <div class="row lang_form d-none" id="{{$lang}}-form">
+                                    <div class="form-group col-6">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
                                         <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_zone')}}" maxlength="191" value="{{$translate[$lang]['name']??''}}"  >
                                     </div>
+                                    <div class="form-group col-6">
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.display_name')}} ({{strtoupper($lang)}})</label>
+                                        <input type="text" name="display_name[]" class="form-control" placeholder="{{translate('messages.display_name')}}" maxlength="191" value="{{$translate[$lang]['display_name']??''}}"  >
+                                    </div>
                                     <input type="hidden" name="lang[]" value="{{$lang}}">
-                                @endforeach
-                            @else
-                                <div class="form-group">
-                                    <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                                    <input type="text" name="name" class="form-control" placeholder="{{translate('messages.new_zone')}}" value="{{$zone['name']}}" required maxlength="191">
                                 </div>
-                                <input type="hidden" name="lang[]" value="{{$lang}}">
+                                @endforeach
                             @endif
                         <div class="form-group d-none">
                             <label class="input-label" for="exampleFormControlInput1">{{ translate('messages.Coordinates') }}

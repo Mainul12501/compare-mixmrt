@@ -6,10 +6,10 @@
                 @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
                 <a class="navbar-brand" href="{{ route('admin.dispatch.dashboard') }}" aria-label="Front">
                        <img class="navbar-brand-logo initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                     <img class="navbar-brand-logo-mini initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                 </a>
                 <!-- End Logo -->
@@ -162,12 +162,12 @@
                     </a>
                 </li>
 
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/report/low-stock-report') ? 'active' : '' }}">
-                    <a class="nav-link " href="{{ route('admin.transactions.report.low-stock-report') }}" title="{{ translate('messages.limited_stock_item') }}">
+                {{-- <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/report/low-stock-report') ? 'active' : '' }}">
+                    <a class="nav-link " href="{{ route('admin.transactions.report.low-stock-report') }}" title="{{ translate('messages.Stock_Report') }}">
                         <span class="tio-chart-bar-4 nav-icon"></span>
-                        <span class="text-truncate text-capitalize">{{ translate('messages.limited_stock_item') }}</span>
+                        <span class="text-truncate text-capitalize">{{ translate('messages.Stock_Report') }}</span>
                     </a>
-                </li>
+                </li> --}}
 
 
                 <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/report/order-report') ? 'active' : '' }}">
@@ -179,43 +179,9 @@
                 @endif
 
 
-                {{-- OFFLINE PAYMENT START --}}
-
-                <li class="nav-item">
-                    <small class="nav-subtitle" title="{{ translate('messages.business_section') }}">{{ translate('messages.offline_payment') }}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                <!-- withdraw -->
-                @if (\App\CentralLogics\Helpers::module_permission_check('withdraw_list'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/store/offline_payment/list*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.transactions.store.offline_payment.store_offline_verification_list', ['all']) }}" title="{{ translate('messages.store_offline_verification_list') }}">
-                        <i class="tio-table nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.store_offline_payment') }}</span>
-                    </a>
-                </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/store/offline_payment/company-list*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.transactions.store.offline_payment.company_offline_verification_list', ['all']) }}" title="{{ translate('messages.store_offline_verification_list') }}">
-                        <i class="tio-table nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.company_offline_payment') }}</span>
-                    </a>
-                </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/transactions/delivery_man/offline_payment/list*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.transactions.delivery_man.offline_payment.delivery_man_offline_verification_list', ['all']) }}" title="{{ translate('messages.delivery_man_offline_verification_list') }}">
-                        <i class="tio-table nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.delivery_man_offline_payment') }}</span>
-                    </a>
-                </li>
-                @endif
-                <!-- End Store -->
-                {{-- OFFLINE PANYMENT END --}}
-
-
                 <li class="nav-item py-5">
 
                 </li>
-
-
 
 
                 <li class="__sidebar-hs-unfold px-2" id="tourb-9">
@@ -230,7 +196,7 @@
                                     <img class="avatar-img onerror-image"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                        src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                         alt="Image Description">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
@@ -253,7 +219,7 @@
                                         <img class="avatar-img onerror-image"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                        src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                         alt="Image Description">
                                     </div>

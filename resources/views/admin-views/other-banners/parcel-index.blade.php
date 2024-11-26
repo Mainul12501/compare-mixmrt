@@ -94,12 +94,7 @@
                                                 <tr>
                                                     <td>{{ $key+1 }}</td>
                                                     <td>
-                                                        <img src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                            $banner,'value',
-                                                            asset('storage/app/public/promotional_banner').'/'.$banner->value ?? '',
-                                                            asset('/public/assets/admin/img/upload-3.png'),
-                                                            'promotional_banner/'
-                                                        ) }}" data-toggle="modal"
+                                                        <img src="{{ $banner->value_full_url ?? asset('/public/assets/admin/img/upload-3.png') }}" data-toggle="modal"
                                                              data-target="#imagemodal{{ $key }}"  data-onerror-image="{{asset('/public/assets/admin/img/upload-3.png')}}" class="__size-105 onerror-image" alt="">
                                                         <div class="modal fade" id="imagemodal{{ $key }}" tabindex="-1"
                                                              role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -114,12 +109,7 @@
                                                                                 class="sr-only">{{ translate('messages.cancel') }}</span></button>
                                                                     </div>
                                                                     <div class="modal-body">
-                                                                        <img src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                            $banner,'value',
-                                                            asset('storage/app/public/promotional_banner').'/'.$banner->value ?? '',
-                                                            asset('/public/assets/admin/img/upload-3.png'),
-                                                            'promotional_banner/'
-                                                        ) }}"
+                                                                        <img src="{{ $banner->value_full_url ?? asset('/public/assets/admin/img/upload-3.png') }}"
                                                                              class="initial--22 w-100">
                                                                     </div>
 {{--                                                                    <div class="modal-footer">--}}

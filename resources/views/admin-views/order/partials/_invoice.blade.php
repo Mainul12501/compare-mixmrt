@@ -86,11 +86,20 @@
                                         <span>{{ translate('messages.phone') }}</span> <span>:</span>
                                         <span>{{ isset($address['contact_person_number']) ? $address['contact_person_number'] : '' }}</span>
                                     </h5>
+                                    <h5 class="text-break d-flex">
+                                        <span class="word-nobreak">{{ translate('messages.address') }}</span> <span>:</span>
+                                        <span>{{ isset($address['address']) ? $address['address'] : '' }}</span>
+                                    </h5>
+                                    @elseif ($order->customer)
+                                    <h5 class="d-flex">
+                                        <span>{{ translate('messages.contact_name') }}</span> <span>:</span>
+                                        <span>{{ $order->customer?->f_name .' '.$order->customer?->l_name }}</span>
+                                    </h5>
+                                    <h5 class="d-flex">
+                                        <span>{{ translate('messages.phone') }}</span> <span>:</span>
+                                        <span>{{ $order->customer?->phone}}</span>
+                                    </h5>
                                 @endif
-                                <h5 class="text-break d-flex">
-                                    <span class="word-nobreak">{{ translate('messages.address') }}</span> <span>:</span>
-                                    <span>{{ isset($order->delivery_address) ? json_decode($order->delivery_address, true)['address'] : '' }}</span>
-                                </h5>
                             </div>
                         @endif
                     </div>

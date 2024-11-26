@@ -60,7 +60,7 @@ class Notification extends Model
             "description"=> $this->description,
             "order_id"=> "",
             "image"=> $this->image,
-            "type"=> "order_status"
+            "type"=> "push_notification"
         ];
     }
 
@@ -95,18 +95,12 @@ class Notification extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('notification',$value);
-                    }else{
-                        return Helpers::local_storage_link('notification',$value);
-                    }
+                    return Helpers::get_full_url('notification',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('notification',$value);
+        return Helpers::get_full_url('notification',$value,'public');
     }
 
     public function storage()

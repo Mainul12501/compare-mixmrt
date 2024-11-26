@@ -28,7 +28,7 @@
                     <div>
                         <div class="d-flex flex-wrap align-items-center food--media position-relative mr-4">
                             <img class="avatar avatar-xxl avatar-4by3 onerror-image"
-                            src="{{\App\CentralLogics\Helpers::get_image_helper($product,'image', asset('storage/app/public/product/').'/'.$product['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                            src="{{ $product['image_full_url'] }}"
                                  data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                                 alt="Image Description">
                                 @if ($product['is_rejected'] == 1 )
@@ -120,6 +120,21 @@
                             <th class="px-4 border-0">
                                 <h4 class="m-0 text-capitalize">{{ translate('price_Information') }}</h4>
                             </th>
+
+                            @if (in_array($product->module->module_type ,['food','grocery']))
+                            <th class="px-4 border-0">
+                                <h4 class="m-0 text-capitalize">{{ translate('Nutrition') }}</h4>
+                            </th>
+                            <th class="px-4 border-0">
+                                <h4 class="m-0 text-capitalize">{{ translate('Allergy') }}</h4>
+                            </th>
+
+                        @endif
+                        @if (in_array($product->module->module_type ,['pharmacy']))
+                            <th class="px-4 border-0">
+                                <h4 class="m-0 text-capitalize">{{ translate('Generic_Name') }}</h4>
+                            </th>
+                        @endif
                             <th class="px-4 border-0">
                                 <h4 class="m-0 text-capitalize">{{ translate('Available_Variations') }}</h4>
                             </th>
@@ -207,6 +222,34 @@
                                 </span>
 
                             </td>
+
+                            @php($product_nutritions = $product?->nutrition_ids ? \App\Models\Nutrition::whereIn('id', json_decode($product?->nutrition_ids))->pluck('nutrition') : [])
+                            @php($product_allergies = $product?->allergy_ids ?\App\Models\Allergy::whereIn('id', json_decode($product?->allergy_ids))->pluck('allergy') : [])
+
+                            @if (in_array($product->module->module_type ,['food','grocery']))
+                            <td class="px-4 product-gallery-info">
+
+                                    @foreach($product_nutritions as $nutrition)
+                                        {{$nutrition}}{{ !$loop->last ? ',' : '.'}}
+                                    @endforeach
+
+                            </td>
+                            <td class="px-4 product-gallery-info">
+                                    @foreach($product_allergies as $allergy)
+                                        {{$allergy}}{{ !$loop->last ? ',' : '.'}}
+                                    @endforeach
+
+                            </td>
+                            @endif
+                            @if (in_array($product->module->module_type ,['pharmacy']))
+                                <td class="px-4 product-gallery-info">
+                                    {{ \App\Models\GenericName::where('id', json_decode($product?->generic_ids))->first()?->generic_name }}
+                                </td>
+                            @endif
+
+
+
+
                             <td class="px-4">
                                 @if ($product->module->module_type == 'food')
                                     @if ($product->food_variations && is_array(json_decode($product['food_variations'], true)))
@@ -276,7 +319,7 @@
 
                         @php( $tags =\App\Models\Tag::whereIn('id',json_decode($product?->tag_ids) )->get('tag'))
                             <td>
-                                @foreach($tags as $c) {{$c->tag.','}} @endforeach
+                                @foreach($tags as $c) {{$c->tag}}{{ !$loop->last ? ',' : '.'}} @endforeach
                             </td>
 
                     </tr>

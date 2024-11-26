@@ -309,13 +309,13 @@
                                         </a>
                                     </td>
                                     <td class="text-center">
-                                        {{ $item->orders->sum('quantity') }}
+                                        {{ $item->orders_sum_quantity ?? 0 }}
                                     </td>
                                     <td class="text-center">
-                                        {{ $item->orders->sum('price') }}
+                                        {{ \App\CentralLogics\Helpers::format_currency($item->orders_sum_price) }}
                                     </td>
                                     <td class="text-center">
-                                        {{ $item->orders->sum('discount_on_item') }}
+                                        {{ \App\CentralLogics\Helpers::format_currency($item->total_discount) }}
                                     </td>
                                     <td>
                                         <div class="btn--container justify-content-center">
@@ -402,33 +402,5 @@
                 }
             });
 
-
-            $('#search-form').on('submit', function (e) {
-            e.preventDefault();
-            let formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.report.store-sales-report-search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    // $('#countItems').html(data.count);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
         </script>
     @endpush

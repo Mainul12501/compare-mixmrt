@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Stripe\Product;
 use App\Models\Cart;
 use App\Models\Item;
+use App\Models\User;
 use App\Models\Zone;
 use App\Models\Admin;
 use App\Models\Order;
 use App\Models\Store;
 use App\Models\Coupon;
-use App\Models\Module;
 use App\Models\Refund;
 use App\Mail\PlaceOrder;
 use App\Models\DMVehicle;
@@ -23,7 +22,9 @@ use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\ParcelCategory;
 use App\Models\BusinessSetting;
+use App\Models\CashBackHistory;
 use App\Models\OfflinePayments;
+use App\Models\AutomatedMessage;
 use App\CentralLogics\OrderLogic;
 use App\Models\OrderCancelReason;
 use App\CentralLogics\CouponLogic;
@@ -32,12 +33,11 @@ use App\CentralLogics\ProductLogic;
 use App\Mail\OrderVerificationMail;
 use App\CentralLogics\CustomerLogic;
 use App\Http\Controllers\Controller;
-use App\Models\CashBackHistory;
 use App\Models\OfflinePaymentMethod;
-use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Models\ParcelDeliveryInstruction;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class OrderController extends Controller
@@ -53,7 +53,13 @@ class OrderController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $user_id = $request?->user?->id ;
-        $order = Order::with(['store','store.store_sub' ,'delivery_man.rating', 'parcel_category', 'refund','payments'])->withCount('details')->where('id', $request['order_id'])
+
+        if ($request['contact_number'] && (substr($request['contact_number'], 0, 1) !== '+')) {
+            $request['contact_number'] = '+' . $request['contact_number'];
+        }
+
+        $order = Order::with(['store','store.store_sub' ,'delivery_man.rating', 'parcel_category', 'refund','payments'])->withCount('details')
+        ->where('id', $request['order_id'])
         ->when($request->user, function ($query) use ($user_id) {
             return $query->where('user_id', $user_id);
         })
@@ -80,7 +86,7 @@ class OrderController extends Controller
                 ]
             ], 404);
         }
-        return response()->json($order->toArray(), 200);
+        return response()->json($order, 200);
     }
 
     public function place_order(Request $request)
@@ -101,10 +107,73 @@ class OrderController extends Controller
             'guest_id' => $request->user ? 'nullable' : 'required',
             'contact_person_name' => $request->user ? 'nullable' : 'required',
             'contact_person_number' => $request->user ? 'nullable' : 'required',
+            'contact_person_email' => $request->user ? 'nullable' : 'required',
+            'password' => $request->create_new_user ? ['required', Password::min(8)] : 'nullable',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        if($request->create_new_user){
+            if(!$request->password){
+                return response()->json([
+                    'errors' => [
+                        ['code' => 'password', 'message' => translate('messages.password_is_required')]
+                    ]
+                ], 403);
+            }
+            if(User::where('phone',$request->contact_person_number)->first()){
+                return response()->json([
+                    'errors' => [
+                        ['code' => 'phone_person_email', 'message' => translate('messages.phone_already_taken')]
+                    ]
+                ], 403);
+            }
+            if(User::where('email',$request->contact_person_email)->first()){
+                return response()->json([
+                    'errors' => [
+                        ['code' => 'contact_person_email', 'message' => translate('messages.email_already_taken')]
+                    ]
+                ], 403);
+            }
+            $user = new User();
+            $user->f_name = $request->contact_person_name;
+            $user->email = $request->contact_person_email;
+            $user->phone = $request->contact_person_number;
+            $user->password = bcrypt($request->password);
+            $user->ref_code = Helpers::generate_referer_code($user);
+            $user->login_medium = 'manual';
+            $user->save();
+
+            try
+            {
+                if (config('mail.status') && $request->contact_person_email && Helpers::get_mail_status('registration_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer','customer_registration','mail_status')) {
+                    Mail::to($request->contact_person_email)->send(new \App\Mail\CustomerRegistration($request->contact_person_name));
+                }
+            }
+            catch(\Exception $ex)
+            {
+                info($ex->getMessage());
+            }
+            if($request->guest_id  && isset($user->id)){
+
+                $userStoreIds = Cart::where('user_id', $request->guest_id)
+                    ->join('items', 'carts.item_id', '=', 'items.id')
+                    ->pluck('items.store_id')
+                    ->toArray();
+
+                Cart::where('user_id', $user->id)
+                    ->whereHas('item', function ($query) use ($userStoreIds) {
+                        $query->whereNotIn('store_id', $userStoreIds);
+                    })
+                    ->delete();
+
+                Cart::where('user_id', $request->guest_id)->update(['user_id' => $user->id,'is_guest' => 0]);
+            }
+
+            $request->is_guest = 0;
+            $request->user = $user;
         }
 
 
@@ -124,11 +193,7 @@ class OrderController extends Controller
         $store = null;
         $free_delivery_by = null;
         $distance_data = $request->distance;
-        $weight = $request->weight;
         $increased=0;
-        $total_weight = 0;
-        $free_delivery_type = null;
-        $per_kg_charge = 0;
         $maximum_shipping_charge = 0;
 
         if($request['order_type'] == 'delivery' && !Helpers::get_business_settings('home_delivery_status')){
@@ -178,26 +243,19 @@ class OrderController extends Controller
                 ], 403);
             }
 
-        $data =  DMVehicle::active()->where(function ($query) use ($weight) {
-            $query->where('minimum_weight', '<=', $weight)->where('maximum_weight', '>=', $weight)
-            ->orWhere(function ($query) use ($weight) {
-                $query->where('minimum_weight', '>=', $weight);
+        $data =  DMVehicle::active()->where(function ($query) use ($distance_data) {
+            $query->where('starting_coverage_area', '<=', $distance_data)->where('maximum_coverage_area', '>=', $distance_data)
+            ->orWhere(function ($query) use ($distance_data) {
+                $query->where('starting_coverage_area', '>=', $distance_data);
             });
         })
-            ->orderBy('minimum_weight')->first();
-            if(!$data){
-                $data = DMVehicle::active()
-                ->where('maximum_weight', '<', $weight)
-                ->orderByDesc('maximum_weight')
-                ->first();
-            }
+            ->orderBy('starting_coverage_area')->first();
 
         $extra_charges = (float) (isset($data) ? $data->extra_charges  : 0);
         $vehicle_id = (isset($data) ? $data->id  : null);
 
 
         $zone = null;
-	$parcel_zone_id = null;
         if ($request->latitude && $request->longitude) {
             $point = new Point($request->latitude, $request->longitude);
             if ($request->order_type == 'parcel') {
@@ -206,8 +264,7 @@ class OrderController extends Controller
                 $zone_ids = $request->header('zoneId') ? json_decode($request->header('zoneId'), true) :[];
                 $zone = Zone::whereIn('id', $zone_ids)->whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->wherehas('modules',function($q){
                     $q->where('module_type','parcel');
-                })->latest()->first();
-		$parcel_zone_id = $zone->id ?? null;
+                })->first();
             } else{
                 $store = Store::with(['discount', 'store_sub'])->selectRaw('*, IF(((select count(*) from `store_schedule` where `stores`.`id` = `store_schedule`.`store_id` and `store_schedule`.`day` = ' . $schedule_at->format('w') . ' and `store_schedule`.`opening_time` < "' . $schedule_at->format('H:i:s') . '" and `store_schedule`.`closing_time` >"' . $schedule_at->format('H:i:s') . '") > 0), true, false) as open')->where('id', $request->store_id)->first();
 
@@ -321,7 +378,6 @@ class OrderController extends Controller
 
                     $coupon_created_by = $coupon->created_by;
                     if ($coupon->coupon_type == 'free_delivery') {
-                        $free_delivery_type = 'free_delivery';
                         $delivery_charge = 0;
                         $free_delivery_by =  $coupon_created_by;
                         $coupon_created_by = null;
@@ -340,7 +396,6 @@ class OrderController extends Controller
                 $per_km_shipping_charge = $module_wise_delivery_charge->pivot->per_km_shipping_charge;
                 $minimum_shipping_charge = $module_wise_delivery_charge->pivot->minimum_shipping_charge;
                 $maximum_shipping_charge = $module_wise_delivery_charge->pivot->maximum_shipping_charge;
-                $per_kg_charge = $module_wise_delivery_charge->pivot->per_kg_charge;
             } else {
                 $per_km_shipping_charge = (float)BusinessSetting::where(['key' => 'per_km_shipping_charge'])->first()->value;
                 $minimum_shipping_charge = (float)BusinessSetting::where(['key' => 'minimum_shipping_charge'])->first()->value;
@@ -351,7 +406,6 @@ class OrderController extends Controller
                 $per_km_shipping_charge = $store->per_km_shipping_charge;
                 $minimum_shipping_charge = $store->minimum_shipping_charge;
                 $maximum_shipping_charge = $store->maximum_shipping_charge;
-                $per_kg_charge = $store->per_kg_charge;
                 $extra_charges = 0;
                 $vehicle_id = null;
                 $increased=0;
@@ -361,7 +415,6 @@ class OrderController extends Controller
                 $per_km_shipping_charge = $store->per_km_shipping_charge;
                 $minimum_shipping_charge = $store->minimum_shipping_charge;
                 $maximum_shipping_charge = $store->maximum_shipping_charge;
-                $per_kg_charge = $store->per_kg_charge;
                 $extra_charges = 0;
                 $increased=0;
             }
@@ -372,12 +425,10 @@ class OrderController extends Controller
                 $per_km_shipping_charge = 0;
                 $minimum_shipping_charge = 0;
                 $maximum_shipping_charge = 0;
-                $per_kg_charge = 0;
                 $extra_charges = 0;
                 $distance_data = 0;
                 $vehicle_id = null;
                 $original_delivery_charge = 0;
-                $free_delivery_type = 'free_delivery';
                 $increased=0;
             }
 
@@ -406,14 +457,12 @@ class OrderController extends Controller
             if (isset($parcel_category) && isset($parcel_category->parcel_minimum_shipping_charge)) {
                 $per_km_shipping_charge = $parcel_category->parcel_per_km_shipping_charge;
                 $minimum_shipping_charge = $parcel_category->parcel_minimum_shipping_charge;
-                $per_kg_charge = $parcel_category->parcel_per_kg_charge;
             } else {
                 $per_km_shipping_charge = (float)BusinessSetting::where(['key' => 'parcel_per_km_shipping_charge'])->first()->value;
                 $minimum_shipping_charge = (float)BusinessSetting::where(['key' => 'parcel_minimum_shipping_charge'])->first()->value;
-                $per_kg_charge = (float)BusinessSetting::where(['key' => 'parcel_per_kg_charge'])->first()->value;
             }
 
-            $original_delivery_charge = ((($request->distance * $per_km_shipping_charge) +($request->weight * $per_kg_charge)) > $minimum_shipping_charge) ? (($request->distance * $per_km_shipping_charge) + ($request->weight * $per_kg_charge)) : $minimum_shipping_charge;
+            $original_delivery_charge = (($request->distance * $per_km_shipping_charge )> $minimum_shipping_charge) ? ($request->distance * $per_km_shipping_charge )+ $extra_charges : ($minimum_shipping_charge + $extra_charges);
         }
 
 
@@ -430,7 +479,8 @@ class OrderController extends Controller
 
         $address = [
             'contact_person_name' => $request->contact_person_name ? $request->contact_person_name : ($request->user?$request->user->f_name . ' ' . $request->user->f_name:''),
-            'contact_person_number' => $request->contact_person_number ? ($request->user ? $request->contact_person_number :str_replace('+', '', $request->contact_person_number)) : ($request->user?$request->user->phone:''),
+            'contact_person_number' => $request->contact_person_number ? $request->contact_person_number : ($request->user?$request->user->phone:''),
+//            'contact_person_number' => $request->contact_person_number ? ($request->user ? $request->contact_person_number :str_replace('+', '', $request->contact_person_number)) : ($request->user?$request->user->phone:''),
             'contact_person_email' => $request->contact_person_email ? $request->contact_person_email : ($request->user?$request->user->email:''),
             'address_type' => $request->address_type ? $request->address_type : 'Delivery',
             'address' => $request?->address??'',
@@ -474,8 +524,7 @@ class OrderController extends Controller
         $order->delivery_instruction = $request['delivery_instruction'];
         $order->order_type = $request['order_type'];
         $order->store_id = $request['store_id'];
-        // $order->delivery_charge = round($delivery_charge, config('round_up_to_digit')) ?? 0;
-        $order->delivery_charge = substr(number_format($delivery_charge, config('round_up_to_digit')+1, '.', ''), 0, -1)??0;
+        $order->delivery_charge = round($delivery_charge, config('round_up_to_digit')) ?? 0;
         $order->original_delivery_charge = round($original_delivery_charge, config('round_up_to_digit'));
         $order->delivery_address = json_encode($address);
         $order->schedule_at = $schedule_at;
@@ -656,7 +705,6 @@ class OrderController extends Controller
                             $total_addon_price += $or_d['total_add_on_price'];
                             $product_price += $price * $or_d['quantity'];
                             $store_discount_amount += $or_d['discount_on_item'] * $or_d['quantity'];
-                            $total_weight += $product->weight * $or_d['quantity'];
                         }
                     } else {
                         return response()->json([
@@ -735,7 +783,6 @@ class OrderController extends Controller
                             $flash_sale_admin_discount_amount += $or_d['discount_type']=='flash_sale'?$product_discount['admin_discount_amount'] * $or_d['quantity']:0;
                             $flash_sale_vendor_discount_amount += $or_d['discount_type']=='flash_sale'?$product_discount['vendor_discount_amount'] * $or_d['quantity']:0;
                             $order_details[] = $or_d;
-                            $total_weight += $product->weight * $or_d['quantity'];
                         } else {
 
                             if (count(json_decode($product['variations'], true)) > 0 && count($c['variation'])>0) {
@@ -789,7 +836,6 @@ class OrderController extends Controller
                             $flash_sale_admin_discount_amount += $or_d['discount_type']=='flash_sale'?$product_discount['admin_discount_amount'] * $or_d['quantity']:0;
                             $flash_sale_vendor_discount_amount += $or_d['discount_type']=='flash_sale'?$product_discount['vendor_discount_amount'] * $or_d['quantity']:0;
                             $order_details[] = $or_d;
-                            $total_weight += $product->weight * $or_d['quantity'];
                         }
                     } else {
                         return response()->json([
@@ -857,14 +903,12 @@ class OrderController extends Controller
             if (isset($free_delivery_over)) {
                 if ($free_delivery_over <= $product_price + $total_addon_price - $coupon_discount_amount - $store_discount_amount - $flash_sale_admin_discount_amount - $flash_sale_vendor_discount_amount) {
                     $order->delivery_charge = 0;
-                    $free_delivery_type = 'free_delivery';
                     $free_delivery_by = 'admin';
                 }
             }
 
             if ($store->free_delivery) {
                 $order->delivery_charge = 0;
-                $free_delivery_type = 'free_delivery';
                 $free_delivery_by = 'vendor';
             }
 
@@ -872,7 +916,6 @@ class OrderController extends Controller
                 if ($coupon->coupon_type == 'free_delivery') {
                     if ($coupon->min_purchase <= $product_price + $total_addon_price - $store_discount_amount - $flash_sale_admin_discount_amount - $flash_sale_vendor_discount_amount) {
                         $order->delivery_charge = 0;
-                         $free_delivery_type = 'free_delivery';
                         $free_delivery_by = $coupon->created_by;
                     }
                 }
@@ -885,32 +928,11 @@ class OrderController extends Controller
             $order->store_discount_amount = round($store_discount_amount, config('round_up_to_digit'));
             $order->tax_percentage = $tax;
             $order->total_tax_amount = round($total_tax_amount, config('round_up_to_digit'));
-
+            $order->order_amount = round($total_price + $tax_a + $order->delivery_charge, config('round_up_to_digit'));
             $order->free_delivery_by = $free_delivery_by;
-
-           //weight wise charge
-           $original_delivery_charge = ((($request->distance * $per_km_shipping_charge) +($total_weight * $per_kg_charge)) > $minimum_shipping_charge) ? (($request->distance * $per_km_shipping_charge) + ($total_weight * $per_kg_charge)) : $minimum_shipping_charge;
-           $order->original_delivery_charge = round($original_delivery_charge, config('round_up_to_digit'));
-           $order->order_amount = round($total_price + $tax_a + $order->dm_tips + $order->additional_charge + $order->delivery_charge, config('round_up_to_digit'));
-
-           if($free_delivery_type != 'free_delivery'){
-                $delivery_charge = $original_delivery_charge + $extra_charges;
-                if ($maximum_shipping_charge  >= $minimum_shipping_charge  && $delivery_charge >  $maximum_shipping_charge) {
-                    $delivery_charge = $maximum_shipping_charge + $extra_charges;
-                }
-                // $order->delivery_charge = round($delivery_charge, config('round_up_to_digit')) ?? 0;
-                $order->delivery_charge = substr(number_format($delivery_charge, config('round_up_to_digit')+1, '.', ''), 0, -1)??0;
-                $order->order_amount = round($total_price + $tax_a + $delivery_charge + $order->dm_tips + $order->additional_charge, config('round_up_to_digit'));
-            }
-
-    // charge end
-
-
-
         } else {
             $point = new Point(json_decode($request->receiver_details, true)['latitude'], json_decode($request->receiver_details, true)['longitude']);
- //           $zone_id =  json_decode($request->receiver_details, true)['zone_id'];
-	    $zone_id =  $parcel_zone_id;
+            $zone_id =  json_decode($request->receiver_details, true)['zone_id'];
             $zone = Zone::where('id', $zone_id)->whereContains('coordinates', new Point(json_decode($request->receiver_details, true)['latitude'], json_decode($request->receiver_details, true)['longitude'], POINT_SRID))->first();
             if (!$zone) {
                 $errors = [];
@@ -919,11 +941,10 @@ class OrderController extends Controller
                     'errors' => $errors
                 ], 403);
             }
-            $order->delivery_charge = round($original_delivery_charge + $extra_charges, config('round_up_to_digit')) ?? 0;
+            $order->delivery_charge = round($original_delivery_charge, config('round_up_to_digit')) ?? 0;
             $order->original_delivery_charge = round($original_delivery_charge, config('round_up_to_digit'));
             $order->order_amount = round($order->delivery_charge, config('round_up_to_digit'));
         }
-        $order->weight = $request->weight;
         $order->flash_admin_discount_amount = round($flash_sale_admin_discount_amount, config('round_up_to_digit'));
         $order->flash_store_discount_amount = round($flash_sale_vendor_discount_amount, config('round_up_to_digit'));
 
@@ -950,34 +971,7 @@ class OrderController extends Controller
                 ]
             ], 203);
         }
-        // $module_name = Module::where('id', $request->header('moduleId'))->first()?->module_type;
-        // $order->module_name = $module_name;
-        // if($module_name && $module_name == 'ecommerce'){
-        //     $data =  DMVehicle::active()->where(function ($query) use ($total_weight) {
-        //         $query->where('minimum_weight', '<=', $total_weight)->where('maximum_weight', '>=', $total_weight)
-        //         ->orWhere(function ($query) use ($total_weight) {
-        //             $query->where('minimum_weight', '>=', $total_weight);
-        //         });
-        //     })
-        //         ->orderBy('minimum_weight')->get();
-        //         if(count($data) > 0){
-        //             $order->vehicle_ids = json_encode($data->pluck('id'));
-        //         }
-        // }
-        // if($module_name && $free_delivery_type != 'free_delivery' && $module_name == 'ecommerce'){
-        //     $original_delivery_charge = ((($request->distance * $per_km_shipping_charge) +($total_weight * $per_kg_charge)) > $minimum_shipping_charge) ? (($request->distance * $per_km_shipping_charge) + ($total_weight * $per_kg_charge)) : $minimum_shipping_charge;
-        //     $delivery_charge = $original_delivery_charge + $extra_charges;
-        //     if ($maximum_shipping_charge  >= $minimum_shipping_charge  && $delivery_charge >  $maximum_shipping_charge) {
-        //         $delivery_charge = $maximum_shipping_charge + $extra_charges;
-        //     }
-        //     // $order->delivery_charge = round($delivery_charge, config('round_up_to_digit')) ?? 0;
-        //     $order->delivery_charge = substr(number_format($delivery_charge, config('round_up_to_digit')+1, '.', ''), 0, -1)??0;
-        //     $order->original_delivery_charge = round($original_delivery_charge, config('round_up_to_digit'));
-        //     $order->order_amount = round($total_price + $tax_a + $delivery_charge + $order->dm_tips + $order->additional_charge, config('round_up_to_digit'));
-        // }
-        // if($request->order_type !== 'parcel' && $module_name !== 'ecommerce'){
-        //     $order->order_amount = round($total_price + $tax_a + $order->dm_tips + $order->additional_charge + $order->delivery_charge, config('round_up_to_digit'));
-        // }
+
         try {
             DB::beginTransaction();
             $order->save();
@@ -1047,29 +1041,29 @@ class OrderController extends Controller
                         }
 
 
-                    if ($order->order_status == 'pending' && config('mail.status') && $order_mail_status == '1' && $request->user) {
+                    if ($order->order_status == 'pending' && config('mail.status') && $order_mail_status == '1' && $request->user && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status')) {
                         Mail::to($request->user->email)->send(new PlaceOrder($order->id));
                     }
-                    if ($order->order_status == 'pending' && config('order_delivery_verification') == 1 && $order_verification_mail_status == '1' && $request->user) {
+                    if ($order->order_status == 'pending' && config('order_delivery_verification') == 1 && $order_verification_mail_status == '1' && $request->user && Helpers::getNotificationStatusData('customer','customer_delivery_verification','mail_status')) {
                         Mail::to($request->user->email)->send(new OrderVerificationMail($order->otp,$request->user->f_name));
                     }
-                    if ($order->is_guest == 1 && $order->order_status == 'pending' && config('mail.status') && $order_mail_status == '1' && isset($request->contact_person_email)) {
+                    if ($order->is_guest == 1 && $order->order_status == 'pending' && config('mail.status') && $order_mail_status == '1' && isset($request->contact_person_email) && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status')) {
                         Mail::to($request->contact_person_email)->send(new PlaceOrder($order->id));
                     }
-                    if ($order->is_guest == 1 && $order->order_status == 'pending' && config('order_delivery_verification') == 1 && $order_verification_mail_status == '1' && isset($request->contact_person_email)) {
+                    if ($order->is_guest == 1 && $order->order_status == 'pending' && config('order_delivery_verification') == 1 && $order_verification_mail_status == '1' && isset($request->contact_person_email) && Helpers::getNotificationStatusData('customer','customer_delivery_verification','mail_status') ) {
                         Mail::to($request->contact_person_email)->send(new OrderVerificationMail($order->otp,$request->contact_person_name));
                     }
                 }
             } catch (\Exception $ex) {
                 info($ex->getMessage());
             }
-            //PlaceOrderMail end
             return response()->json([
                 'message' => translate('messages.order_placed_successfully'),
                 'order_id' => $order->id,
                 'total_ammount' => $order->order_amount,
                 'status' => $order->order_status,
-                'created_at' => $order->created_at
+                'created_at' => $order->created_at,
+                'user_id' => (int) $order->user_id,
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1502,7 +1496,7 @@ class OrderController extends Controller
             $mail_status = Helpers::get_mail_status('place_order_mail_status_user');
             //PlaceOrderMail
             try {
-                if ($order->order_status == 'pending' && config('mail.status') && $mail_status == '1' && $request->user) {
+                if ($order->order_status == 'pending' && config('mail.status') && $mail_status == '1' && $request->user && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status')) {
                     Mail::to($request->user->email)->send(new PlaceOrder($order->id));
                 }
             } catch (\Exception $ex) {
@@ -1515,7 +1509,8 @@ class OrderController extends Controller
                 'total_ammount' => $order->order_amount,
                 'offline_payments' => isset($order->offline_payments) ? Helpers::offline_payment_formater($order->offline_payments) : null,
                 'status' => $order->order_status,
-                'created_at' => $order->created_at
+                'created_at' => $order->created_at,
+                'user_id' => (int) $order->user_id,
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1542,11 +1537,11 @@ class OrderController extends Controller
         }
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
 
-        $paginator = Order::with(['delivery_company','store', 'delivery_man.rating', 'parcel_category', 'refund:order_id,admin_note,customer_note'])->withCount('details')->where(['user_id' => $user_id])->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed'])
+        $paginator = Order::with(['store', 'delivery_man.rating', 'parcel_category', 'refund:order_id,admin_note,customer_note'])->withCount('details')->where(['user_id' => $user_id])->whereIn('order_status', ['delivered', 'canceled', 'refund_requested', 'refund_request_canceled', 'refunded', 'failed'])
 
-        ->when(!isset($request->user) , function($query){
-            $query->where('is_guest' , 1);
-        })
+        // ->when(!isset($request->user) , function($query){
+        //     $query->where('is_guest' , 1);
+        // })
 
         ->when(isset($request->user)  , function($query){
             $query->where('is_guest' , 0);
@@ -1583,10 +1578,10 @@ class OrderController extends Controller
         }
         $user_id = $request->user ? $request->user->id : $request['guest_id'];
 
-        $paginator = Order::with(['delivery_company','store', 'delivery_man.rating', 'parcel_category'])
-        ->when(!isset($request->user) , function($query){
-            $query->where('is_guest' , 1);
-        })
+        $paginator = Order::with(['store', 'delivery_man.rating', 'parcel_category'])
+        // ->when(!isset($request->user) , function($query){
+        //     $query->where('is_guest' , 1);
+        // })
 
         ->when(isset($request->user)  , function($query){
             $query->where('is_guest' , 0);
@@ -1620,21 +1615,22 @@ class OrderController extends Controller
         }
         $user_id = $request?->user?->id ;
 
-        $order = Order::with('delivery_company','details', 'offline_payments','parcel_category')
-        ->when(!isset($request->user) , function($query){
-            $query->where('is_guest' , 1);
-        })
+        $order = Order::with('details', 'offline_payments','parcel_category')
+//        ->when(!isset($request->user) , function($query){
+//            $query->where('is_guest' , 1);
+//        })
 
         ->when(isset($request->user)  , function($query){
             $query->where('is_guest' , 0);
         })
             ->when($request->user, function ($query) use ($user_id) {
                 return $query->where('user_id', $user_id);
-            })->find($request->order_id);
+            })->findOrFail($request->order_id);
 
         $details = isset($order->details) ? $order->details : null;
         if ($details != null && $details->count() > 0) {
             $details = Helpers::order_details_data_formatting($details);
+            $details[0]['is_guest'] = (int)$order->is_guest;
             // $details['store'] = $order['store'] ? Helpers::store_data_formatting($order['store']) : $order['store'];
             // $details['delivery_man'] = $order['delivery_man'] ? Helpers::deliverymen_data_formatting([$order['delivery_man']]) : $order['delivery_man'];
             return response()->json($details, 200);
@@ -1669,9 +1665,9 @@ class OrderController extends Controller
 
         $order = Order::where(['user_id' => $user_id, 'id' => $request['order_id']])
 
-        ->when(!isset($request->user) , function($query){
-            $query->where('is_guest' , 1);
-        })
+        // ->when(!isset($request->user) , function($query){
+        //     $query->where('is_guest' , 1);
+        // })
 
         ->when(isset($request->user)  , function($query){
             $query->where('is_guest' , 0);
@@ -1734,9 +1730,9 @@ class OrderController extends Controller
 
         $order = Order::where(['user_id' => $request->user->id, 'id' => $request['order_id']])
 
-        ->when(!isset($request->user) , function($query){
-            $query->where('is_guest' , 1);
-        })
+        // ->when(!isset($request->user) , function($query){
+        //     $query->where('is_guest' , 1);
+        // })
 
         ->when(isset($request->user)  , function($query){
             $query->where('is_guest' , 0);
@@ -1783,47 +1779,12 @@ class OrderController extends Controller
             $admin = Admin::where('role_id',1)->first();
             $mail_status = Helpers::get_mail_status('refund_request_mail_status_admin');
             try {
-                if (config('mail.status') && $admin['email'] && $mail_status == '1') {
+                if (config('mail.status') && $admin['email'] && $mail_status == '1' && Helpers::getNotificationStatusData('admin','order_refund_request','mail_status')) {
                     Mail::to($admin['email'])->send(new RefundRequest($order->id));
                 }
             } catch (\Exception $ex) {
                 info($ex->getMessage());
             }
-
-            try {
-                $storeEmail = Store::find($order->store_id)->email;
-                if (config('mail.status') && $storeEmail !=null && $mail_status == '1') {
-                    Mail::to($storeEmail)->send(new RefundRequest($order->id));
-                }
-            } catch (\Exception $ex) {
-                info($ex->getMessage());
-            }
-
-            $data = [
-                'title' => 'You have a refund request',
-                'description' => 'You have a refund request of order - '.$order->id,
-                'order_id' => $order->id,
-                'type' => 'general',
-                'image' => ''
-            ];
-
-            if ($order?->store && $order->store?->vendor) {
-                try {
-                    \App\CentralLogics\Helpers::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $order->store->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                } catch (\Exception $exception) {
-                    info($exception->getMessage());
-                }
-            }
-
-
-
-
             return response()->json(['message' => translate('messages.refund_request_placed_successfully')], 200);
         }
         return response()->json([
@@ -1879,10 +1840,10 @@ class OrderController extends Controller
             try {
                 Helpers::send_order_notification($order);
 
-                if ($order->is_guest == 0 && config('mail.status') && $order_mail_status == '1'&& $order->customer) {
+                if ($order->is_guest == 0 && config('mail.status') && $order_mail_status == '1'&& $order->customer && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status')) {
                     Mail::to($order->customer->email)->send(new PlaceOrder($order->id));
                 }
-                if ($order->is_guest == 1 && config('mail.status') && $order_mail_status == '1' && isset($address['contact_person_email'])) {
+                if ($order->is_guest == 1 && config('mail.status') && $order_mail_status == '1' && isset($address['contact_person_email']) && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status')) {
                     Mail::to($address['contact_person_email'])->send(new PlaceOrder($order->id));
                 }
 
@@ -2005,7 +1966,7 @@ class OrderController extends Controller
 
 
                 $data = [
-                    'title' => translate('messages.order_push_title'),
+                    'title' => translate('Order_Notification'),
                     'description' => translate('messages.new_order_push_description'),
                     'order_id' => $order->id,
                     'image' => '',
@@ -2124,5 +2085,23 @@ class OrderController extends Controller
             ]);
         }
         return true;
+    }
+
+
+    public function automatedMessage(Request $request)
+    {
+        $limit = $request->query('limit', 25);
+        $offset = $request->query('offset', 1);
+        $messages = AutomatedMessage::orderBy('id', 'desc')->where('status',1)->select(['id','message'])
+        ->paginate($limit, ['*'], 'page', $offset);
+        $messages->makeHidden(['translations']);
+        $data = [
+            'total_size' => $messages->total(),
+            'limit' => $limit,
+            'offset' => $offset,
+            'data' => $messages->items()
+        ];
+
+        return response()->json($data, 200);
     }
 }

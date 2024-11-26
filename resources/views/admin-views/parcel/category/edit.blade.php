@@ -110,12 +110,7 @@
                                 <div class="text-center py-3 my-auto">
                                     <img class="img--130 onerror-image" id="viewer"
 
-                                    src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                        $parcel_category,'image',
-                                        asset('storage/app/public/parcel_category').'/'.$parcel_category['image'] ?? '',
-                                        asset('/public/assets/admin/img/400x400/img2.jpg'),
-                                        'parcel_category/'
-                                    ) }}"
+                                    src="{{ $parcel_category['image_full_url'] }}"
 
                                     data-onerror-image="{{asset('/public/assets/admin/img/400x400/img2.jpg')}}" />
                                 </div>
@@ -126,24 +121,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label  class="input-label text-capitalize">{{translate('messages.per_km_shipping_charge')}}</label>
                                 <input type="number" step=".01" min="0" placeholder="{{translate('messages.per_km_shipping_charge')}}" class="form-control" name="parcel_per_km_shipping_charge"
                                     value="{{ $parcel_category->parcel_per_km_shipping_charge }}">
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label class="input-label text-capitalize">{{translate('messages.minimum_shipping_charge')}}</label>
                                 <input type="number" step=".01" min="0" placeholder="{{translate('messages.minimum_shipping_charge')}}" class="form-control" name="parcel_minimum_shipping_charge"
                                     value="{{ $parcel_category->parcel_minimum_shipping_charge }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="input-label text-capitalize">{{translate('messages.per_kg_charge')}}</label>
-                                <input type="number" step=".01" min="0" placeholder="{{translate('messages.per_kg_charge')}}" class="form-control" name="parcel_per_kg_charge" value="{{ $parcel_category->parcel_per_kg_charge }}">
                             </div>
                         </div>
                         <div class="col-12">

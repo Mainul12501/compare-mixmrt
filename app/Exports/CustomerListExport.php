@@ -52,7 +52,7 @@ class CustomerListExport implements  FromView, ShouldAutoSize, WithStyles,WithCo
 
     public function styles(Worksheet $sheet) {
         $sheet->getStyle('A2:J4')->getFont()->setBold(true);
-        $sheet->getStyle('A4:J4')->getFill()->applyFromArray([
+        $sheet->getStyle('A5:J5')->getFill()->applyFromArray([
             'fillType' => 'solid',
             'rotation' => 0,
             'color' => ['rgb' => '005D5F'],
@@ -72,7 +72,7 @@ class CustomerListExport implements  FromView, ShouldAutoSize, WithStyles,WithCo
         $sheet->getStyle('A1:C1')->applyFromArray($styleArray);
         return [
             // Define the style for cells with data
-            'A1:J'.$this->data['customers']->count() +4 => [
+            'A1:J'.$this->data['customers']->count() +5 => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -101,11 +101,11 @@ class CustomerListExport implements  FromView, ShouldAutoSize, WithStyles,WithCo
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
-                $event->sheet->getStyle('A3:J'.$this->data['customers']->count() +4)
+                $event->sheet->getStyle('A4:J'.$this->data['customers']->count() +5)
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
-                $event->sheet->getStyle('D2:J3')
+                $event->sheet->getStyle('D2:J4')
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                     ->setVertical(Alignment::VERTICAL_CENTER);
@@ -116,11 +116,14 @@ class CustomerListExport implements  FromView, ShouldAutoSize, WithStyles,WithCo
                     $event->sheet->mergeCells('D2:J2');
                     $event->sheet->mergeCells('A3:C3');
                     $event->sheet->mergeCells('D3:J3');
+                    $event->sheet->mergeCells('A4:C4');
+                    $event->sheet->mergeCells('D4:J4');
 
                     $event->sheet->getDefaultRowDimension()->setRowHeight(30);
                     $event->sheet->getRowDimension(1)->setRowHeight(50);
                     $event->sheet->getRowDimension(2)->setRowHeight(80);
                     $event->sheet->getRowDimension(3)->setRowHeight(40);
+                    $event->sheet->getRowDimension(4)->setRowHeight(80);
                 },
         ];
     }

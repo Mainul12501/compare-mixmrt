@@ -147,12 +147,8 @@
                                 <label class="upload-img-3 m-0">
                                         <div class="position-relative">
                                         <div class="img">
-                                            <img class="onerror-image" src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $feature,'image',
-                                                asset('storage/app/public/admin_feature').'/'.$feature->image ?? '',
-                                                asset('/public/assets/admin/img/upload-3.png'),
-                                                'admin_feature/'
-                                            ) }}"
+                                            <img class="onerror-image" src="{{ $feature->image_full_url ?? '',
+                                                asset('/public/assets/admin/img/upload-3.png') }}"
 
                                             data-onerror-image="{{asset('/public/assets/admin/img/upload-3.png')}}" alt="">
                                         </div>
@@ -169,7 +165,7 @@
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit" class="btn btn--primary mb-2">{{translate('messages.Update')}}</button>
                         </div>
                     </div>

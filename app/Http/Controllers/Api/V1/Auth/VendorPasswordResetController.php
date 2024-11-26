@@ -57,7 +57,7 @@ class VendorPasswordResetController extends Controller
         }
 
         $data = DB::table('password_resets')->where(['token' => $request['reset_token'],'email'=>$request->email])->first();
-        if (isset($data) || (env('APP_MODE')=='demo'&& $request['reset_token'] == '1234' )) {
+        if (isset($data) || (env('APP_MODE')=='demo'&& $request['reset_token'] == '123456' )) {
             return response()->json(['message'=>translate("OTP found, you can proceed")], 200);
         } else{
             // $otp_hit = BusinessSetting::where('key', 'max_otp_hit')->first();
@@ -144,7 +144,7 @@ class VendorPasswordResetController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         if(env('APP_MODE')=='demo') {
-            if ($request['reset_token'] != '1234') {
+            if ($request['reset_token'] != '123456') {
                 return response()->json(['errors' => [
                     ['code' => 'invalid', 'message' => trans('messages.invalid_otp')]
                 ]], 400);

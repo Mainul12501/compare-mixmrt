@@ -21,6 +21,9 @@
                 <a class="nav-link {{ Request::is('admin/business-settings/third-party/recaptcha*') ? 'active' : '' }}" href="{{route('admin.business-settings.third-party.recaptcha_index')}}"  aria-disabled="true">{{translate('Recaptcha')}}</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/third-party/firebase-otp*') ? 'active' : '' }}" href="{{route('admin.business-settings.third-party.firebase_otp_index')}}"  aria-disabled="true">{{translate('Firebase OTP')}}</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/third-party/storage-connection*') ? 'active' : '' }}" href="{{route('admin.business-settings.third-party.storage_connection_index')}}"  aria-disabled="true">{{translate('Storage_Connection')}}</a>
             </li>
         </ul>

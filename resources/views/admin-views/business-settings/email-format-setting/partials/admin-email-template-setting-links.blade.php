@@ -44,6 +44,18 @@
                     {{translate('Login mail')}}
                 </a>
             </li> --}}
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/admin/new-advertisement') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['admin','new-advertisement']) }}">
+                    {{translate('New_Advertisement_Request')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/admin/update-advertisement') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['admin','update-advertisement']) }}">
+                    {{translate('Advertisement_Update_Request')}}
+                </a>
+            </li>
         </ul>
         <!-- End Nav -->
     </div>

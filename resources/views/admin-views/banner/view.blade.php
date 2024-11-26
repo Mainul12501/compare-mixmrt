@@ -30,7 +30,7 @@
                     <div class="col-md-auto mb-3 mb-md-0">
                         <div class="d-flex align-items-center">
                             <img class="avatar avatar-xxl avatar-4by3 mr-4 onerror-image"
-                            src="{{\App\CentralLogics\Helpers::get_image_helper($banner,'image', asset('storage/app/public/banner/').'/'.$banner->image, asset('public/assets/admin/img/160x160/img2.jpg'), 'banner/') }}"
+                            src="{{ $banner->image_full_url }}"
                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"
                                  alt="Image Description">
                             <div class="d-block">
@@ -123,7 +123,7 @@
                                         <div class="inline--1">
                                             <img class="img--60 img--circle onerror-image"
                                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                                 src="{{\App\CentralLogics\Helpers::get_image_helper($dm,'logo', asset('storage/app/public/store/').'/'.$dm['logo'], asset('public/assets/admin/img/160x160/img1.jpg'), 'store/') }}"
+                                                 src="{{ $dm['logo_full_url'] }}"
 >
                                         </div>
                                     </td>

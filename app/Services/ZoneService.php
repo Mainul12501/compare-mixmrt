@@ -14,26 +14,49 @@ class ZoneService
         $value = $request['coordinates'];
 
 
-        // dd($value);
         foreach(explode('),(',trim($value,'()')) as $index=>$single_array){
             if($index == 0)
             {
                 $lastCord = explode(',',$single_array);
             }
             $coords = explode(',',$single_array);
-// dd($coords);
 
             $polygon[] = new Point($coords[0], $coords[1]);
         }
         $polygon[] = new Point($lastCord[0], $lastCord[1]);
         return [
             'name' => $request->name[array_search('default', $request->lang)],
+            'display_name' => $request->display_name[array_search('default', $request->lang)],
             'coordinates' => new Polygon([new LineString($polygon)]),
             'store_wise_topic' => 'zone_'.$zoneId.'_store',
             'customer_wise_topic' => 'zone_'.$zoneId.'_customer',
             'deliveryman_wise_topic' => 'zone_'.$zoneId.'_delivery_man',
             'cash_on_delivery' => $request->cash_on_delivery?1:0,
             'digital_payment' => $request->digital_payment?1:0,
+        ];
+    }
+
+    public function getUpdateData(Object $request, int|string $zoneId): array
+    {
+        $value = $request['coordinates'];
+
+        foreach(explode('),(',trim($value,'()')) as $index=>$single_array){
+            if($index == 0)
+            {
+                $lastCord = explode(',',$single_array);
+            }
+            $coords = explode(',',$single_array);
+
+            $polygon[] = new Point($coords[0], $coords[1]);
+        }
+        $polygon[] = new Point($lastCord[0], $lastCord[1]);
+        return [
+            'name' => $request->name[array_search('default', $request->lang)],
+            'display_name' => $request->display_name[array_search('default', $request->lang)],
+            'store_wise_topic' => 'zone_'.$zoneId.'_store',
+            'customer_wise_topic' => 'zone_'.$zoneId.'_customer',
+            'deliveryman_wise_topic' => 'zone_'.$zoneId.'_delivery_man',
+            'coordinates' => new Polygon([new LineString($polygon)]),
         ];
     }
     public function getZoneModuleSetupData(Object $request): array

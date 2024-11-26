@@ -117,6 +117,36 @@
             </li>
             @endif
 
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/store/advertisement-create') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['store','advertisement-create']) }}">
+                    {{translate('Advertisement_Create_By_Admin')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/store/advertisement-approved') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['store','advertisement-approved']) }}">
+                    {{translate('Advertisement_Approval')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/store/advertisement-deny') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['store','advertisement-deny']) }}">
+                    {{translate('Advertisement_Deny')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/store/advertisement-resume') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['store','advertisement-resume']) }}">
+                    {{translate('Advertisement_Resume')}}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/email-setup/store/advertisement-pause') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.email-setup', ['store','advertisement-pause']) }}">
+                    {{translate('Advertisement_Pause')}}
+                </a>
+            </li>
         </ul>
         <!-- End Nav -->
     </div>

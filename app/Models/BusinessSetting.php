@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 class BusinessSetting extends Model
 {
     protected $guarded = ['id'];
+
+    protected $fillable = [
+        'key',
+        'value'
+    ];
     public function storage()
     {
         return $this->morphMany(Storage::class, 'data');

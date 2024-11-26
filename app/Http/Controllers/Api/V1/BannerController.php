@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\CentralLogics\BannerLogic;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class BannerController extends Controller
@@ -26,19 +27,25 @@ class BannerController extends Controller
         $campaigns = [];
         if(!$request->featured)
         {
-            $campaigns = Campaign::
-            whereHas('module.zones',function($query)use($zone_id){
-                $query->whereIn('zones.id', json_decode($zone_id, true));
-            })
-            ->when(config('module.current_module_data'), function($query)use($zone_id){
-                $query->module(config('module.current_module_data')['id']);
-                if(!config('module.current_module_data')['all_zone_service']) {
-                    $query->whereHas('stores', function($q)use($zone_id){
-                        $q->whereIn('zone_id', json_decode($zone_id, true));
-                    });
-                }
-            })
-            ->running()->active()->get();
+            $moduleData = config('module.current_module_data');
+            $moduleId = isset($moduleData['id']) ? $moduleData['id'] : 'default';
+            $cacheKey = 'campaigns_' . md5($zone_id . '_' . $moduleId);
+            $campaigns = Cache::remember($cacheKey, now()->addMinutes(20), function() use ($zone_id) {
+                return Campaign::whereHas('module.zones', function($query) use($zone_id) {
+                    $query->whereIn('zones.id', json_decode($zone_id, true));
+                })
+                    ->when(config('module.current_module_data'), function($query) use($zone_id) {
+                        $query->module(config('module.current_module_data')['id']);
+                        if (!config('module.current_module_data')['all_zone_service']) {
+                            $query->whereHas('stores', function($q) use($zone_id) {
+                                $q->whereIn('zone_id', json_decode($zone_id, true));
+                            });
+                        }
+                    })
+                    ->running()
+                    ->active()
+                    ->get();
+            });
         }
 
         try {
@@ -58,21 +65,36 @@ class BannerController extends Controller
             ], 403);
         }
         $zone_id= $request->header('zoneId');
-        $banners = Banner::active();
-        if(config('module.current_module_data')) {
-            $banners = $banners->whereHas('zone.modules', function($query){
-                $query->where('modules.id', config('module.current_module_data')['id']);
-            })
-            ->module(config('module.current_module_data')['id'])
-            ->when(!config('module.current_module_data')['all_zone_service'], function($query)use($zone_id){
-                $query->whereIn('zone_id', json_decode($zone_id, true));
-            });
-        }
+        $moduleData = config('module.current_module_data');
+        $moduleId = isset($moduleData['id']) ? $moduleData['id'] : 'default';
+        $cacheKey = 'store_banners_' . md5(implode('_', [
+                $zone_id,
+                $moduleId,
+                $store_id
+            ]));
+        $banners = Cache::remember($cacheKey, now()->addMinutes(20), function() use ($zone_id, $store_id) {
+            $banners = Banner::active();
 
-        $banners = $banners->whereIn('zone_id', json_decode($zone_id, true))->whereHas('module',function($query){
-            $query->active();
-        })->where('data',$store_id)->where('created_by','store')
-        ->get();
+            if (config('module.current_module_data')) {
+                $banners = $banners->whereHas('zone.modules', function($query) {
+                    $query->where('modules.id', config('module.current_module_data')['id']);
+                })
+                    ->module(config('module.current_module_data')['id'])
+                    ->when(!config('module.current_module_data')['all_zone_service'], function($query) use ($zone_id) {
+                        $query->whereIn('zone_id', json_decode($zone_id, true));
+                    });
+            }
+
+            $banners = $banners->whereIn('zone_id', json_decode($zone_id, true))
+                ->whereHas('module', function($query) {
+                    $query->active();
+                })
+                ->where('data', $store_id)
+                ->where('created_by', 'store')
+                ->get();
+
+            return $banners;
+        });
 
         return response()->json($banners, 200);
     }

@@ -2,12 +2,7 @@
     <div  class="select-product-item media gap-3 cursor-pointer">
         <img class="avatar avatar-xl border onerror-image" width="75"
         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-            $store,'logo',
-            asset('storage/app/public/store').'/'.$store['logo'] ?? '',
-            asset('public/assets/admin/img/160x160/img1.jpg'),
-            'store/'
-        ) }}"
+        src="{{ $store['logo_full_url'] ?? asset('public/assets/admin/img/160x160/img1.jpg') }}"
 
             alt="">
         <div class="media-body d-flex flex-column gap-1 ">

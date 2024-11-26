@@ -6,12 +6,7 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
         <td class="email-template-table-td-style">
             <img class="mail-img-2 onerror-image" data-onerror-image="{{ asset('/public/assets/admin/img/blank3.png') }}"
 
-            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                $data, 'icon',
-                asset('storage/app/public/email_template').'/'.data_get($data, 'icon' , null),
-                asset('/public/assets/admin/img/blank3.png'),
-                'email_template/'
-            ) }}"
+            src="{{ $data['icon_full_url'] ?? asset('/public/assets/admin/img/blank3.png') }}"
 
 
             id="iconViewer" alt="">
@@ -36,18 +31,7 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
             <span class="d-block" class="email-template-table-td-span-4">{{ $company_name }}</span>
             @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
             <img class="email-template-img onerror-image"
-
-            @if ($data?->logo)
-            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                $data, 'logo',
-                asset('storage/app/public/email_template').'/'.data_get($data, 'logo' , null),
-                asset('public/assets/admin/img/160x160/img2.jpg'),
-                'email_template/'
-                ) }}"
-
-            @else
-                src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo?->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/')}}"
-            @endif
+            src="{{ $data?->logo ? $data->logo_full_url : \App\CentralLogics\Helpers::get_full_url('business',$store_logo?->value,$store_logo?->storage[0]?->value ?? 'public', 'favicon') }}"
 
 
             alt="public/img">

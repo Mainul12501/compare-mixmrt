@@ -21,33 +21,35 @@ class UserInfo extends Model
     ];
     protected $appends = ['image_full_url'];
     public function getImageFullUrlAttribute(){
-        $value = $this->image;
-        $path = 'profile';
         if ($this->user_id){
-            $path = 'profile';
-            $storages = $this->user?->storage;
+            return $this->user?->image_full_url;
         }elseif ($this->vendor_id){
-            $path = 'store';
-            $storages = $this->vendor?->storage;
+            return $this->vendor?->stores[0]->logo_full_url;
         }elseif ($this->deliveryman_id){
-            $path = 'delivery-man';
-            $storages = $this->delivery_man?->storage;
+            return $this->delivery_man?->image_full_url;
         }
-
-        if (count($storages) > 0) {
-            foreach ($storages as $storage) {
-                if ($storage['key'] == 'image') {
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link($path,$value);
-                    }else{
-                        return Helpers::local_storage_link($path,$value);
-                    }
-                }
-            }
-        }
-
-        return Helpers::local_storage_link($path,$value);
+//        $value = $this->image;
+//        $path = 'profile';
+//        if ($this->user_id){
+//            $path = 'profile';
+//            $storages = $this->user?->storage;
+//        }elseif ($this->vendor_id){
+//            $path = 'store';
+//            $storages = $this->vendor?->storage;
+//        }elseif ($this->deliveryman_id){
+//            $path = 'delivery-man';
+//            $storages = $this->delivery_man?->storage;
+//        }
+//
+//        if (count($storages) > 0) {
+//            foreach ($storages as $storage) {
+//                if ($storage['key'] == 'image') {
+//                    return Helpers::get_full_url($path,$value,$storage['value']);
+//                }
+//            }
+//        }
+//
+//        return Helpers::get_full_url($path,$value,'public');
     }
     public function user()
     {

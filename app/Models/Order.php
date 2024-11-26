@@ -6,14 +6,12 @@ use App\CentralLogics\Helpers;
 use Carbon\Carbon;
 use App\Scopes\ZoneScope;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Support\Facades\DB;
+use App\Traits\ReportFilter;
 
 class Order extends Model
 {
-    use HasFactory;
+    use HasFactory , ReportFilter;
 
     protected $casts = [
         'order_amount' => 'float',
@@ -46,43 +44,48 @@ class Order extends Model
         'cutlery' => 'boolean',
         'is_guest' => 'boolean',
         'ref_bonus_amount' => 'float',
-        'third_party' => 'boolean',
-        'company_id' => 'integer',
     ];
 
     protected $appends = ['module_type','order_attachment_full_url','order_proof_full_url'];
 
     public function getOrderAttachmentFullUrlAttribute(){
         $images = [];
-        $value = is_array($this->order_attachment)?$this->order_attachment:json_decode($this->order_attachment,true);
+        $value = is_array($this->order_attachment)
+            ? $this->order_attachment
+            : ($this->order_attachment && is_string($this->order_attachment) && $this->isValidJson($this->order_attachment)
+                ? json_decode($this->order_attachment, true)
+                : []);
         if ($value){
             foreach ($value as $item){
                 $item = is_array($item)?$item:(is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true):['img' => $item, 'storage' => 'public']);
-                if($item['storage']=='s3'){
-                    $images[] = Helpers::s3_storage_link('order',$item['img']);
-                }else{
-                    $images[] = Helpers::local_storage_link('order',$item['img']);
-                }
+                $images[] = Helpers::get_full_url('order',$item['img'],$item['storage']);
             }
         }
 
         return $images;
     }
+
     public function getOrderProofFullUrlAttribute(){
         $images = [];
-        $value = is_array($this->order_proof)?$this->order_proof:json_decode($this->order_proof,true);
+        $value = is_array($this->order_proof)
+            ? $this->order_proof
+            : ($this->order_proof && is_string($this->order_proof) && $this->isValidJson($this->order_proof)
+                ? json_decode($this->order_proof, true)
+                : []);
         if ($value){
             foreach ($value as $item){
                 $item = is_array($item)?$item:(is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true):['img' => $item, 'storage' => 'public']);
-                if($item['storage']=='s3'){
-                    $images[] = Helpers::s3_storage_link('order',$item['img']);
-                }else{
-                    $images[] = Helpers::local_storage_link('order',$item['img']);
-                }
+                $images[] = Helpers::get_full_url('order',$item['img'],$item['storage']);
             }
         }
 
         return $images;
+    }
+
+    private function isValidJson($string)
+    {
+        json_decode($string);
+        return (json_last_error() === JSON_ERROR_NONE);
     }
 
     public function setDeliveryChargeAttribute($value)
@@ -175,14 +178,7 @@ class Order extends Model
     {
         return $this->hasOne(OrderReference::class, 'order_id');
     }
-    public function delivery_company()
-    {
-        return $this->hasOne(DeliveryCompany::class,'id', 'company_id');
-    }
-    public function parcel_company()
-    {
-        return $this->belongsTo(Store::class,'parcel_company_id');
-    }
+
     public function getModuleTypeAttribute()
     {
         return $this->module ? $this->module->module_type : null;
@@ -216,15 +212,6 @@ class Order extends Model
     public function scopePending($query)
     {
         return $query->where('order_status', 'pending');
-    }
-    public function scopeParcelAll($query, $store_id)
-    {
-        return $query->where('order_status', 'pending')
-        ->orWhere(function($query) use($store_id) {
-            $query->whereIn('order_status', ['pending','confirmed,','handover','accepted','item_on_the_way','delivered','canceled','failed','scheduled','on_going'])
-                  ->where('parcel_company_id', $store_id);
-        });
-
     }
 
     public function scopeFailed($query)
@@ -294,13 +281,6 @@ class Order extends Model
             $q->where('order_type', 'take_away')->orWhere('order_type', 'delivery');
         });
     }
-    public function scopeCompanyOrder($query)
-    {
-        return $query->where(function ($q) {
-            $q->where('order_type', 'delivery');
-        });
-    }
-    
 
     public function scopeDmOrder($query)
     {
@@ -311,12 +291,9 @@ class Order extends Model
 
     public function scopeParcelOrder($query)
     {
-        return $query->where('order_type', 'parcel')->OrWhere('store_id',null);
+        return $query->where('order_type', 'parcel');
     }
-    public function scopeNot_take_away($query)
-    {
-        return $query->where('order_type', '<>', 'take_away');
-    }
+
     public function scopePos($query)
     {
         return $query->where('order_type', '=', 'pos');

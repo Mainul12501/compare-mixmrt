@@ -518,8 +518,6 @@
                                         </td>
                                     @elseif ($ot->received_by == 'store')
                                         <td class="text-capitalize white-space-nowrap">{{ translate('messages.store') }}</td>
-                                        @elseif ($ot->received_by == 'company')
-                                        <td class="text-capitalize white-space-nowrap">{{ translate('messages.company') }}</td>
                                     @endif
                                     <td class="mw--85px text-capitalize min-w-120 ">
                                             {{ translate(str_replace('_', ' ', $ot->order['payment_method'])) }}

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Traits\ReportFilter;
 
 /**
  * Class Store
@@ -75,6 +76,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Store extends Model
 {
+    use ReportFilter;
     /**
      * The attributes that are mass assignable.
      *
@@ -167,7 +169,8 @@ class Store extends Model
         'announcement'=>'integer',
         'rating_count'=>'integer',
         'reviews_comments_count'=>'integer',
-        'per_kg_charge'=>'float'
+        'package_id'=>'integer',
+        'distance' => 'float',
     ];
 
     /**
@@ -276,54 +279,36 @@ class Store extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'logo') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('store',$value);
-                    }else{
-                        return Helpers::local_storage_link('store',$value);
-                    }
+                    return Helpers::get_full_url('store',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('store',$value);
+        return Helpers::get_full_url('store',$value,'public');
     }
     public function getCoverPhotoFullUrlAttribute(){
         $value = $this->cover_photo;
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'cover_photo') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('store/cover',$value);
-                    }else{
-                        return Helpers::local_storage_link('store/cover',$value);
-                    }
+                    return Helpers::get_full_url('store/cover',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('store/cover',$value);
+        return Helpers::get_full_url('store/cover',$value,'public');
     }
     public function getMetaImageFullUrlAttribute(){
         $value = $this->meta_image;
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'meta_image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('store',$value);
-                    }else{
-                        return Helpers::local_storage_link('store',$value);
-                    }
+                    return Helpers::get_full_url('store',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('store',$value);
+        return Helpers::get_full_url('store',$value,'public');
     }
 
     /**
@@ -567,15 +552,6 @@ class Store extends Model
         return $query;
     }
 
-        /**
-     * @param $query
-     * @return mixed
-     */
-    public function scopeIsStore($query): mixed
-    {
-        return $query->where('store_type', 'store');
-    }
-
     /**
      * @param $query
      * @return mixed
@@ -604,6 +580,10 @@ class Store extends Model
     public function scopeWithOpen($query, $longitude, $latitude): void
     {
         $query->selectRaw('*, IF(((select count(*) from `store_schedule` where `stores`.`id` = `store_schedule`.`store_id` and `store_schedule`.`day` = '.now()->dayOfWeek.' and `store_schedule`.`opening_time` < "'.now()->format('H:i:s').'" and `store_schedule`.`closing_time` >"'.now()->format('H:i:s').'") > 0), true, false) as open,ST_Distance_Sphere(point(longitude, latitude),point('.$longitude.', '.$latitude.')) as distance');
+    }
+    public function scopeWithOpenWithDeliveryTime($query, $longitude, $latitude): void
+    {
+        $query->selectRaw('*, IF(((select count(*) from `store_schedule` where `stores`.`id` = `store_schedule`.`store_id` and `store_schedule`.`day` = '.now()->dayOfWeek.' and `store_schedule`.`opening_time` < "'.now()->format('H:i:s').'" and `store_schedule`.`closing_time` >"'.now()->format('H:i:s').'") > 0), true, false) as open,ST_Distance_Sphere(point(longitude, latitude),point('.$longitude.', '.$latitude.')) as distance, CASE WHEN delivery_time IS NULL THEN 9999  WHEN delivery_time LIKE  "%hours%" THEN CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(delivery_time, "-", 1), " ", 1) AS UNSIGNED) * 60 WHEN delivery_time LIKE "%min%" OR delivery_time LIKE "%minute%" THEN CAST(SUBSTRING_INDEX(delivery_time, "-", 1) AS UNSIGNED) ELSE 9999 END AS min_delivery_time');
     }
 
     /**
@@ -642,7 +622,7 @@ class Store extends Model
 
             if($check_daily_subscription_validity_check && $check_daily_subscription_validity_check?->value != $current_date){
                 Store::whereHas('store_subs',function ($query)use($current_date){
-                    $query->where('status',1)->whereDate('expiry_date', '<', $current_date);
+                    $query->where('status',1)->whereDate('expiry_date', '<=', $current_date);
                 })->update(['status' => 0,
                             'pos_system'=>1,
                             'self_delivery_system'=>1,
@@ -650,7 +630,7 @@ class Store extends Model
                             'free_delivery'=>0,
                             'store_business_model'=>'unsubscribed',
                             ]);
-                StoreSubscription::where('status',1)->whereDate('expiry_date', '<', $current_date)->update([
+                StoreSubscription::where('status',1)->whereDate('expiry_date', '<=', $current_date)->update([
                     'status' => 0
                 ]);
 
@@ -695,10 +675,6 @@ class Store extends Model
         return $query;
 
     }
-    public function scopeCompany($query): mixed
-    {
-        return $query->where(['store_type' => 'company','self_parcel_delivery' => 1]);
-    }
 
     /**
      * @param $name
@@ -735,12 +711,6 @@ class Store extends Model
         static::created(function ($store) {
             $store->slug = $store->generateSlug($store->name);
             $store->save();
-        });
-        static::deleting(function ($store){
-            if (!empty($store->disbursmentWithdrawalMethods))
-            {
-                $store->disbursmentWithdrawalMethods->each->delete();
-            }
         });
         static::saved(function ($model) {
             if($model->isDirty('logo')){
@@ -786,8 +756,6 @@ class Store extends Model
     }
 
 
-
-
     /**
      * @return HasOne
      */
@@ -820,9 +788,5 @@ class Store extends Model
             return $query->where('store_business_model', 'none');
         }
         return $query;
-    }
-    public function disbursmentWithdrawalMethods()
-    {
-        return $this->hasMany(DisbursementWithdrawalMethod::class);
     }
 }

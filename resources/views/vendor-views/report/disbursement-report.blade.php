@@ -22,7 +22,7 @@
                 <h3 class="title text-008958">{{\App\CentralLogics\Helpers::format_currency($pending)}}
                 </h3>
                 <h6 class="subtitle">{{ translate('Pending_Disbursements') }}</h6>
-                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="When the order is successfully delivered full order amount goes to this section.">
+                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="{{ translate('When_the_disbursement_is_pending_full_order_amount_goes_to_this_section.') }}">
                     <img src="{{asset('public/assets/admin/img/report/new/info1.png')}}" alt="report/new">
                 </div>
             </div>
@@ -32,7 +32,7 @@
                 <h3 class="title text-FF7E0D">{{\App\CentralLogics\Helpers::format_currency($completed)}}
                 </h3>
                 <h6 class="subtitle">{{ translate('Completed_Disbursements') }}</h6>
-                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="When the order is successfully delivered full order amount goes to this section.">
+                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="{{ translate('When_the_disbursement_is_completed_full_order_amount_goes_to_this_section.') }}">
                     <img src="{{asset('public/assets/admin/img/report/new/info5.png')}}" alt="report/new">
                 </div>
             </div>
@@ -41,8 +41,8 @@
                 <img src="{{asset('public/assets/admin/img/report/new/trx3.png')}}" class="icon" alt="report/new">
                 <h3 class="title text-FF5A54">{{\App\CentralLogics\Helpers::format_currency($canceled)}}
                 </h3>
-                <h6 class="subtitle">{{ translate('Cancele_ Transactions') }}</h6>
-                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="When the order is successfully delivered full order amount goes to this section.">
+                <h6 class="subtitle">{{ translate('Canceled_Transactions') }}</h6>
+                <div class="info-icon" data-toggle="tooltip" data-placement="top" data-original-title="{{ translate('When_the_disbursement_is_canceled_full_order_amount_goes_to_this_section.') }}">
                     <img src="{{asset('public/assets/admin/img/report/new/info3.png')}}" alt="report/new">
                 </div>
             </div>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\CentralLogics\Helpers;
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -30,7 +32,17 @@ class SMSModuleController extends Controller
 
     public function sms_update(Request $request, $module)
     {
-
+        $login_setup_status = Helpers::get_business_settings('otp_login_status')??0;
+        $is_firebase_active=Helpers::get_business_settings('firebase_otp_verification') ?? 0;
+        $phone_verification_status = Helpers::get_business_settings('phone_verification_status')??0;
+        if(!$is_firebase_active && $login_setup_status && ($request['status']==0)){
+            Toastr::warning(translate('otp_login_status_is_enabled_in_login_setup._First_disable_from_login_setup.'));
+            return redirect()->back();
+        }
+        if(!$is_firebase_active && $phone_verification_status && ($request['status']==0)){
+            Toastr::warning(translate('phone_verification_status_is_enabled_in_login_setup._First_disable_from_login_setup.'));
+            return redirect()->back();
+        }
         if ($module == 'twilio') {
                 $additional_data = [
                     'status' => $request['status'],
@@ -66,6 +78,7 @@ class SMSModuleController extends Controller
             $additional_data = [
                 'status' => $request['status'],
                 'api_key' =>$request['api_key'],
+                'sender_id' =>$request['sender_id'] ?? null,
                 'otp_template' =>$request['otp_template'],
             ];
         }

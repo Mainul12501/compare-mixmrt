@@ -131,7 +131,7 @@
                                 </label>
                                 <div class="text-center py-3 my-auto">
                                     <img class="initial--4 onerror-image" id="viewer"
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper($campaign,'image', asset('storage/app/public/campaign/').'/'.$campaign->image, asset('public/assets/admin/img/900x400/img1.jpg'), 'campaign/') }}"
+                                    src="{{$campaign->image_full_url }}"
                                          data-onerror-image="{{ asset('public/assets/admin/img/900x400/img1.jpg') }}" alt="campaign image"/>
                                 </div>
                                 <div class="custom-file">

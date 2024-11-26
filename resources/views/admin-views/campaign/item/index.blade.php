@@ -213,6 +213,59 @@
                                         </select>
                                     </div>
                                 </div>
+                                @if(Config::get('module.current_module_type') == 'pharmacy')
+                                    <div class="col-sm-6" id="generic_name">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('generic_name')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the medicine`s active ingredient that makes it work') }}" data-toggle="tooltip">
+                                            <i class="tio-info-outined"></i>
+                                        </span>
+                                        </label>
+                                        <div class="dropdown suggestion_dropdown">
+                                            <input type="text" class="form-control" name="generic_name" placeholder="{{ translate('messages.Type your content here') }}" autocomplete="off">
+                                            @if(count(\App\Models\GenericName::select(['generic_name'])->get())>0)
+                                                <div class="dropdown-menu">
+                                                    @foreach (\App\Models\GenericName::select(['generic_name'])->get() as $generic_name)
+                                                        <div class="dropdown-item">{{ $generic_name->generic_name }}</div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="row g-2">
+                                @if(Config::get('module.current_module_type') == 'grocery' || Config::get('module.current_module_type') == 'food')
+
+                                <div class="col-sm-6" id="nutrition">
+                                    <label class="input-label" for="sub-categories">
+                                        {{translate('Nutrition')}}
+                                        <span class="input-label-secondary" title="{{ translate('Specify the necessary keywords relating to energy values for the item.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                    </label>
+                                    <select name="nutritions[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                        @foreach (\App\Models\Nutrition::select(['nutrition'])->get() as $nutrition)
+                                            <option value="{{ $nutrition->nutrition }}">{{ $nutrition->nutrition }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+
+                                <div class="col-sm-6" id="allergy">
+                                    <label class="input-label" for="sub-categories">
+                                        {{translate('Allegren Ingredients')}}
+                                        <span class="input-label-secondary" title="{{ translate('Specify the ingredients of the item which can make a reaction as an allergen.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                    </label>
+                                    <select name="allergies[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                        @foreach (\App\Models\Allergy::select(['allergy'])->get() as $allergy)
+                                            <option value="{{ $allergy->allergy }}">{{ $allergy->allergy }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
                             </div>
                         </div>
                     </div>

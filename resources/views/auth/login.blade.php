@@ -35,7 +35,7 @@
             <div class="auth-left-cont">
                 @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
                 <img class="onerror-image"  data-onerror-image="{{asset('/public/assets/admin/img/favicon.png')}}"
-                src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('/public/assets/admin/img/favicon.png'),'business/')}}"  alt="public/img">
+                src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"  alt="public/img">
                 <h2 class="title">{{translate('Your')}} <span class="d-block">{{translate('All Service')}}</span> <strong class="text--039D55">{{translate('in one field')}}....</strong></h2>
             </div>
         </div>
@@ -124,9 +124,23 @@
 
                     @php($recaptcha = \App\CentralLogics\Helpers::get_business_settings('recaptcha'))
                     @if(isset($recaptcha) && $recaptcha['status'] == 1)
-                        <div id="recaptcha_element" class="w-100" data-type="image"></div>
-                        <br/>
-                    @else
+                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+
+                        <input type="hidden" name="set_default_captcha" id="set_default_captcha_value" value="0" >
+                        <div class="row p-2 d-none" id="reload-captcha">
+                            <div class="col-6 pr-0">
+                                <input type="text" class="form-control form-control-lg border-0" name="custome_recaptcha"
+                                        id="custome_recaptcha" required placeholder="{{translate('Enter recaptcha value')}}" autocomplete="off" value="{{env('APP_MODE')=='dev'? session('six_captcha'):''}}">
+                            </div>
+                            <div class="col-6 bg-white rounded d-flex">
+                                <img src="<?php echo $custome_recaptcha->inline(); ?>" class="rounded w-100" />
+                                <div class="p-3 pr-0 capcha-spin reloadCaptcha">
+                                    <i class="tio-cached"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        @else
                         <div class="row p-2" id="reload-captcha">
                             <div class="col-6 pr-0">
                                 <input type="text" class="form-control form-control-lg border-0" name="custome_recaptcha"
@@ -141,7 +155,7 @@
                         </div>
                     @endif
 
-                    <button type="submit" class="btn btn-lg btn-block btn--primary mt-xxl-3">{{translate('messages.login')}}</button>
+                    <button type="submit" class="btn btn-lg btn-block btn--primary mt-xxl-3" id="signInBtn">{{translate('messages.login')}}</button>
                 </form>
                 <!-- End Form -->
                 @if(env('APP_MODE') == 'demo')
@@ -345,26 +359,44 @@ $(document).on('click','.reloadCaptcha', function(){
         });
     });
 </script>
-<!-- recaptcha code starts -->
 @if(isset($recaptcha) && $recaptcha['status'] == 1)
-    <script type="text/javascript">
-    "use strict";
-        var onloadCallback = function () {
-            grecaptcha.render('recaptcha_element', {
-                'sitekey': '{{ \App\CentralLogics\Helpers::get_business_settings('recaptcha')['site_key'] }}'
-            });
-        };
-    </script>
-    <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{$recaptcha['site_key']}}"></script>
+@endif
+@if(isset($recaptcha) && $recaptcha['status'] == 1)
     <script>
-        "use strict";
-        $("#form-id").on('submit',function(e) {
-            var response = grecaptcha.getResponse();
-
-            if (response.length === 0) {
+        $(document).ready(function() {
+            $('#signInBtn').click(function (e) {
+                if( $('#set_default_captcha_value').val() == 1){
+                    $('#form-id').submit();
+                    return true;
+                }
                 e.preventDefault();
-                toastr.error("{{translate('messages.Please check the recaptcha')}}");
-            }
+                if (typeof grecaptcha === 'undefined') {
+                    toastr.error('Invalid recaptcha key provided. Please check the recaptcha configuration.');
+                    $('#reload-captcha').removeClass('d-none');
+                    $('#set_default_captcha_value').val('1');
+
+                    return;
+                }
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('{{$recaptcha['site_key']}}', {action: 'submit'}).then(function (token) {
+                        $('#g-recaptcha-response').value = token;
+                        $('#form-id').submit();
+                    });
+                });
+                window.onerror = function (message) {
+                    var errorMessage = 'An unexpected error occurred. Please check the recaptcha configuration';
+                    if (message.includes('Invalid site key')) {
+                        errorMessage = 'Invalid site key provided. Please check the recaptcha configuration.';
+                    } else if (message.includes('not loaded in api.js')) {
+                        errorMessage = 'reCAPTCHA API could not be loaded. Please check the recaptcha API configuration.';
+                    }
+                    $('#reload-captcha').removeClass('d-none');
+                    $('#set_default_captcha_value').val('1');
+                    toastr.error(errorMessage)
+                    return true;
+                };
+            });
         });
     </script>
 @endif

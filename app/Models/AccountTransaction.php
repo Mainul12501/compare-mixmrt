@@ -38,7 +38,7 @@ class   AccountTransaction extends Model
     public function store()
     {
         if ($this->from_type == 'store') {
-            return $this->belongsTo(Store::class,'from_id','id');
+            return $this->belongsTo(Store::class,'from_id','vendor_id');
         }
         return $this->belongsTo(Store::class)->whereNull('id');
     }

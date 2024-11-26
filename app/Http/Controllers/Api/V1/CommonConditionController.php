@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\BusinessSetting;
 use App\Models\Item;
+use App\Models\PriorityList;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\CommonCondition;
@@ -14,6 +16,8 @@ class CommonConditionController extends Controller
     public function get_conditions(Request $request,$search=null)
     {
         try {
+            $common_condition_default_status = BusinessSetting::where('key', 'common_condition_default_status')->first()?->value ?? 1;
+            $common_condition_sort_by_general = PriorityList::where('name', 'common_condition_sort_by_general')->where('type','general')->first()?->value ?? '';
             $key = explode(' ', $search);
             $conditions = CommonCondition::Active()->withCount(['items'])
             ->when($search, function($query)use($key){
@@ -22,7 +26,45 @@ class CommonConditionController extends Controller
                         $q->orWhere('name', 'like', "%". $value."%");
                     }
                 });
-            })->get();
+            })
+            ->when($common_condition_default_status  != 1 &&  $common_condition_sort_by_general == 'latest', function ($query) {
+                $query->latest();
+            })
+            ->when($common_condition_default_status  != 1 &&  $common_condition_sort_by_general == 'oldest', function ($query) {
+                $query->oldest();
+            })
+            ->when($common_condition_default_status  != 1 &&  $common_condition_sort_by_general == 'a_to_z', function ($query) {
+                $query->orderby('name');
+            })
+            ->when($common_condition_default_status  != 1 &&  $common_condition_sort_by_general == 'z_to_a', function ($query) {
+                $query->orderby('name','desc');
+            })
+            ->get();
+
+
+            if($common_condition_default_status  != 1 &&  $common_condition_sort_by_general == 'order_count'){
+                foreach ($conditions as $condition) {
+                    $productCountQuery = Item::active()
+                        ->whereHas('pharmacy_item_details',function($q)use($condition){
+                            return $q->whereHas('common_condition',function($q)use($condition){
+                                return $q->when(is_numeric($condition->id),function ($qurey) use($condition){
+                                    return $qurey->whereId($condition->id);
+                                })
+                                    ->when(!is_numeric($condition->id),function ($qurey) use($condition){
+                                        $qurey->where('slug', $condition->id);
+                                    });
+                            });
+                        })
+                        ->withCount('orders');
+
+                    $orderCount = $productCountQuery->sum('order_count');
+
+                    $condition['order_count'] = $orderCount;
+                }
+
+                $conditions = $conditions->sortByDesc('order_count')->values()->all();
+            }
+
             return response()->json($conditions, 200);
         } catch (\Exception $e) {
             return response()->json([], 200);
@@ -83,5 +125,9 @@ class CommonConditionController extends Controller
         ];
         $data['products'] = Helpers::product_data_formatting($data['products'] , true, false, app()->getLocale());
         return response()->json($data, 200);
+    }
+    public function getCommonConditionList(){
+        $conditions = CommonCondition::Active()->get(['id','name']);
+        return response()->json($conditions, 200);
     }
 }

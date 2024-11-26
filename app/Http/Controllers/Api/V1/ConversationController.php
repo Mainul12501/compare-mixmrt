@@ -136,6 +136,8 @@ class ConversationController extends Controller
         $message->conversation_id = $conversation->id;
         $message->sender_id = $sender->id;
         $message->message = $request->message;
+        $message->order_id = $request?->order_id ?? null;
+
         if($image_name && count($image_name)>0){
             $message->file = json_encode($image_name, JSON_UNESCAPED_SLASHES);
         }
@@ -148,8 +150,8 @@ class ConversationController extends Controller
             {
                 if($request->receiver_type == 'admin' || $receiver_id == 0){
                     $data = [
-                        'title' =>'Message',
-                        'description' =>'You have received new message',
+                        'title' =>translate('messages.message'),
+                        'description' =>translate('messages.message_description'),
                         'order_id' => '',
                         'image' => '',
                         'message' => json_encode($message) ,
@@ -158,8 +160,8 @@ class ConversationController extends Controller
                     Helpers::send_push_notif_to_topic($data,'admin_message','message');
                 }else if($request->receiver_type == 'vendor' || $request->receiver_type == 'delivery_man'){
                     $data = [
-                        'title' =>'Message',
-                        'description' =>'You have received new message',
+                        'title' =>translate('messages.message'),
+                        'description' =>translate('messages.message_description'),
                         'order_id' => '',
                         'image' => '',
                         'message' => json_encode($message) ,
@@ -179,7 +181,17 @@ class ConversationController extends Controller
             info($e->getMessage());
         }
 
-        $messages = Message::where(['conversation_id' => $conversation->id])->latest()->paginate($limit, ['*'], 'page', $offset);
+        $messages = Message::where(['conversation_id' => $conversation->id])->with('order')->latest()->paginate($limit, ['*'], 'page', $offset);
+        $messages->getCollection()->transform(function ($message) {
+            if ($message->order) {
+                $message->order->delivery_address = gettype($message->order->delivery_address) == 'string' ? json_decode($message->order->delivery_address,true): $message->order->delivery_address;
+                $message->order->id = (int) $message->order->id;
+                $message->order->order_amount = (float) $message->order->order_amount;
+                $message->order->details_count = (int) $message->order->details_count;
+                }
+
+            return $message;
+        });
 
         $conv = Conversation::with('sender','receiver','last_message')->find($conversation->id);
 
@@ -404,7 +416,17 @@ class ConversationController extends Controller
                 $conversation->save();
             }
             Message::where(['conversation_id' => $conversation->id])->where('sender_id','!=',$user->id)->update(['is_seen' => 1]);
-            $messages = Message::where(['conversation_id' => $conversation->id])->latest()->paginate($limit, ['*'], 'page', $offset);
+            $messages = Message::where(['conversation_id' => $conversation->id])->with('order')->latest()->paginate($limit, ['*'], 'page', $offset);
+            $messages->getCollection()->transform(function ($message) {
+                if ($message->order) {
+                    $message->order->delivery_address = gettype($message->order->delivery_address) == 'string' ? json_decode($message->order->delivery_address,true): $message->order->delivery_address;
+                    $message->order->id = (int) $message->order->id;
+                    $message->order->order_amount = (float) $message->order->order_amount;
+                    $message->order->details_count = (int) $message->order->details_count;
+                    }
+
+                return $message;
+            });
         }else{
             $messages =[];
             $order=0;
@@ -549,8 +571,8 @@ class ConversationController extends Controller
             $conversation->save();
             {
                 $data = [
-                    'title' =>'Message',
-                    'description' =>'You have received new message',
+                    'title' =>translate('messages.message_from')." ".$sender->f_name,
+                    'description' => $message->message ?? translate('attachment'),
                     'order_id' => '',
                     'image' => '',
                     'message' => json_encode($message) ,

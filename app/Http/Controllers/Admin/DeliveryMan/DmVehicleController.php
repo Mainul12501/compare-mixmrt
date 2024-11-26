@@ -56,11 +56,15 @@ class DmVehicleController extends BaseController
     {
         $temp = $this->vehicleRepo->getExistFirst(
             params: [
-                'minimum_weight' => $request['minimum_weight'],
-                'maximum_weight' => $request['maximum_weight']
+                'starting_coverage_area' => $request['starting_coverage_area'],
+                'maximum_coverage_area' => $request['maximum_coverage_area']
             ]
         );
-    
+        if (isset($temp)) {
+            return response()->json(['errors' => [
+                ['code' => 'Vehicle_overlapped', 'message' => translate('messages.Coverage_area_overlapped')]
+            ]]);
+        }
         $vehicle = $this->vehicleRepo->add(data: $this->vehicleService->getAddData(request: $request));
         $this->translationRepo->addByModel(request: $request, model: $vehicle, modelPath: 'App\Models\DMVehicle', attribute: 'type');
 
@@ -79,12 +83,16 @@ class DmVehicleController extends BaseController
     {
         $temp = $this->vehicleRepo->getExistFirst(
             params: [
-                'minimum_weight' => $request['minimum_weight'],
-                'maximum_weight' => $request['maximum_weight']
+                'starting_coverage_area' => $request['starting_coverage_area'],
+                'maximum_coverage_area' => $request['maximum_coverage_area']
             ],
             id: $id
         );
-   
+        if (isset($temp)) {
+            return response()->json(['errors' => [
+                ['code' => 'Vehicle_overlapped', 'message' => translate('messages.Coverage_area_overlapped')]
+            ]]);
+        }
         $vehicle = $this->vehicleRepo->update(id: $id ,data: $this->vehicleService->getUpdateData(request: $request));
         $this->translationRepo->updateByModel(request: $request, model: $vehicle, modelPath: 'App\Models\DMVehicle', attribute: 'type');
 

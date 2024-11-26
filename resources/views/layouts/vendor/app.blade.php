@@ -20,7 +20,7 @@ $countryCode= strtolower($country?$country->value:'auto');
     <!-- Favicon -->
     @php($logo=\App\Models\BusinessSetting::where(['key'=>'icon'])->first())
     <link rel="shortcut icon" href="">
-    <link rel="icon" type="image/x-icon" href="{{\App\CentralLogics\Helpers::get_image_helper($logo,'value', asset('storage/app/public/business/').'/' . $logo?->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}">
+    <link rel="icon" type="image/x-icon" href="{{\App\CentralLogics\Helpers::get_full_url('business', $logo?->value?? '', $logo?->storage[0]?->value ?? 'public','favicon')}}">
     <!-- Font -->
     <link href="{{asset('public/assets/admin/css/fonts.css')}}" rel="stylesheet">
     <!-- CSS Implementing Plugins -->
@@ -151,6 +151,48 @@ $countryCode= strtolower($country?$country->value:'auto');
                                 <hr>
                                 <button  class="btn btn-primary check-order">{{translate('messages.Ok, let me check')}}</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="new-dynamic-submit-model">
+        <div class="modal-dialog modal-dialog-centered status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img id="image-src" class="mb-20">
+                                <h5 class="modal-title" id="toggle-title"></h5>
+                            </div>
+                            <div class="text-center" id="toggle-message">
+                                <h3 id="modal-title"></h3>
+                                <div id="modal-text"></div>
+                            </div>
+
+                            </div>
+                            <div class="mb-4 d-none" id="note-data">
+                                <textarea class="form-control" placeholder="{{ translate('your_note_here') }}" id="get-text-note" cols="5" ></textarea>
+                            </div>
+                        <div class="btn--container justify-content-center">
+                            <div id="hide-buttons">
+                                <div class="d-flex justify-content-center flex-wrap gap-3">
+                                    <button data-dismiss="modal" id="cancel_btn_text" class="btn btn--cancel min-w-120" >{{translate("Not_Now")}}</button>
+                                    <button type="button" id="new-dynamic-ok-button" class="btn btn-primary confirm-model min-w-120">{{translate('Yes')}}</button>
+                                </div>
+                            </div>
+
+                            <button data-dismiss="modal"  type="button" id="new-dynamic-ok-button-show" class="btn btn--primary  d-none min-w-120">{{translate('Okay')}}</button>
+
                         </div>
                     </div>
                 </div>
@@ -416,10 +458,7 @@ $countryCode= strtolower($country?$country->value:'auto');
         }
         @php($order_notification_type = \App\Models\BusinessSetting::where('key', 'order_notification_type')->first())
         @php($order_notification_type = $order_notification_type ? $order_notification_type->value : 'firebase')
-        @php($store_type = \App\CentralLogics\Helpers::get_store_data()->store_type)
         let order_type = 'all';
-        var parcel_order_type = '';
-        var store_type = '{{$store_type}}';
         messaging.onMessage(function (payload) {
             if(payload.data.order_id && payload.data.type === 'new_order'){
                 @if(\App\CentralLogics\Helpers::employee_module_permission_check('order') && $order_notification_type == 'firebase')
@@ -427,13 +466,6 @@ $countryCode= strtolower($country?$country->value:'auto');
                     playAudio();
                     $('#popup-modal').appendTo("body").modal('show');
                 @endif
-            }
-            else if(payload.data.order_id && payload.data.type === 'new_order_parcel' && store_type == "company"){
-                var parcel_order_type = 'parcel'; 
-                    order_type = payload.data.order_type
-                    playAudio();
-                    $('#popup-modal').appendTo("body").modal('show');
-             
             }else if(payload.data.type === 'message'){
                 if (window.location.href.includes('message/list?conversation')) {
                     let conversation_id = getUrlParameter('conversation');
@@ -481,12 +513,7 @@ $countryCode= strtolower($country?$country->value:'auto');
 
         $('.check-order').on('click',function (){
             if(order_type){
-                if(store_type == 'company'){
-                    location.href = '{{url('/')}}/store-panel/parcel/orders/all';
-                }
-                else{
-                    location.href = '{{url('/')}}/store-panel/order/list/'+order_type;
-                }
+                location.href = '{{url('/')}}/store-panel/order/list/'+order_type;
             }
         });
         startFCM();

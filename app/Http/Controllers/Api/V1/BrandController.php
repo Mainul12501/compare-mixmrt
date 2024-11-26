@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\BusinessSetting;
 use App\Models\Item;
+use App\Models\PriorityList;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\Brand;
@@ -14,6 +16,8 @@ class BrandController extends Controller
     public function get_brands(Request $request,$search=null)
     {
         try {
+            $brand_default_status = BusinessSetting::where('key', 'brand_default_status')->first()?->value ?? 1;
+            $brand_sort_by_general = PriorityList::where('name', 'brand_sort_by_general')->where('type','general')->first()?->value ?? '';
             $key = explode(' ', $search);
             $brands = Brand::Active()->withCount(['items'])
             ->when($search, function($query)use($key){
@@ -22,7 +26,43 @@ class BrandController extends Controller
                         $q->orWhere('name', 'like', "%". $value."%");
                     }
                 });
-            })->get();
+            })
+            ->when($brand_default_status  != 1 &&  $brand_sort_by_general == 'latest', function ($query) {
+                $query->latest();
+            })
+            ->when($brand_default_status  != 1 &&  $brand_sort_by_general == 'oldest', function ($query) {
+                $query->oldest();
+            })
+            ->when($brand_default_status  != 1 &&  $brand_sort_by_general == 'a_to_z', function ($query) {
+                $query->orderby('name');
+            })
+            ->when($brand_default_status  != 1 &&  $brand_sort_by_general == 'z_to_a', function ($query) {
+                $query->orderby('name','desc');
+            })
+            ->get();
+
+            if($brand_default_status  != 1 &&  $brand_sort_by_general == 'order_count'){
+                foreach ($brands as $brand) {
+                    $productCountQuery = Item::active()
+                        ->whereHas('ecommerce_item_details',function($q)use($brand){
+                            return $q->whereHas('brand',function($q)use($brand){
+                                return $q->when(is_numeric($brand->id),function ($qurey) use($brand){
+                                    return $qurey->whereId($brand->id);
+                                })
+                                    ->when(!is_numeric($brand->id),function ($qurey) use($brand){
+                                        $qurey->where('slug', $brand->id);
+                                    });
+                            });
+                        })
+                        ->withCount('orders');
+
+                    $orderCount = $productCountQuery->sum('order_count');
+
+                    $brand['order_count'] = $orderCount;
+                }
+
+                $brands = $brands->sortByDesc('order_count')->values()->all();
+            }
             return response()->json($brands, 200);
         } catch (\Exception $e) {
             return response()->json([], 200);
@@ -47,13 +87,18 @@ class BrandController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
+        $brand_item_default_status = BusinessSetting::where('key', 'brand_item_default_status')->first()?->value ?? 1;
+        $brand_item_sort_by_general = PriorityList::where('name', 'brand_item_sort_by_general')->where('type','general')->first()?->value ?? '';
+        $brand_item_sort_by_unavailable = PriorityList::where('name', 'brand_item_sort_by_unavailable')->where('type','unavailable')->first()?->value ?? '';
+        $brand_item_sort_by_temp_closed = PriorityList::where('name', 'brand_item_sort_by_temp_closed')->where('type','temp_closed')->first()?->value ?? '';
+
         $zone_id= $request->header('zoneId');
 
         $type = $request->query('type', 'all');
         $limit = $request['limit'];
         $offset = $request['offset'];
 
-        $paginator = Item::
+        $query = Item::
         whereHas('module.zones', function($query)use($zone_id){
             $query->whereIn('zones.id', json_decode($zone_id, true));
         })
@@ -74,7 +119,47 @@ class BrandController extends Controller
                 });
             });
         })
-        ->active()->type($type)->latest()->paginate($limit, ['*'], 'page', $offset);
+        ->select(['items.*'])
+        ->selectSub(function ($subQuery) {
+            $subQuery->selectRaw('active as temp_available')
+                ->from('stores')
+                ->whereColumn('stores.id', 'items.store_id');
+        }, 'temp_available')
+        ->active()->type($type);
+
+        if ($brand_item_default_status == '1'){
+            $query = $query->latest();
+        } else {
+            if(config('module.current_module_data')['module_type']  !== 'food'){
+                if($brand_item_sort_by_unavailable == 'remove'){
+                    $query = $query->where('stock', '>', 0);
+                }elseif($brand_item_sort_by_unavailable == 'last'){
+                    $query = $query->orderByRaw('CASE WHEN stock = 0 THEN 1 ELSE 0 END');
+                }
+            }
+
+            if($brand_item_sort_by_temp_closed == 'remove'){
+                $query = $query->having('temp_available', '>', 0);
+            }elseif($brand_item_sort_by_temp_closed == 'last'){
+                $query = $query->orderByDesc('temp_available');
+            }
+
+            if ($brand_item_sort_by_general == 'rating') {
+                $query = $query->orderByDesc('avg_rating');
+            } elseif ($brand_item_sort_by_general == 'review_count') {
+                $query = $query->withCount('reviews')->orderByDesc('reviews_count');
+
+            } elseif ($brand_item_sort_by_general == 'a_to_z') {
+                $query = $query->orderBy('name');
+            } elseif ($brand_item_sort_by_general == 'z_to_a') {
+                $query = $query->orderByDesc('name');
+            } elseif ($brand_item_sort_by_general == 'order_count') {
+                $query = $query->orderByDesc('order_count');
+            }
+
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $offset);
         $data=[
             'total_size' => $paginator->total(),
             'limit' => $limit,

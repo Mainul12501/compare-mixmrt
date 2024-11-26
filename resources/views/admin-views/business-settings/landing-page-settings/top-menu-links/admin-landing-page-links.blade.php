@@ -23,6 +23,10 @@
                 href="{{ route('admin.business-settings.admin-landing-page-settings', 'why-choose-us') }}">{{translate('messages.why_choose_us')}}</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/available-zone*') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.admin-landing-page-settings', 'available-zone') }}">{{translate('messages.available_zone')}}</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/admin-landing-page-settings/download-apps') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.admin-landing-page-settings', 'download-apps') }}">{{translate('messages.download_apps')}}</a>
             </li>

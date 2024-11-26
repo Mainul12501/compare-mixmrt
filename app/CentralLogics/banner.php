@@ -6,29 +6,39 @@ use App\Models\Banner;
 use App\Models\Item;
 use App\Models\Store;
 use App\CentralLogics\Helpers;
+use Illuminate\Support\Facades\Cache;
 
 class BannerLogic
 {
     public static function get_banners($zone_id, $featured = false)
     {
-        $banners = Banner::active()
-        ->when($featured, function($query){
-            $query->featured();
-        });
-        if(config('module.current_module_data')) {
-            $banners = $banners->whereHas('zone.modules', function($query){
-                $query->where('modules.id', config('module.current_module_data')['id']);
-            })
-            ->module(config('module.current_module_data')['id'])
-            ->when(!config('module.current_module_data')['all_zone_service'], function($query)use($zone_id){
-                $query->whereIn('zone_id', json_decode($zone_id, true));
-            });
-        }
+        $moduleData = config('module.current_module_data');
+        $moduleId = isset($moduleData['id']) ? $moduleData['id'] : 'default';
+        $cacheKey = 'banners_' . md5($zone_id . '_' . ($featured ? 'featured' : 'non_featured') . '_' . $moduleId);
 
-        $banners = $banners->whereIn('zone_id', json_decode($zone_id, true))->whereHas('module',function($query){
-            $query->active();
-        })->where('created_by','admin')
-        ->get();
+        $banners = Cache::remember($cacheKey, now()->addMinutes(20), function() use ($zone_id, $featured) {
+            $banners = Banner::active()
+                ->when($featured, function($query){
+                    $query->featured();
+                });
+
+            if(config('module.current_module_data')) {
+                $banners = $banners->whereHas('zone.modules', function($query){
+                    $query->where('modules.id', config('module.current_module_data')['id']);
+                })
+                    ->module(config('module.current_module_data')['id'])
+                    ->when(!config('module.current_module_data')['all_zone_service'], function($query) use ($zone_id){
+                        $query->whereIn('zone_id', json_decode($zone_id, true));
+                    });
+            }
+
+            return $banners->whereIn('zone_id', json_decode($zone_id, true))
+                ->whereHas('module', function($query){
+                    $query->active();
+                })
+                ->where('created_by', 'admin')
+                ->get();
+        });
 
         $data = [];
         foreach($banners as $banner)

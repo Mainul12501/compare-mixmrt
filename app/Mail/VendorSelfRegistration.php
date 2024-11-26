@@ -21,13 +21,11 @@ class VendorSelfRegistration extends Mailable
 
     protected $status;
     protected $name;
-    protected $type;
 
-    public function __construct($status, $name, $type)
+    public function __construct($status, $name)
     {
         $this->status = $status;
         $this->name = $name;
-        $this->type = $type;
     }
 
     /**
@@ -50,15 +48,10 @@ class VendorSelfRegistration extends Mailable
         $template=$data?$data->email_template:5;
         $url = '';
         $store_name = $this->name;
-        $store_type = $this->type;
         $title = Helpers::text_variable_data_format( value:$data['title']??'',store_name:$store_name??'');
         $body = Helpers::text_variable_data_format( value:$data['body']??'',store_name:$store_name??'');
         $footer_text = Helpers::text_variable_data_format( value:$data['footer_text']??'',store_name:$store_name??'');
         $copyright_text = Helpers::text_variable_data_format( value:$data['copyright_text']??'',store_name:$store_name??'');
-        if($store_type == 'company'){
-            return $this->subject(translate('New_company_Registration'))->view('email-templates.new-email-format-'.$template, ['company_name'=>$company_name,'data'=>$data,'title'=>$title,'body'=>$body,'footer_text'=>$footer_text,'copyright_text'=>$copyright_text,'url'=>$url]);
-        }else{
-            return $this->subject(translate('New_Store_Registration'))->view('email-templates.new-email-format-'.$template, ['company_name'=>$company_name,'data'=>$data,'title'=>$title,'body'=>$body,'footer_text'=>$footer_text,'copyright_text'=>$copyright_text,'url'=>$url]);
-        }
+        return $this->subject(translate('New_Store_Registration'))->view('email-templates.new-email-format-'.$template, ['company_name'=>$company_name,'data'=>$data,'title'=>$title,'body'=>$body,'footer_text'=>$footer_text,'copyright_text'=>$copyright_text,'url'=>$url]);
     }
 }

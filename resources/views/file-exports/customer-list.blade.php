@@ -28,13 +28,33 @@
                 <th></th>
                 <th></th>
                 <th>
-                    {{ translate('Search_Bar_Conten')  }}: : {{ $data['search'] ??translate('N/A') }}
+                    {{ translate('Search_Bar_Content')  }}: {{ $data['search'] ??translate('N/A') }}
                 </th>
                 <th> </th>
                 <th></th>
                 <th></th>
                 <th></th>
-                </tr>
+            </tr>
+            <tr>
+                <th>{{ translate('Filter_Criteria') }}</th>
+                <th></th>
+                <th></th>
+                <th>
+                    {{ translate('Customer_Status')  }}: {{ $data['filter'] ?translate($data['filter']):translate('all') }}
+                    <br>
+                    {{ translate('Sort_by')  }}: {{ $data['order_wise'] ??translate('N/A') }}
+                    <br>
+                    {{ translate('Show_Limit')  }}: {{ $data['show_limit'] ??translate('N/A') }}
+                    <br>
+                    {{ translate('Order_Date_Range')  }}: {{ $data['order_date'] ??translate('N/A') }}
+                    <br>
+                    {{ translate('Join_Date_Range')  }}: {{ $data['join_date'] ??translate('N/A') }}
+                </th>
+                <th> </th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
         <tr>
             <th>{{ translate('sl') }}</th>
             <th>{{ translate('first_name') }}</th>

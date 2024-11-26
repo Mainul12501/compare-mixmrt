@@ -8,12 +8,7 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
                 <div class="text-center">
                 <img class="mail-img-2 onerror-image" data-onerror-image="{{ asset('/public/assets/admin/img/blank3.png') }}"
 
-                src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                    $data, 'icon',
-                    asset('storage/app/public/email_template').'/'.data_get($data, 'icon' , null),
-                    asset('/public/assets/admin/img/blank3.png'),
-                    'email_template/'
-                ) }}"
+                src="{{ $data['icon_full_url'] ?? asset('/public/assets/admin/img/blank3.png') }}"
 
                 id="iconViewer" alt="">
                     <h2 id="mail-title" class="mt-2">{{ $data['title']?? translate('Main_Title_or_Subject_of_the_Mail') }}</h2>

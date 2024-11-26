@@ -6,8 +6,10 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PaymentRequest;
 use App\Traits\Processor;
@@ -91,7 +93,7 @@ class StripePaymentController extends Controller
             ]],
             'mode' => 'payment',
             'success_url' => url('/') . '/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}&payment_id=' . $data->id,
-            'cancel_url' => url()->previous(),
+            'cancel_url' => url('/') . '/payment/stripe/canceled?payment_id=' . $data->id,
         ]);
 
         return response()->json(['id' => $checkout_session->id]);
@@ -123,5 +125,14 @@ class StripePaymentController extends Controller
             call_user_func($payment_data->failure_hook, $payment_data);
         }
         return $this->payment_response($payment_data,'fail');
+    }
+
+    public function canceled(Request $request): JsonResponse|Redirector|RedirectResponse|Application
+    {
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
+        if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
+            call_user_func($payment_data->failure_hook, $payment_data);
+        }
+        return $this->payment_response($payment_data, 'cancel');
     }
 }

@@ -1,13 +1,6 @@
 @extends('layouts.landing.app')
 @section('title', translate('messages.deliveryman_registration'))
-@push('css_or_js')
-    <link rel="stylesheet" href="{{asset('/public/assets/admin/css/intlTelInput.css')}}"/>
-    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/toastr.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/view-pages/vendor-registration.css') }}">
-    <link rel="stylesheet" href="{{ asset('public/assets/landing/css/select2.min.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/style.css') }}">
 
-@endpush
 
 @section('content')
 
@@ -26,7 +19,7 @@ $countryCode= strtolower($country?$country->value:'auto');
                 <form action="{{ route('deliveryman.store') }}" method="post" enctype="multipart/form-data" id="form-id">
                     @csrf
                     <div class="card __card mb-3">
-                        <div class="card-header d-flex  justify-content-between flex align-items-center ">
+                        <div class="card-header">
                             <h5 class="card-title">
                                 <svg width="20" x="0" y="0" viewBox="0 0 460.8 460.8" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><g><g><g>
                                         <path d="M230.432,239.282c65.829,0,119.641-53.812,119.641-119.641C350.073,53.812,296.261,0,230.432,0
@@ -42,11 +35,6 @@ $countryCode= strtolower($country?$country->value:'auto');
                                 </g>
                             </g>
                             </svg>{{ translate('messages.deliveryman_info') }}</h5>
-                            @php($dm_agreement = \App\Models\BusinessSetting::where('key', 'dm_agreement')->first())
-{{--                            @if ($dm_agreement)--}}
-{{--                            <a href="{{route('deliveryman.download-delivery-man-agreement')}}" class="text-center mr-3 mb-4 cmn--btn border-0 outline-0"> <strong>{{ translate('messages.download_Agreement') }} </strong> </a>--}}
-{{--                            @endif--}}
-
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -124,12 +112,11 @@ $countryCode= strtolower($country?$country->value:'auto');
                                     <div class="form-group mb-3">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.identity_type') }}</label>
-                                        <select name="identity_type" class="form-control __form-control"> <!--mainul-->
+                                        <select name="identity_type" class="form-control __form-control">
                                             <option value="passport">{{ translate('messages.passport') }}</option>
                                             <option value="driving_license">{{ translate('messages.driving_license') }}</option>
                                             <option value="nid">{{ translate('messages.nid') }}</option>
-                                            <option value="nrc">{{ translate('messages.NRC') }}</option>
-{{--                                            <option value="restaurant_id">{{ translate('messages.store_id') }}</option>--}}
+                                            <option value="restaurant_id">{{ translate('messages.store_id') }}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -149,31 +136,6 @@ $countryCode= strtolower($country?$country->value:'auto');
                                         </div>
                                     </div>
                                 </div>
-
-                                 <div class=" card col-12  p-3">
-                                    <label class="__custom-upload-img">
-                                        <label class="form-label">
-                                            {{ translate('agreement/contact document  ') }}
-                                        </label>
-
-                                        <div class="text-center">
-                                            <a href="{{route('show-agreement', ['key' => 'dm'])}}" target="_blank">
-                                                <img class="img--110 onerror-image" id="agreement_document_view"
-                                                     data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                     src="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                     alt="registration_document" />
-                                                <br>
-{{--                                                <span class="text-center" style="text-decoration: none;">Download</span>--}}
-                                            </a>
-                                        </div>
-
-{{--                                        <input type="file" name="agreement_document" id="agreement_document" required--}}
-{{--                                            class="custom-file-input"--}}
-{{--                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">--}}
-                                    </label>
-                                </div>
-
-
                             </div>
                         </div>
                     </div>
@@ -244,8 +206,7 @@ $countryCode= strtolower($country?$country->value:'auto');
                                     {{-- recaptcha --}}
                                     @php($recaptcha = \App\CentralLogics\Helpers::get_business_settings('recaptcha'))
                                     @if(isset($recaptcha) && $recaptcha['status'] == 1)
-                                        <div id="recaptcha_element" style="width: 100%;" data-type="image"></div>
-                                        <br/>
+                                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                                     @else
                                         <div class="row p-2">
                                             <div class="col-6 pr-0">
@@ -261,47 +222,18 @@ $countryCode= strtolower($country?$country->value:'auto');
                             </div>
                         </div>
                     </div>
-                    {{--                            mainul start--}}
-                    <div class=" pt-4 d-flex flex-wrap ">
-                        <label for="termsConditions" class="me-3">
-                            <input type="checkbox" style="width: auto" name="agree_terms_conditions" id="termsConditions"> I agree to the <a href="{{ route('terms-and-conditions') }}" style="text-decoration: none; color: blue" target="_blank">Terms and Conditions</a>.
-                        </label>
-                        <label for="privacyPolicy" class="me-3">
-                            <input type="checkbox" style="width: auto" name="agree_privacy_policy" id="privacyPolicy"> I agree to the <a href="{{ route('privacy-policy') }}" style="text-decoration: none; color: blue" target="_blank">Privacy Policy</a>.
-                        </label>
-                        <label for="agreementDocs" class="me-3">
-                            <input type="checkbox" style="width: auto" name="agree_agreement_docs" id="agreementDocs"> I agree to the <a href="{{ route('show-agreement', ['key' => 'dm']) }}" target="_blank" style="text-decoration: none; color: blue">Agreement Documents</a>.
-                        </label>
-                    </div>
-                    {{--                            mainul ends--}}
                     <div class="text-end">
-                        <button type="submit" class="cmn--btn border-0 outline-0" id="nextBtn">{{ translate('messages.submit') }}</button>
+                        <button type="submit" class="cmn--btn border-0 outline-0" id="signInBtn">{{ translate('messages.submit') }}</button>
                     </div>
                 </form>
         </div>
+
     </section>
 
 @endsection
 
 @push('script_2')
 
-
-     <script>
-        $("#agreement_document").change(function() {
-        var fallbackImageUrl = $("#agreement_document_view").data("onerror-image");
-        $("#agreement_document_view").on("error", function() {
-            $(this).attr("src", fallbackImageUrl);
-        });
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $("#agreement_document_view").attr("src", e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-          });
-        </script>
     <script>
         function readURL(input) {
             if (input.files && input.files[0]) {
@@ -364,58 +296,36 @@ $countryCode= strtolower($country?$country->value:'auto');
 
     {{-- recaptcha scripts start --}}
     @if(isset($recaptcha) && $recaptcha['status'] == 1)
-        <script type="text/javascript">
-            var onloadCallback = function () {
-                grecaptcha.render('recaptcha_element', {
-                    'sitekey': '{{ \App\CentralLogics\Helpers::get_business_settings('recaptcha')['site_key'] }}'
-                });
-            };
-        </script>
-        <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+        <script src="https://www.google.com/recaptcha/api.js?render={{$recaptcha['site_key']}}"></script>
+    @endif
+    @if(isset($recaptcha) && $recaptcha['status'] == 1)
         <script>
-            $("#form-id").on('submit',function(e) {
-                var response = grecaptcha.getResponse();
-
-                if (response.length === 0) {
+            $(document).ready(function() {
+                $('#signInBtn').click(function (e) {
                     e.preventDefault();
-                    toastr.error("{{translate('messages.Please check the recaptcha')}}");
-                }
+                    if (typeof grecaptcha === 'undefined') {
+                        toastr.error('Invalid recaptcha key provided. Please check the recaptcha configuration.');
+                        return;
+                    }
+                    grecaptcha.ready(function () {
+                        grecaptcha.execute('{{$recaptcha['site_key']}}', {action: 'submit'}).then(function (token) {
+                            $('#g-recaptcha-response').value = token;
+                            $('#form-id').submit();
+                        });
+                    });
+                    window.onerror = function (message) {
+                        var errorMessage = 'An unexpected error occurred. Please check the recaptcha configuration';
+                        if (message.includes('Invalid site key')) {
+                            errorMessage = 'Invalid site key provided. Please check the recaptcha configuration.';
+                        } else if (message.includes('not loaded in api.js')) {
+                            errorMessage = 'reCAPTCHA API could not be loaded. Please check the recaptcha API configuration.';
+                        }
+                        toastr.error(errorMessage)
+                        return true;
+                    };
+                });
             });
         </script>
     @endif
     {{-- recaptcha scripts end --}}
-
-     {{--        mainul starts--}}
-     <script>
-         $(document).on('click', '#nextBtn', function (e) {
-             if ($('#termsConditions').length)
-             {
-
-                 if (!$('#termsConditions').is(':checked'))
-                 {
-                     e.preventDefault();
-                     toastr.error('You must agree with our terms and conditions.');
-                 }
-             }
-             if ($('#privacyPolicy').length)
-             {
-
-                 if (!$('#privacyPolicy').is(':checked'))
-                 {
-                     e.preventDefault();
-                     toastr.error('You must agree with our Privacy Policy.');
-                 }
-             }
-             if ($('#agreementDocs').length)
-             {
-
-                 if (!$('#agreementDocs').is(':checked'))
-                 {
-                     e.preventDefault();
-                     toastr.error('You must agree with our Agreement Documents.');
-                 }
-             }
-         })
-     </script>
-     {{--        mainul ends--}}
 @endpush

@@ -3,18 +3,21 @@
     <h5 class="card-header-title text-capitalize">
         <i class="tio-star"></i> {{translate('messages.top_rated_items')}}
     </h5>
+    <a href="{{ route('vendor.item.list') }}" class="fz-12px font-medium text-006AE5">{{ translate('view_all') }}</a>
+
 </div>
 <!-- End Header -->
 
 <!-- Body -->
 <div class="card-body">
+    @if (count($most_rated_items) > 0)
     <div class="row g-2">
         @foreach($most_rated_items as $key=>$item)
         <div class="col-md-4 col-6">
             <div class="grid-card top--rated-food pb-4 cursor-pointer redirect-url"
                  data-url="{{route('vendor.item.view',[$item['id']])}}">
                 <div class="text-center">
-                    <img class="rounded onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($item,'image', asset('storage/app/public/product').'/'.$item['image'], asset('public/assets/admin/img/100x100/2.png'), 'product/') }}"
+                    <img class="rounded onerror-image" src="{{ $item['image_full_url'] }}"
                     data-onerror-image="{{asset('public/assets/admin/img/100x100/2.png')}}" alt="{{Str::limit($item->name??translate('messages.Item deleted!'),20,'...')}}">
                 </div>
 
@@ -30,6 +33,16 @@
         @endforeach
 
     </div>
+
+    @else
+    <div class="empty--data">
+        <img src="{{ asset('/public/assets/admin/svg/illustrations/empty-state.svg') }}" alt="public">
+        <h5>
+            {{ translate('no_data_found') }}
+        </h5>
+    </div>
+
+    @endif
 </div>
 <!-- End Body -->
 <script src="{{asset('public/assets/admin')}}/js/view-pages/common.js"></script>

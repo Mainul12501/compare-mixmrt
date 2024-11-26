@@ -27,9 +27,6 @@
         @php($parcel_minimum_shipping_charge=\App\Models\BusinessSetting::where(['key'=>'parcel_minimum_shipping_charge'])->first())
         @php($parcel_minimum_shipping_charge=$parcel_minimum_shipping_charge?$parcel_minimum_shipping_charge->value:null)
 
-        @php($parcel_per_kg_charge=\App\Models\BusinessSetting::where(['key'=>'parcel_per_kg_charge'])->first())
-        @php($parcel_per_kg_charge=$parcel_per_kg_charge?$parcel_per_kg_charge->value:null)
-        
         @php($parcel_commission_dm=\App\Models\BusinessSetting::where(['key'=>'parcel_commission_dm'])->first())
         @php($parcel_commission_dm=$parcel_commission_dm?$parcel_commission_dm->value:null)
 
@@ -53,13 +50,7 @@
                                     value="{{env('APP_MODE')!='demo'?$parcel_minimum_shipping_charge??'':''}}">
                             </div>
                         </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="form-group">
-                                <label class="input-label text-capitalize">{{translate('messages.per_kg_charge')}}</label>
-                                <input type="number" step=".01" placeholder="{{translate('messages.per_kg_charge')}}" class="form-control" name="parcel_per_kg_charge"
-                                    value="{{env('APP_MODE')!='demo'?$parcel_per_kg_charge??'':''}}">
-                            </div>
-                        </div>
+
                         <div class="col-md-6 col-lg-4">
                             <div class="form-group">
                                 <label class="input-label text-capitalize">{{translate('messages.deliveryman_commission')}} (%)</label>

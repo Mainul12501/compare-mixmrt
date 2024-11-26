@@ -107,8 +107,8 @@ class SubscriptionController extends Controller
         $package->text = $request->text[array_search('default', $request->lang)];
         $package->price = $request->package_price;
         $package->validity = $request->package_validity;
-        $package->max_order = $request->max_order  ?? 'unlimited';
-        $package->max_product = $request->max_product ?? 'unlimited';
+        $package->max_order = $request?->minimum_order_limit == 'on' ?   'unlimited' : $request->max_order;
+        $package->max_product =   $request?->maximum_item_limit == 'on' ?   'unlimited' : $request->max_product;
         $package->pos = $request->pos_system ?? 0;
         $package->mobile_app = $request->mobile_app ?? 0;
         $package->self_delivery = $request->self_delivery ?? 0;
@@ -147,6 +147,7 @@ class SubscriptionController extends Controller
 
     public function update(SubscriptionPackage $subscriptionackage, Request $request)
     {
+
         $request->validate([
             'package_name' => 'max:191|unique:subscription_packages,package_name,'.$subscriptionackage->id,
             'package_name.0' => 'required',
@@ -171,8 +172,8 @@ class SubscriptionController extends Controller
         $subscriptionackage->text = $request->text[array_search('default', $request->lang)];
         $subscriptionackage->price = $request->package_price;
         $subscriptionackage->validity = $request->package_validity;
-        $subscriptionackage->max_order = $request->max_order  ?? 'unlimited';
-        $subscriptionackage->max_product = $request->max_product ?? 'unlimited';
+        $subscriptionackage->max_order = $request?->minimum_order_limit == 'on' ?   'unlimited' : $request->max_order;
+        $subscriptionackage->max_product =   $request?->maximum_item_limit == 'on' ?   'unlimited' : $request->max_product;
         $subscriptionackage->pos = $request->pos_system ?? 0;
         $subscriptionackage->mobile_app = $request->mobile_app ?? 0;
         $subscriptionackage->self_delivery = $request->self_delivery ?? 0;
@@ -186,12 +187,32 @@ class SubscriptionController extends Controller
 
 
         try {
-            if (config('mail.status') && Helpers::get_mail_status('subscription_plan_upadte_mail_status_store') == '1') {
-            $subscribers= StoreSubscription::with('store:id,name,email')->select(['store_id'])->where(['package_id' =>  $subscriptionackage->id,'status'=> 1])->get();
-                foreach ($subscribers as $subscriber){
-                    Mail::to($subscriber?->store?->email)->send(new SubscriptionPlanUpdate($subscriber?->store?->name));
+
+            $subscribers= StoreSubscription::with('store.vendor')->has('store')->where(['package_id' =>  $subscriptionackage->id,'status'=> 1])->get();
+            foreach ($subscribers as $subscriber){
+                if( Helpers::getNotificationStatusData('store','store_subscription_plan_update','push_notification_status',$subscriber?->store?->id)  &&  $subscriber?->store?->vendor?->firebase_token){
+                    $data = [
+                        'title' => translate('subscription_plan_updated'),
+                        'description' => translate('Your_subscription_plan_has_been_updated'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'subscription',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($subscriber?->store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $subscriber?->store?->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
                 }
-            }
+
+                    if(config('mail.status') && Helpers::get_mail_status('subscription_plan_upadte_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
+                        Mail::to($subscriber?->store?->email)->send(new SubscriptionPlanUpdate($subscriber?->store?->name));
+                    }
+                }
+
         } catch (\Exception $ex) {
             info($ex->getMessage());
         }
@@ -486,8 +507,30 @@ class SubscriptionController extends Controller
         ]);
 
         try {
-            $store=Store::where('id',$id)->select(['id','name','email'])->first();
-            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1') {
+            $store=Store::where('id',$id)->first();
+
+
+
+            if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                $data = [
+                    'title' => translate('subscription_canceled'),
+                    'description' => translate('Your_subscription_has_been_canceled'),
+                    'order_id' => '',
+                    'image' => '',
+                    'type' => 'subscription',
+                    'order_status' => '',
+                ];
+                Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                DB::table('user_notifications')->insert([
+                    'data' => json_encode($data),
+                    'vendor_id' => $store?->vendor_id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+
+            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_cancel','mail_status' ,$store?->id)) {
                 Mail::to($store->email)->send(new SubscriptionCancel($store->name));
             }
         } catch (\Exception $ex) {
@@ -498,11 +541,18 @@ class SubscriptionController extends Controller
     }
     public function switchToCommission($id){
 
+        $store=  Store::where('id',$id)->with('store_sub')->first();
+
+        $store_subscription=  $store->store_sub;
+        if($store->store_business_model == 'subscription'  && $store_subscription?->is_canceled === 0 && $store_subscription?->is_trial === 0){
+            Helpers::calculateSubscriptionRefundAmount(store:$store);
+        }
+
+        $store->store_business_model = 'commission';
+        $store->save();
+
         StoreSubscription::where(['store_id' => $id])->update([
             'status' => 0,
-        ]);
-        Store::where('id',$id)->update([
-            'store_business_model' => 'commission',
         ]);
         return response()->json(200);
 
@@ -568,16 +618,13 @@ class SubscriptionController extends Controller
             else{
                 Toastr::error( translate('messages.Insufficient_balance_in_wallet'));
                 return back();
-                // return to_route('admin.business-settings.subscriptionackage.subscriberDetail',$store->id);
-
             }
         } elseif($request->payment_gateway == 'manual_payment_by_admin'){
             $reference= 'manual_payment_by_admin';
             $plan_data=   Helpers::subscription_plan_chosen(store_id:$store->id,package_id:$package->id,payment_method:$reference,discount:0,pending_bill:$pending_bill,reference:$reference,type: $request?->type);
         }
 
-        $plan_data != false ?  Toastr::success( translate('Successfully_Subscribed.')) : Toastr::error( translate('Something_went_wrong!.'));
-        // return to_route('admin.business-settings.subscriptionackage.subscriberDetail',$store->id);
+        $plan_data != false ?  Toastr::success(  $request?->type == 'renew' ?  translate('Subscription_Package_Renewed_Successfully.'): translate('Subscription_Package_Shifted_Successfully.') ) : Toastr::error( translate('Something_went_wrong!.'));
         return back();
 
     }

@@ -53,10 +53,7 @@ class OrderLogic
         $ref_bonus_amount=0;
         $subscription_mode = 0;
         $commission_percentage = 0;
-        $company_type = 'admin';
-        $store_amount = 0;
-        $parcel_company_id = null;
-        $delivered_by_dm = $received_by;
+
         $store= $order?->store;
         $store_sub = $order?->store?->store_sub;
         // free delivery by admin
@@ -93,29 +90,18 @@ class OrderLogic
         if($order?->cashback_history){
             self::cashbackToWallet($order);
         }
+
         if($type=='parcel')
         {
             $comission = \App\Models\BusinessSetting::where('key','parcel_commission_dm')->first();
             $dm_tips = $dm_tips_manage_status ? $order->dm_tips : 0;
             $comission = isset($comission) ? $comission->value : 0;
-            if($order?->parcel_company && $order?->parcel_company?->self_parcel_delivery){
-                // $comission = isset($order->store->parcel_commission) == null ? $comission : $order->store->parcel_commission;
-                $company_type = 'store';
-                $received_by = 'company';
-                $parcel_company_id = $order->parcel_company->vendor->id;
-            }
             $order_amount = $order->order_amount - $dm_tips - $order->additional_charge - $order->extra_packaging_amount;
             $dm_commission = $comission?($order_amount/ 100) * $comission:0;
             $comission_amount = $order_amount - $dm_commission;
         }
         else
         {
-            if($order?->parcel_company && $order?->parcel_company?->self_parcel_delivery){
-                // $comission = isset($order->store->parcel_commission) == null ? $comission : $order->store->parcel_commission;
-                $company_type = 'store';
-                $received_by = 'company';
-                $parcel_company_id = $order->parcel_company->vendor->id;
-            }
             $comission = isset($order->store->comission) == null?\App\Models\BusinessSetting::where('key','admin_commission')->first()->value:$order->store->comission;
             $dm_tips = $dm_tips_manage_status ? $order->dm_tips : 0;
             // $order_amount = $order->order_amount - $order->delivery_charge - $order->total_tax_amount - $dm_tips;
@@ -193,25 +179,13 @@ class OrderLogic
             $dm_commission = $order->original_delivery_charge - $comission_on_actual_delivery_fee;
         }
         $store_amount = $order_amount + $order->total_tax_amount + $order->extra_packaging_amount - $comission_on_store_amount - $store_coupon_discount_subsidy - $flash_store_discount_amount;
-        if($company_type == 'admin' && $type == 'parcel'){
-         $store_amount = 0;
-        }
-        $parcel_store_amount = 0;
-       if($company_type == 'store' && $type == 'parcel'){
-        $parcel_store_amount = $dm_commission;
-        $store_amount = 0;
-       }
-       if($company_type == 'store' && $type !== 'parcel'){
-        $parcel_store_amount = $dm_commission;
-       }
         try{
             OrderTransaction::insert([
-                'vendor_id' =>($type=='parcel' && !$order->store)?null:$order->store->vendor->id,
+                'vendor_id' =>$type=='parcel'?null:$order->store->vendor->id,
                 'delivery_man_id'=>$order->delivery_man_id,
                 'order_id' =>$order->id,
                 'order_amount'=>$order->order_amount,
-                'store_amount'=>$store_amount,
-                // 'store_amount'=>$type=='parcel' ? 0 : $store_amount,
+                'store_amount'=>$type=='parcel' ? 0 : $store_amount,
                 // 'store_amount'=>$type=='parcel' ? 0 : $order_amount + $order->total_tax_amount - $comission_on_store_amount,
                 'admin_commission'=>$comission_amount + $order->additional_charge - $admin_subsidy - $admin_coupon_discount_subsidy - $ref_bonus_amount,
                 'delivery_charge'=>$order->delivery_charge,
@@ -229,8 +203,6 @@ class OrderLogic
                 'delivery_fee_comission'=>isset($comission_on_actual_delivery_fee)?$comission_on_actual_delivery_fee: 0,
                 'discount_amount_by_store' => $store_coupon_discount_subsidy + $store_d_amount + $store_subsidy,
                 'additional_charge' => $order->additional_charge,
-                'company_amount' => $parcel_store_amount,
-                'parcel_company_id' =>  $parcel_company_id,
                 'extra_packaging_amount' => $order->extra_packaging_amount,
                 'ref_bonus_amount' => $order->ref_bonus_amount,
                  // for store business model
@@ -243,7 +215,7 @@ class OrderLogic
 
             $adminWallet->total_commission_earning = $adminWallet->total_commission_earning + $comission_amount + $order->additional_charge - $admin_subsidy- $admin_coupon_discount_subsidy -$store_discount_amount - $flash_admin_discount_amount - $ref_bonus_amount;
 
-            if($type != 'parcel' && $company_type == 'admin')
+            if($type != 'parcel')
             {
                 $vendorWallet = StoreWallet::firstOrNew(
                     ['vendor_id' => $order->store->vendor->id]
@@ -258,41 +230,22 @@ class OrderLogic
                 // $vendorWallet->total_earning = $vendorWallet->total_earning+($order_amount + $order->total_tax_amount - $comission_on_store_amount);
                 $vendorWallet->total_earning = $vendorWallet->total_earning+$store_amount;
             }
-            if($company_type == 'admin'){
-                if($order->delivery_man && ($type == 'parcel' || ($order->store && !$order->store->sub_self_delivery))){
-                    $dmWallet = DeliveryManWallet::firstOrNew(
-                        ['delivery_man_id' => $order->delivery_man_id]
-                    );
-                    if($order->delivery_man->earning == 1){
-                        $dmWallet->total_earning = $dmWallet->total_earning + $dm_commission+ $dm_tips;
-                    }else {
-                        $adminWallet->total_commission_earning = $adminWallet->total_commission_earning + $dm_commission + $dm_tips;
-                    }
-                } else {
+            if($order->delivery_man && ($type == 'parcel' || ($order->store && !$order->store->sub_self_delivery))){
+                $dmWallet = DeliveryManWallet::firstOrNew(
+                    ['delivery_man_id' => $order->delivery_man_id]
+                );
+                if($order->delivery_man->earning == 1){
+                    $dmWallet->total_earning = $dmWallet->total_earning + $dm_commission+ $dm_tips;
+                }else {
                     $adminWallet->total_commission_earning = $adminWallet->total_commission_earning + $dm_commission + $dm_tips;
                 }
-            }
-            if($company_type == 'store'){
-                $vendorWallet = StoreWallet::firstOrNew(
-                    ['vendor_id' => $order->parcel_company->vendor->id]
-                );
-                $vendorWallet->total_earning = $vendorWallet->total_earning + $dm_commission + $dm_tips;
-                if($type != 'parcel'){
-                    $vendorWalletForCompany = StoreWallet::firstOrNew(
-                        ['vendor_id' => $order->store->vendor->id]
-                    );
-                    $vendorWalletForCompany->total_earning = $vendorWalletForCompany->total_earning + $store_amount;
-                }
-
-            }
-            if($delivered_by_dm == 'deliveryman' && $order->delivery_man && $order->delivery_man->type == 'company_wise'){
-                $company_dm = DeliveryMan::where('id',$order->delivery_man->id)->first();
-                $company_dm->collected_cash = $company_dm->collected_cash+($order->order_amount-$order->partially_paid_amount);
+            } else {
+                $adminWallet->total_commission_earning = $adminWallet->total_commission_earning + $dm_commission + $dm_tips;
             }
 
             try
             {
-              DB::beginTransaction();
+                DB::beginTransaction();
                 $unpaid_payment = OrderPayment::where('payment_status','unpaid')->where('order_id',$order->id)->first()?->payment_method;
                 $unpaid_pay_method = 'digital_payment';
                 if($unpaid_payment){
@@ -302,7 +255,7 @@ class OrderLogic
                 {
                     $adminWallet->digital_received = $adminWallet->digital_received+($order->order_amount-$order->partially_paid_amount);
                 }
-                else if(($received_by=='store' || $company_type == 'store') && ($type != 'parcel' || $company_type == 'store') && ($order->payment_method == "cash_on_delivery" || $unpaid_pay_method == 'cash_on_delivery'))
+                else if($received_by=='store' && $type != 'parcel' && ($order->payment_method == "cash_on_delivery" || $unpaid_pay_method == 'cash_on_delivery'))
                 {
                     $store_over_flow =  true ;
                     $vendorWallet->collected_cash = $vendorWallet->collected_cash+($order->order_amount-$order->partially_paid_amount);
@@ -311,43 +264,24 @@ class OrderLogic
                 {
                     $adminWallet->manual_received = $adminWallet->manual_received+($order->order_amount-$order->partially_paid_amount);
                 }
-                else if($received_by=='deliveryman' && $order->delivery_man && $order->delivery_man->type == 'zone_wise' )
+                else if($received_by=='deliveryman' && $order->delivery_man && $order->delivery_man->type == 'zone_wise')
                 {
-                        $dmWallet->collected_cash = $dmWallet->collected_cash+($order->order_amount-$order->partially_paid_amount);
-                        $dm_over_flow =  true ;
+                    $dmWallet->collected_cash = $dmWallet->collected_cash+($order->order_amount-$order->partially_paid_amount);
+                    $dm_over_flow =  true ;
                 }
 
                 $adminWallet->save();
-                if($type != 'parcel' || $company_type == 'store' )
+                if($type != 'parcel')
                 {
                     $vendorWallet->save();
-                }
-                if($company_type == 'store' && $type != 'parcel'){
-                    $vendorWalletForCompany->save();
                 }
                 if(isset($dmWallet)){
                     $dmWallet->save();
                 }
-                if(isset($company_dm)){
-                    $company_dm->save();
-                }
 
 
-                if(isset($store_over_flow)){
-                      if($company_type == 'store' && $type == 'parcel'){
-                        self::create_account_transaction_for_collect_cash(old_collected_cash:$vendorWallet->collected_cash , from_type:'company' , from_id: $order->parcel_company->vendor->id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
-
-                      }
-                      if($company_type == 'store' && $type !== 'parcel'){
-                        self::create_account_transaction_for_collect_cash(old_collected_cash:$vendorWallet->collected_cash , from_type:'company' , from_id: $order->parcel_company->vendor->id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
-                        self::create_account_transaction_for_collect_cash(old_collected_cash:$vendorWalletForCompany->collected_cash , from_type:'store' , from_id: $order->store->vendor->id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
-
-                      }
-
-                    if($type != 'parcel' && $company_type != 'store'){
-                        self::create_account_transaction_for_collect_cash(old_collected_cash:$vendorWallet->collected_cash , from_type:'store' , from_id: $order->store->vendor->id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
-
-                    }
+                if(isset($store_over_flow) ){
+                    self::create_account_transaction_for_collect_cash(old_collected_cash:$vendorWallet->collected_cash , from_type:'store' , from_id: $order->store->vendor->id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
                 }
                 if(isset($dm_over_flow)){
                     self::create_account_transaction_for_collect_cash(old_collected_cash:$dmWallet->collected_cash , from_type:'deliveryman' , from_id: $order->delivery_man_id , amount: $order->order_amount - $order->partially_paid_amount ,order_id: $order->id);
@@ -363,7 +297,6 @@ class OrderLogic
                         $ref_code_exchange_amt = BusinessSetting::where('key','ref_earning_exchange_rate')->first()->value;
                         $referar_user=User::where('id',$order->customer->ref_by)->first();
                         $refer_wallet_transaction = CustomerLogic::create_wallet_transaction($referar_user->id, $ref_code_exchange_amt, 'referrer',$order->customer->phone);
-                        $mail_status = Helpers::get_mail_status('add_fund_mail_status_user');
 
                         $notification_data = [
                             'title' => translate('messages.Congratulation'),
@@ -373,7 +306,7 @@ class OrderLogic
                             'type' => 'referral_code',
                         ];
 
-                        if($referar_user?->cm_firebase_token){
+                        if(Helpers::getNotificationStatusData('customer','customer_referral_bonus_earning','push_notification_status') && $referar_user?->cm_firebase_token){
                             Helpers::send_push_notif_to_device($referar_user?->cm_firebase_token, $notification_data);
                             DB::table('user_notifications')->insert([
                                 'data' => json_encode($notification_data),
@@ -385,7 +318,8 @@ class OrderLogic
 
 
                         try{
-                            if(config('mail.status') && $mail_status == '1') {
+                            Helpers::add_fund_push_notification($referar_user->id);
+                            if(config('mail.status') && Helpers::get_mail_status('add_fund_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer','customer_add_fund_to_wallet','mail_status') ) {
                                 Mail::to($referar_user->email)->send(new \App\Mail\AddFundToWallet($refer_wallet_transaction));
                             }
                         } catch(\Exception $ex){
@@ -393,7 +327,27 @@ class OrderLogic
                         }
                     }
 
-                    if($order->user_id) CustomerLogic::create_loyalty_point_transaction($order->user_id, $order->id, $order->order_amount, 'order_place');
+                   $create_loyalty_point_transaction= CustomerLogic::create_loyalty_point_transaction($order->user_id, $order->id, $order->order_amount, 'order_place');
+                    if($create_loyalty_point_transaction > 0) {
+                        $notification_data = [
+                            'title' => translate('messages.Congratulation'),
+                            'description' => translate('You_have_received').' '.$create_loyalty_point_transaction.' '.translate('points_as_loyalty_point'),
+                            'order_id' => $order->id,
+                            'image' => '',
+                            'type' => 'loyalty_point',
+                        ];
+
+                        if(Helpers::getNotificationStatusData('customer','customer_loyalty_point_earning','push_notification_status') && $order->customer?->cm_firebase_token){
+                            Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
+                            DB::table('user_notifications')->insert([
+                                'data' => json_encode($notification_data),
+                                'user_id' => $order->user_id,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                        }
+
+                    }
                 }
 
 
@@ -402,13 +356,11 @@ class OrderLogic
             {
                 DB::rollBack();
                 info($e->getMessage());
-                info($e->getLine());
                 return false;
             }
         }
         catch(\Exception $e){
             info($e->getMessage());
-            info($e->getLine());
             return false;
         }
 
@@ -684,10 +636,10 @@ class OrderLogic
                 'description' => translate('The_cashback_amount_successfully_added_to_your_wallet') ,
                 'order_id' => $order->id,
                 'image' => '',
-                'type' => 'csahback',
+                'type' => 'cashback',
             ];
 
-            if($order->customer?->cm_firebase_token){
+            if($order->customer?->cm_firebase_token && Helpers::getNotificationStatusData('customer','customer_cashback','push_notification_status')){
                 Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
                 DB::table('user_notifications')->insert([
                     'data' => json_encode($notification_data),

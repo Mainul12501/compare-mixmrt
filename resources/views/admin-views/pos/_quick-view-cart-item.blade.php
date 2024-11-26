@@ -18,12 +18,7 @@
         <!-- Product gallery-->
         <div class="d-flex align-items-center justify-content-center active">
             <img class="img-responsive initial--30 onerror-image"
-            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                $product,'image',
-                asset('storage/app/public/product').'/'.$product['image'] ?? '',
-                asset('public/assets/admin/img/160x160/img2.jpg'),
-                'product/'
-            ) }}"
+            src="{{ $product['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
                 data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                 data-zoom="{{ asset('storage/app/public/product') }}/{{ $product['image'] }}" alt="Product image"
                 width="">
@@ -74,6 +69,38 @@
             <span class="d-block text-dark text-break">
                 {!! $product->description !!}
             </span>
+
+            @if (in_array($product->module->module_type ,['food','grocery']))
+                @if (count($product->nutritions) )
+                    <h4 class="mt-2"> {{ translate('messages.Nutrition_Details') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        @foreach($product->nutritions as $nutrition)
+                        {{$nutrition->nutrition}}{{ !$loop->last ? ',' : '.'}}
+                        @endforeach
+                    </span>
+                @endif
+                @if (count($product->allergies))
+                    <h4 class="mt-2"> {{ translate('messages.Allergie_Ingredients') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        @foreach($product->allergies as $allergy)
+                        {{$allergy->allergy}}{{ !$loop->last ? ',' : '.'}}
+                        @endforeach
+                    </span>
+                @endif
+            @endif
+
+            @if (in_array($product->module->module_type ,['pharmacy']))
+                @if ($product->generic->pluck('generic_name')->first())
+                    <h4 class="mt-2"> {{ translate('generic_name') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        {{ $product->generic->pluck('generic_name')->first() }}
+                    </span>
+                @endif
+            @endif
+
+
+
+
             <form id="add-to-cart-form" class="mb-2">
                 @csrf
                 <input type="hidden" name="id" value="{{ $product->id }}">

@@ -65,12 +65,7 @@
                                         <label class="upload-img-3 m-0 d-block">
                                             <div class="position-relative">
                                             <div class="img">
-                                                <img  src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                    $review,'reviewer_image',
-                                                    asset('storage/app/public/reviewer_image').'/'.$review->reviewer_image ?? '',
-                                                    asset('/public/assets/admin/img/aspect-1.png'),
-                                                    'reviewer_image/'
-                                                ) }}" data-onerror-image="{{asset("/public/assets/admin/img/aspect-1.png")}}" class="img__aspect-1 min-w-187px max-w-187px onerror-image" alt="">
+                                                <img  src="{{ $review->reviewer_image_full_url ?? asset('/public/assets/admin/img/aspect-1.png') }}" data-onerror-image="{{asset("/public/assets/admin/img/aspect-1.png")}}" class="img__aspect-1 min-w-187px max-w-187px onerror-image" alt="">
                                             </div>
                                             <input type="file"  name="reviewer_image" hidden="">
                                             @if (isset($review->reviewer_image))
@@ -89,7 +84,7 @@
 
                     </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('messages.Update')}}</button>
                         </div>
                 </div>

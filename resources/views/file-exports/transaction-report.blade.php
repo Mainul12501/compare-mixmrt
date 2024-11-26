@@ -139,8 +139,6 @@
                 <td>{{ \App\CentralLogics\Helpers::format_currency($ot->store_amount - $ot->tax) }}</td>
                 @if ($ot->received_by == 'admin')
                     <td>{{ translate('messages.admin') }}</td>
-                    @elseif ($ot->received_by == 'company')
-                    <td>{{ translate('messages.company') }}</td>
                 @elseif ($ot->received_by == 'deliveryman')
                     <td>
                         <div>{{ translate('messages.delivery_man') }}</div>

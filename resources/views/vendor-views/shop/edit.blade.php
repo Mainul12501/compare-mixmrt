@@ -1,10 +1,6 @@
 
 @extends('layouts.vendor.app')
-@if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-@section('title',translate('messages.edit_company'))
-@else
 @section('title',translate('messages.edit_store'))
-@endif
 @push('css_or_js')
     <!-- Custom styles for this page -->
     <link href="{{asset('public/assets/admin')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
@@ -19,11 +15,7 @@
             <h2 class="page-header-title text-capitalize">
                 <img class="w--26" src="{{asset('/public/assets/admin/img/store.png')}}" alt="public">
                 <span>
-                    @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-                    {{translate('messages.edit_company_info')}}
-                    @else
                     {{translate('messages.edit_store_info')}}
-                    @endif
                 </span>
             </h1>
         </div>
@@ -159,7 +151,7 @@
                             <div class="text-center my-auto py-4 py-xl-5">
                                 <img class="store-banner onerror-image" id="viewer"
                                 data-onerror-image="{{asset('public/assets/admin/img/image-place-holder.png')}}"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($shop,'logo', asset('storage/app/public/store/').'/'.$shop->logo, asset('public/assets/admin/img/image-place-holder.png'), 'store/') }}" alt="Product thumbnail"/>
+                                src="{{ $shop->logo_full_url }}" alt="Product thumbnail"/>
                             </div>
                             <div class="custom-file">
                                 <input type="file" name="image" id="customFileUpload" class="custom-file-input"
@@ -180,7 +172,7 @@
                             <div class="text-center my-auto py-4 py-xl-5">
                                 <img class="store-banner onerror-image" id="coverImageViewer"
                                 data-onerror-image="{{asset('public/assets/admin/img/restaurant_cover.jpg')}}"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($shop,'cover_photo', asset('storage/app/public/store/cover/').'/'.$shop->cover_photo, asset('public/assets/admin/img/restaurant_cover.jpg'), 'store/cover/') }}" alt="Product thumbnail"/>
+                                src="{{ $shop->cover_photo_full_url }}" alt="Product thumbnail"/>
                             </div>
                             <div class="custom-file">
                                 <input type="file" name="photo" id="coverImageUpload" class="custom-file-input"

@@ -36,7 +36,6 @@ class AccountTransactionController extends Controller
                 }
             });
         })->where('type', 'collected' )
-        ->whereNull('company_id')
             ->latest()->paginate(config('default_pagination'));
         return view('admin-views.account.index', compact('account_transaction'));
     }
@@ -119,14 +118,30 @@ class AccountTransactionController extends Controller
         }
 
         try {
-            if($request['type']=='deliveryman' && $request['deliveryman_id'] && config('mail.status')){
-                $mail_status = Helpers::get_mail_status('cash_collect_mail_status_dm');
-                if (config('mail.status') && $mail_status == '1') {
-                    Mail::to($data['email'])->send(new \App\Mail\CollectCashMail($account_transaction,$data['f_name']));
-                }
+
+            if( $request['type'] == 'deliveryman' && $request['deliveryman_id'] &&   Helpers::getNotificationStatusData('deliveryman','deliveryman_collect_cash','push_notification_status') && $data->fcm_token){
+                $notification_data = [
+                    'title' => translate('messages.Cash_Collected'),
+                    'description' => translate('messages.Your_hand_in_cash_has_been_collected_by_admin'),
+                    'order_id' => '',
+                    'image' => '',
+                    'type' => 'cash_collect'
+                ];
+                Helpers::send_push_notif_to_device($data->fcm_token, $notification_data);
+                DB::table('user_notifications')->insert([
+                    'data' => json_encode($notification_data),
+                    'delivery_man_id' => $data->id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+
+            if($request['type']=='deliveryman' && $request['deliveryman_id'] && config('mail.status') &&  Helpers::get_mail_status('cash_collect_mail_status_dm') == '1'  &&  Helpers::getNotificationStatusData('deliveryman','deliveryman_collect_cash','mail_status')){
+                Mail::to($data['email'])->send(new \App\Mail\CollectCashMail($account_transaction,$data['f_name']));
             }
         } catch (\Throwable $th) {
-            
+
         }
         return response()->json(200);
     }

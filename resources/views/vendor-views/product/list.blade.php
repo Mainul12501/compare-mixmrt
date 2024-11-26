@@ -124,6 +124,9 @@
                             <th class="border-0">{{translate('messages.#')}}</th>
                             <th class="border-0 w-20p">{{translate('messages.name')}}</th>
                             <th class="border-0 w-20p">{{translate('messages.category')}}</th>
+                            @if ($store_data->module->module_type != 'food')
+                            <th class="border-0 w-20p">{{translate('messages.quantity')}}</th>
+                            @endif
                             <th class="border-0">{{translate('messages.price')}}</th>
                             <th class="border-0 text-center">{{translate('messages.Recommended')}}</th>
                             <th class="border-0 text-center">{{translate('messages.status')}}</th>
@@ -137,7 +140,7 @@
                             <td>{{$key+$items->firstItem()}}</td>
                             <td>
                                 <a class="media align-items-center" href="{{route('vendor.item.view',[$item['id']])}}">
-                                    <img class="avatar avatar-lg mr-3 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($item,'image', asset('storage/app/public/product/').'/'.$item['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                                    <img class="avatar avatar-lg mr-3 onerror-image" src="{{ $item['image_full_url'] }}"
                                          data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->name}} image">
                                     <div class="media-body">
                                         <h5 class="text-hover-primary mb-0">{{Str::limit($item['name'],20,'...')}}</h5>
@@ -147,6 +150,14 @@
                             <td>
                             {{Str::limit($item->category?$item->category->name:translate('messages.category_deleted'),20,'...')}}
                             </td>
+                            @if ($store_data->module->module_type != 'food')
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="text-hover-primary fw-medium mb-0">{{$item->stock}}</h5>
+                                    <span data-toggle="modal"  data-id="{{ $item->id }}"  data-target="#update-quantity" class="text-primary tio-add-circle fs-22 cursor-pointer update-quantity"></span>
+                                </div>
+                            </td>
+                            @endif
                             <td>
                                 <div class="mw--85px">
                                     {{\App\CentralLogics\Helpers::format_currency($item['price'])}}
@@ -212,6 +223,31 @@
         <!-- End Card -->
     </div>
 </div>
+
+
+    {{-- Add Quantity Modal --}}
+    <div class="modal fade update-quantity-modal" id="update-quantity" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body pt-0">
+
+                    <form action="{{route('vendor.item.stock-update')}}" method="post">
+                        @csrf
+                        <div class="mt-2 rest-part w-100"></div>
+                        <div class="btn--container justify-content-end">
+                            <button type="reset" data-dismiss="modal" aria-label="Close" class="btn btn--reset">{{translate('cancel')}}</button>
+                            <button type="submit" id="submit_new_customer" class="btn btn--primary">{{translate('update_stock')}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('script_2')
@@ -335,5 +371,35 @@
                 },
             });
         });
+
+        $('.update-quantity').on('click', function (){
+        let val = $(this).data('id');
+        $.get({
+            url: '{{ route('vendor.item.get_stock') }}',
+            data: { id: val },
+            dataType: 'json',
+            success: function (data) {
+                $('.rest-part').empty().html(data.view);
+                update_qty();
+            },
+        });
+    })
+
+    function update_qty() {
+            let total_qty = 0;
+            let qty_elements = $('input[name^="stock_"]');
+            for (let i = 0; i < qty_elements.length; i++) {
+                total_qty += parseInt(qty_elements.eq(i).val());
+            }
+            if(qty_elements.length > 0)
+            {
+
+                $('input[name="current_stock"]').attr("readonly", 'readonly');
+                $('input[name="current_stock"]').val(total_qty);
+            }
+            else{
+                $('input[name="current_stock"]').attr("readonly", false);
+            }
+        }
     </script>
 @endpush

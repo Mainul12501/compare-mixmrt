@@ -74,6 +74,15 @@ function coupon_type_change(coupon_type) {
         $('#discount_type').removeAttr("disabled");
         $('#discount').removeAttr("readonly");
     }
+    if($('#discount_type').val() == 'amount')
+        {
+            $('#max_discount').attr("readonly","true");
+            $('#max_discount').val(0);
+        }
+        else
+        {
+            $('#max_discount').removeAttr("readonly");
+        }
 }
 
 $('#reset_btn').click(function(){

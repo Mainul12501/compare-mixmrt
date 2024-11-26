@@ -63,17 +63,25 @@
                                             {{isset($data) && isset($data['status'])&&$data['status']==1?translate('Turn OFF'):translate('Turn ON')}}
                                         </span>
                                     </span>
-                                    <input id="mail-config-disable" type="checkbox"
 
+                                    <?php
+                                        if (App\Models\BusinessSetting::where('key', 'firebase_otp_verification')->first()?->value == 1) {
+                                            $text= "<p class=text--danger>" .translate('NOTE: Currently_Your_FireBase_OTP_System_is_Active.Users_won’t_get_any_OTP_related_mails.') ."</p>" ;
+                                        }
+                                    ?>
+
+
+                                    <input id="mail-config-disable" type="checkbox"
                                            data-id="mail-config-disable"
-                                           data-type="status"
-                                           data-image-on="{{ asset('/public/assets/admin/img/modal/mail-success.png') }}"
-                                           data-image-off="{{ asset('/public/assets/admin/img/modal/mail-warning.png') }}"
-                                           data-title-on="{{ translate('Important!') }}"
-                                           data-title-off="{{ translate('Warning!') }}"
-                                           data-text-on="<p>{{ translate('Enabling mail configuration services will allow the system to send emails. Please ensure that you have correctly configured the SMTP settings to avoid potential issues with email delivery.') }}</p>"
-                                           data-text-off="<p>{{ translate('Disabling mail configuration services will prevent the system from sending emails. Please only turn off this service if you intend to temporarily suspend email sending. Note that this may affect system functionality that relies on email communication.') }}</p>"
-                                           class="status toggle-switch-input dynamic-checkbox"
+                                            data-type="status"
+                                            data-image-on="{{ asset('/public/assets/admin/img/modal/mail-success.png') }}"
+                                            data-image-off="{{ asset('/public/assets/admin/img/modal/mail-warning.png') }}"
+                                            data-title-on="{{ translate('Important!') }}"
+                                            data-title-off="{{ translate('Warning!') }}"
+                                            data-text-on="<p>{{ translate('Enabling mail configuration services will allow the system to send emails. Please ensure that you have correctly configured the SMTP settings to avoid potential issues with email delivery.') }}</p>
+                                            {{ $text ?? '' }} "
+                                            data-text-off="<p>{{ translate('Disabling mail configuration services will prevent the system from sending emails. Please only turn off this service if you intend to temporarily suspend email sending. Note that this may affect system functionality that relies on email communication.') }}</p>"
+                                            class="status toggle-switch-input dynamic-checkbox"
 
 
                                            name="status" value="1" {{isset($data) && isset($data['status'])&&$data['status']==1?'checked':''}}>

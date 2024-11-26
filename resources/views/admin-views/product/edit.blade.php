@@ -169,22 +169,17 @@
                                             @php($photo = is_array($photo)?$photo:['img'=>$photo,'storage'=>'public'])
                                             <div id="product_images_{{ $key }}" class="spartan_item_wrapper min-w-176px max-w-176px">
                                                 <img class="img--square onerror-image"
-                                                src="{{ \App\CentralLogics\Helpers::onerror_image_helper(
-                                                    $photo['img'] ?? '',
-                                                    asset('storage/app/public/product').'/'.$photo['img'] ?? '',
-                                                    asset('public/assets/admin/img/upload-img.png'),
-                                                    'product/',$photo['storage']
-                                                ) }}"
+                                                src="{{ \App\CentralLogics\Helpers::get_full_url('product',$photo['img'] ?? '',$photo['storage']) }}"
                                                     data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
                                                     alt="Product image">
                                                     {{-- <div class="pen spartan_remove_row"><i class="tio-edit"></i></div> --}}
-                                                    @if (request()->product_gellary  == 1)
-                                                        <a href="#" data-key={{ $key }} data-photo="{{ $photo['img'] }}"
-                                                        class="spartan_remove_row function_remove_img"><i class="tio-add-to-trash"></i></a>
+                                                    <a href="#" data-key={{ $key }} data-photo="{{ $photo['img'] }}"
+                                                    class="spartan_remove_row function_remove_img"><i class="tio-add-to-trash"></i></a>
+                                                    {{-- @if (request()->product_gellary  == 1)
                                                     @else
                                                         <a href="{{ route('admin.item.remove-image', ['id' => $product['id'], 'name' => $photo['img'] ,'temp_product' => $temp_product]) }}"
                                                             class="spartan_remove_row"><i class="tio-add-to-trash"></i></a>
-                                                    @endif
+                                                    @endif --}}
                                             </div>
                                         @endforeach
                                     </div>
@@ -196,18 +191,13 @@
                                     </label>
                                     <label class="d-inline-block m-0 position-relative">
                                         <img class="img--176 border onerror-image" id="viewer"
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $product,'image',
-                                            asset('storage/app/public/product').'/'.$product['image'] ?? '',
-                                            asset('public/assets/admin/img/upload-img.png'),
-                                            'product/'
-                                        ) }}"
+                                        src="{{ $product['image_full_url'] ?? asset('public/assets/admin/img/upload-img.png') }}"
                                             data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
                                             alt="thumbnail" />
                                         <div class="icon-file-group">
                                             <div class="icon-file">
                                                 <input type="file" name="image" id="customFileEg1" class="custom-file-input read-url"
-                                                    accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" >
+                                                    accept=".jpg, .png, .jpeg, .webp, .gif, .bmp, .tif, .tiff|image/*" >
                                                     <i class="tio-edit"></i>
                                             </div>
                                         </div>
@@ -345,14 +335,46 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-sm-6 col-lg-3" id="stock_input">
-                                    <div class="form-group mb-0">
-                                        <label class="input-label"
-                                            for="total_stock">{{ translate('messages.total_stock') }}</label>
-                                        <input type="number" class="form-control" name="current_stock" min="0"
-                                            value="{{ $product->stock }}" id="quantity">
+                                @if(Config::get('module.current_module_type') == 'grocery' || Config::get('module.current_module_type') == 'food')
+                                    @if (isset($temp_product) && $temp_product == 1 )
+                                        @php($product_nutritions = \App\Models\Nutrition::whereIn('id', json_decode($product?->nutrition_ids))->pluck('id'))
+                                        @php($product_allergies = \App\Models\Allergy::whereIn('id', json_decode($product?->allergy_ids))->pluck('id'))
+                                    @else
+                                        @php($product_nutritions = $product->nutritions->pluck('id'))
+                                        @php($product_allergies = $product->allergies->pluck('id'))
+                                    @endif
+
+                                    <div class="col-sm-6" id="nutrition">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Nutrition')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the necessary keywords relating to energy values for the item.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="nutritions[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Nutrition::all() as $nutrition)
+                                                <option value="{{ $nutrition->nutrition }}" {{ $product_nutritions->contains($nutrition->id) ? 'selected' : '' }}>{{ $nutrition->nutrition }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                </div>
+
+
+                                    <div class="col-sm-6" id="allergy">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Allegren Ingredients')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the ingredients of the item which can make a reaction as an allergen.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="allergies[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Allergy::all() as $allergy)
+                                                <option value="{{ $allergy->allergy }}" {{ $product_allergies->contains($allergy->id) ? 'selected' : '' }}>{{ $allergy->allergy }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+
+
                                 <div class="col-sm-6 col-lg-3" id="maximum_cart_quantity">
                                     <div class="form-group mb-0">
                                         <label class="input-label"
@@ -384,7 +406,6 @@
                                         </label>
                                       </div>
                                 </div>
-                                @endif
                                 <div class="col-sm-6 col-lg-3" id="basic">
                                     <div class="form-check mb-0 p-6">
                                         <input class="form-check-input" name="basic" type="checkbox" value="1" id="flexCheckDefaultbasic" {{ $product->pharmacy_item_details?->is_basic == 1?'checked':((isset($temp_product) && $temp_product == 1 && $product->basic ==1)?'checked':'') }}>
@@ -393,6 +414,28 @@
                                         </label>
                                       </div>
                                 </div>
+
+                                    <div class="col-sm-6" id="generic_name">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('generic_name')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the medicine`s active ingredient that makes it work') }}" data-toggle="tooltip">
+                                            <i class="tio-info-outined"></i>
+                                        </span>
+                                        </label>
+                                        <div class="dropdown suggestion_dropdown">
+                                            <input type="text" class="form-control" data-toggle="dropdown" name="generic_name" value="{{ isset($temp_product) && $temp_product == 1 ?  \App\Models\GenericName::where('id', json_decode($product?->generic_ids))->first()?->generic_name : $product->generic->pluck('generic_name')->first() }}" autocomplete="off">
+                                            @if(count(\App\Models\GenericName::select(['generic_name'])->get())>0)
+                                            <div class="dropdown-menu">
+                                                @foreach (\App\Models\GenericName::select(['generic_name'])->get() as $generic_name)
+                                                <div class="dropdown-item">{{ $generic_name->generic_name }}</div>
+                                                @endforeach
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                @endif
+
                                 @if(Config::get('module.current_module_type') == 'grocery' || Config::get('module.current_module_type') == 'food')
                                     <div class="col-sm-6 col-lg-3" id="halal">
                                         <div class="form-check mb-0 p-6">
@@ -472,7 +515,7 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-2">
-                                <div class="col-sm-4 col-6">
+                                <div class="col-sm-6 col-lg-3">
                                     <div class="form-group mb-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.price') }}  <span class="form-label-secondary text-danger"
@@ -483,19 +526,16 @@
                                             max="999999999999.99" name="price" class="form-control" step="0.01"
                                             placeholder="{{ translate('messages.Ex:') }} 100" required>
                                     </div>
-                                    
+                                </div>
+                                <div class="col-sm-6 col-lg-3" id="stock_input">
                                     <div class="form-group mb-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.weight') }} {{translate('(Kg)')}}</label>
-                                        <input type="number" value="{{ $product->weight }}" min="0.001"
-                                            max="999999999999.99" name="weight" class="form-control" step="0.001"
-                                            placeholder="{{ translate('messages.Ex:') }} 5" required>
-
-                                            <input type="hidden" name= "module_type" value="{{ Config::get('module.current_module_type')}}">
+                                            for="total_stock">{{ translate('messages.total_stock') }}</label>
+                                        <input type="number" class="form-control" name="current_stock" min="0"
+                                            value="{{ $product->stock }}" id="quantity">
                                     </div>
-                                
                                 </div>
-                                <div class="col-sm-4 col-6">
+                                <div class="col-sm-6 col-lg-3">
                                     <div class="form-group mb-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.discount_type') }} <span class="form-label-secondary text-danger"
@@ -519,7 +559,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-sm-4 col-6">
+                                <div class="col-sm-6 col-lg-3">
                                     <div class="form-group mb-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.discount') }}
@@ -709,15 +749,14 @@
 
     $(document).on('click','.function_remove_img' ,function(){
     let key = $(this).data('key');
-         let photo = $(this).data('photo');
-         function_remove_img(key,photo);
+        let photo = $(this).data('photo');
+        function_remove_img(key,photo);
     });
 
         function function_remove_img(key,photo) {
         $('#product_images_' + key).addClass('d-none');
         removedImageKeys.push(photo);
         $('#removedImageKeysInput').val(removedImageKeys.join(','));
-        console.log('Removed Image Keys:', removedImageKeys);
     }
 
 
@@ -1064,6 +1103,16 @@
         } else {
             $('#basic').hide();
         }
+        if (module_data.nutrition) {
+            $('#nutrition').show();
+        } else {
+            $('#nutrition').hide();
+        }
+        if (module_data.allergy) {
+            $('#allergy').show();
+        } else {
+            $('#allergy').hide();
+        }
     }
 
      $('#category_id').on('change', function () {
@@ -1283,6 +1332,11 @@
      $(document).on('change', '.combination_update', function () {
          combination_update();
      });
+     // $('#product_form').on('keydown', function(e) {
+     //        if (e.key === 'Enter') {
+     //        e.preventDefault(); // Prevent submission on Enter
+     //        }
+     //    });
 
     $('#product_form').on('submit', function() {
         console.log('working');

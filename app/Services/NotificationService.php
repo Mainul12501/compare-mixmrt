@@ -52,7 +52,7 @@ class NotificationService
 
         $topicZoneWise=[
             'customer'=>'zone_'.$request->zone.'_customer',
-            'deliveryman'=>'zone_'.$request->zone.'_delivery_man',
+            'deliveryman'=>'zone_'.$request->zone.'_delivery_man_push',
             'store'=>'zone_'.$request->zone.'_store',
         ];
 

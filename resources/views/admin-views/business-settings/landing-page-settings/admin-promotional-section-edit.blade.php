@@ -122,12 +122,7 @@
                                     <label class="upload-img-3 m-0 d-block">
                                         <div class="img">
                                             <img
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $banner,'image',
-                                                asset('storage/app/public/promotional_banner').'/'.$banner['image'] ?? '',
-                                                asset('/public/assets/admin/img/upload-4.png'),
-                                                'promotional_banner/'
-                                            ) }}" 
+                                            src="{{ $banner['image_full_url'] ?? asset('/public/assets/admin/img/upload-4.png') }}" 
                                             data-onerror-image="{{asset('/public/assets/admin/img/upload-4.png')}}" class="vertical-img mw-100 vertical onerror-image" alt="">
                                         </div>
                                             <input type="file" name="image"  hidden>
@@ -143,7 +138,7 @@
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit" class="btn btn--primary mb-2">{{translate('messages.Update')}}</button>
                         </div>
                     </div>

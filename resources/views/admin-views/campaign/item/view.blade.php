@@ -31,7 +31,7 @@
             <div class="card-body">
                 <div class="row align-items-md-center">
                     <div class="col-md-6 col-lg-4 mb-3 mb-md-0">
-                            <img class="rounded img--ratio-3 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($campaign,'image', asset('storage/app/public/campaign/').'/'.$campaign['image'], asset('public/assets/admin/img/900x400/img1.jpg'), 'campaign/') }}"
+                            <img class="rounded img--ratio-3 onerror-image" src="{{ $campaign['image_full_url']}}"
                             data-onerror-image="{{asset('/public/assets/admin/img/900x400/img1.jpg')}}" alt="Image Description">
                     </div>
                     <div class="col-md-6">
@@ -67,9 +67,9 @@
                             <div class="w-100 my-2">
                                 <a href="{{route('admin.store.view', $campaign->store_id)}}" title="{{$campaign->store['name']}}">
                                     <img
-                                        class="img--70 circle onerror-image"
+                                        class="img--100 rounded-circle onerror-image"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper($campaign->store,'logo', asset('storage/app/public/store/').'/'.$campaign->store->logo, asset('public/assets/admin/img/160x160/img1.jpg'), 'store/') }}"
+                                        src="{{$campaign?->store?->logo_full_url ?? asset('public/assets/admin/img/160x160/img1.jpg') }}"
                                         alt="Image Description">
                                     <h5 class="input-label mt-2">{{$campaign->store['name']}}</h5>
                                 </a>
@@ -97,9 +97,24 @@
                                         <th class="px-4 border-0 w--120px">
                                             <h4 class="m-0">{{translate('messages.variations')}}</h4>
                                         </th>
+                                        @if (in_array($campaign->module->module_type ,['food']))
                                         <th class="px-4 border-0 w--120px">
                                             <h4 class="m-0">{{ translate('Addons') }}</h4>
                                         </th>
+                                        @endif
+                                        @if (in_array($campaign->module->module_type ,['food','grocery']))
+                                            <th class="px-4 border-0 w--120px">
+                                                <h4 class="m-0 text-capitalize">{{ translate('nutrition') }}</h4>
+                                            </th>
+                                            <th class="px-4 border-0 w--120px">
+                                                <h4 class="m-0 text-capitalize">{{ translate('allergy') }}</h4>
+                                            </th>
+                                        @endif
+                                        @if (in_array($campaign->module->module_type ,['pharmacy']))
+                                        <th class="px-4 border-0 w--120px">
+                                            <h4 class="m-0 text-capitalize">{{ translate('generic_name') }}</h4>
+                                        </th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -173,7 +188,7 @@
                                             @endforeach
                                         @endif
                                         @endif
-
+                                        @if (in_array($campaign->module->module_type ,['food']))
                                         </td>
                                         <td class="px-4">
                                             @foreach(\App\Models\AddOn::whereIn('id',json_decode($campaign['add_ons'],true))->get() as $addon)
@@ -182,6 +197,31 @@
                                                 </small>
                                             @endforeach
                                         </td>
+                                        @endif
+                                        @if (in_array($campaign->module->module_type ,['food','grocery']))
+                                            <td class="px-4">
+                                                @if ($campaign->nutritions)
+                                                    @foreach($campaign->nutritions as $nutrition)
+                                                        {{$nutrition->nutrition}}{{ !$loop->last ? ',' : '.'}}
+                                                    @endforeach
+                                                @endif
+                                            </td>
+                                            <td class="px-4">
+                                                @if ($campaign->allergies)
+                                                    @foreach($campaign->allergies as $allergy)
+                                                        {{$allergy->allergy}}{{ !$loop->last ? ',' : '.'}}
+                                                    @endforeach
+                                                @endif
+                                            </td>
+                                        @endif
+                                        @if (in_array($campaign->module->module_type ,['pharmacy']))
+                                            <td class="px-4">
+                                                @if ($campaign->generic->pluck('generic_name')->first())
+                                                    {{ $campaign->generic->pluck('generic_name')->first() }}
+                                                @endif
+                                            </td>
+
+                                        @endif
                                     </tr>
                                 </tbody>
                             </table>

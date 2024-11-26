@@ -131,7 +131,7 @@
 
                             <div id="image-viewer-section" class="text-center py-3 my-auto">
                                 <img class="img--120 onerror-image" id="viewer"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($campaign,'image', asset('storage/app/public/campaign/').'/'.$campaign->image, asset('public/assets/admin/img/100x100/2.png'), 'campaign/') }}" alt="campaign image" data-onerror-image="{{asset('public/assets/admin/img/100x100/2.png')}}"/>
+                                src="{{$campaign->image_full_url}}" alt="campaign image" data-onerror-image="{{asset('public/assets/admin/img/100x100/2.png')}}"/>
                             </div>
                             <div class="custom-file">
                                 <input type="file" name="image" id="customFileEg1" class="custom-file-input"
@@ -223,6 +223,64 @@
                                         </select>
                                     </div>
                                 </div>
+                                @if(Config::get('module.current_module_type') == 'pharmacy')
+                                <div class="col-sm-6" id="generic_name">
+                                    <label class="input-label" for="sub-categories">
+                                        {{translate('generic_name')}}
+                                        <span class="input-label-secondary" title="{{ translate('Specify the medicine`s active ingredient that makes it work') }}" data-toggle="tooltip">
+                                            <i class="tio-info-outined"></i>
+                                        </span>
+                                    </label>
+                                    <div class="dropdown suggestion_dropdown">
+                                        <input type="text" class="form-control" data-toggle="dropdown" placeholder="{{ translate('messages.Type your content here') }}" name="generic_name" value="{{ $campaign->generic->pluck('generic_name')->first() }}" autocomplete="off">
+                                        @if(count(\App\Models\GenericName::select(['generic_name'])->get())>0)
+                                            <div class="dropdown-menu">
+                                                @foreach (\App\Models\GenericName::select(['generic_name'])->get() as $generic_name)
+                                                    <div class="dropdown-item">{{ $generic_name->generic_name }}</div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                            <div class="row g-2">
+                                @if(Config::get('module.current_module_type') == 'grocery' || Config::get('module.current_module_type') == 'food')
+
+                                        @php($campaign_nutritions = $campaign->nutritions->pluck('id'))
+                                        @php($campaign_allergies = $campaign->allergies->pluck('id'))
+
+
+                                    <div class="col-sm-6" id="nutrition">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Nutrition')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the necessary keywords relating to energy values for the item.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="nutritions[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Nutrition::all() as $nutrition)
+                                                <option value="{{ $nutrition->nutrition }}" {{ $campaign_nutritions->contains($nutrition->id) ? 'selected' : '' }}>{{ $nutrition->nutrition }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+
+                                    <div class="col-sm-6" id="allergy">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Allegren Ingredients')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the ingredients of the item which can make a reaction as an allergen.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="allergies[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Allergy::all() as $allergy)
+                                                <option value="{{ $allergy->allergy }}" {{ $campaign_allergies->contains($allergy->id) ? 'selected' : '' }}>{{ $allergy->allergy }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+
                             </div>
                         </div>
                     </div>

@@ -138,9 +138,15 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="client_id"
-                                            class="form-label">{{translate('messages.client_id')}}</label>
+                                            class="form-label">{{translate('messages.client_id_for_web')}}</label>
                                         <input id="client_id" type="text" class="form-control" name="client_id"
                                             value="{{ $appleLoginService['client_id'] }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="client_id_app"
+                                            class="form-label">{{translate('messages.client_id_for_app')}}</label>
+                                        <input id="client_id_app" type="text" class="form-control" name="client_id_app"
+                                            value="{{ $appleLoginService['client_id_app']??'' }}">
                                     </div>
                                     <div class="form-group">
                                         <label for="team_id"
@@ -153,6 +159,18 @@
                                             class="form-label">{{translate('messages.key_id')}}</label>
                                         <input id="key_id" type="text" class="form-control" name="key_id"
                                             value="{{ $appleLoginService['key_id'] }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="key_id"
+                                            class="form-label">{{translate('messages.redirect_url_for_flutter_web')}}</label>
+                                        <input id="redirect_url_flutter" type="url" class="form-control" name="redirect_url_flutter"
+                                            value="{{ $appleLoginService['redirect_url_flutter']??'' }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="key_id"
+                                            class="form-label">{{translate('messages.redirect_url_for_react_web')}}</label>
+                                        <input id="redirect_url_react" type="url" class="form-control" name="redirect_url_react"
+                                            value="{{ $appleLoginService['redirect_url_react']??'' }}">
                                     </div>
                                     <div class="form-group">
                                         <label

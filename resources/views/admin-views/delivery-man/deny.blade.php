@@ -86,7 +86,6 @@
                         <th class="border-0 text-capitalize">{{translate('messages.zone')}}</th>
                         <th class="border-0 text-capitalize">{{translate('messages.job_type')}}</th>
                         <th class="border-0 text-capitalize">{{translate('messages.join_request_date')}}</th>
-                        <th class="border-0 text-capitalize">{{translate('messages.Reason')}}</th>
                         <th class="border-0 text-center text-capitalize">{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
@@ -98,7 +97,7 @@
                             <td>
                                 <a class="table-rest-info" href="{{route('admin.users.delivery-man.preview',[$dm['id']])}}">
                                     <img class="onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper($dm,'image', asset('storage/app/public/delivery-man/').'/'.$dm['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'delivery-man/') }}"
+                                    src="{{ $dm['image_full_url'] }}"
                                     alt="{{$dm['f_name']}} {{$dm['l_name']}}">
                                     <div class="info">
                                         <h5 class="text-hover-primary mb-0">{{$dm['f_name'].' '.$dm['l_name']}}</h5>
@@ -123,7 +122,6 @@
                                 {{\App\CentralLogics\Helpers::time_date_format($dm->created_at )   }}
 
                             </td>
-                            <td>{{ $dm->reason }}</td>
                             <td>
                                 @if($dm->application_status == 'approved')
 

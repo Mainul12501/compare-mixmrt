@@ -112,12 +112,7 @@
                                         <div class="img">
                                             <img
 
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $criteria,'image',
-                                                asset('storage/app/public/special_criteria').'/'.$criteria['image'] ?? '',
-                                                asset('/public/assets/admin/img/aspect-1.png'),
-                                                'special_criteria/'
-                                            ) }}"
+                                            src="{{ $criteria['image_full_url'] ?? asset('/public/assets/admin/img/aspect-1.png') }}"
                                         data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" alt="" class="img__aspect-1 min-w-187px max-w-187px onerror-image">
                                         </div>
                                           <input type="file"  name="image" hidden>
@@ -133,7 +128,7 @@
                                 </div>
                             </div>
                             <div class="btn--container justify-content-end mt-3">
-                                <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                                <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                                 <button type="submit"   class="btn btn--primary mb-2">{{translate('messages.Update')}}</button>
                             </div>
                         </div>

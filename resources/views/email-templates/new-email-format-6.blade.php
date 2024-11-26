@@ -169,7 +169,7 @@ width: 24px;
                 <td class="main-table-td">
                     <div class="text-center">
                     <img class="mail-img-2"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper( $data, 'icon', asset('storage/app/public/email_template/').'/'.data_get($data, 'icon'), asset('public/assets/admin/img/emai_demo_template_2.png'), 'email_template/') }}"
+                    src="{{ $data['icon_full_url'] ?? asset('/public/assets/admin/img/blank3.png') }}"
 
 
                     id="iconViewer" alt="">
@@ -196,7 +196,8 @@ width: 24px;
                     </table>
                     @if ($data?->button_url)
                     <span class="d-block text-center" style="margin-top: 16px">
-                    <a href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+                                        <a type="button" href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+
                     </span>
                     @endif
                     <hr>

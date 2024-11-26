@@ -136,7 +136,7 @@
                                         <span class="d-block font-size-sm text-body">
                                             <a href="{{route('admin.users.delivery-man.preview',[$review['delivery_man_id']])}}"
                                                class="media gap-2 align-items-center text-dark">
-                                                <img  src="{{Helpers::get_image_helper($review->delivery_man,'image', asset('storage/app/public/delivery-man/').'/'.$review->delivery_man->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'delivery-man/') }}"
+                                                <img  src="{{ $review->delivery_man->image_full_url }}"
                                                     class="rounded-circle object-cover" width="48" height="48"
                                                     alt="{{$review->delivery_man->f_name.' '.$review->delivery_man->l_name}}">
                                                 <div class="meida-body">
@@ -180,7 +180,7 @@
                                                title="View" data-order_id="{{$review->order_id}}"
                                                data-date="{{ Helpers::time_date_format($review->created_at) }}"
                                                data-name="{{$review?->delivery_man?->f_name.' '.$review?->delivery_man?->l_name}}"
-                                               data-image="{{Helpers::get_image_helper($review->delivery_man,'image', asset('storage/app/public/delivery-man/').'/'.$review->delivery_man->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'delivery-man/') }}"
+                                               data-image="{{ $review?->delivery_man?->image_full_url }}"
                                                data-phone="{{$review?->delivery_man?->phone}}"
                                                data-rating="{{$review->rating}}"
                                                data-comment="{{$review->comment}}" >

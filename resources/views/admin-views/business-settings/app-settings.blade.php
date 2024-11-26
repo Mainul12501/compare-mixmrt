@@ -18,12 +18,12 @@
                     {{translate('messages.app_settings')}}
                 </span>
             </h1>
-            <div class="text--primary-2 d-flex flex-wrap align-items-center" type="button" data-toggle="modal" data-target="#how-it-works">
+            {{-- <div class="text--primary-2 d-flex flex-wrap align-items-center" type="button" data-toggle="modal" data-target="#how-it-works">
                 <strong class="mr-2">{{translate('See_how_it_works!')}}</strong>
                 <div class="blinkings">
                     <i class="tio-info-outined"></i>
                 </div>
-            </div>
+            </div> --}}
         </div>
         <!-- End Page Header -->
 

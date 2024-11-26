@@ -134,6 +134,9 @@ class InstallController extends Controller
 
         Helpers::insert_business_settings_key('check_daily_subscription_validity_check', date('Y-m-d'));
 
+        Helpers::insert_business_settings_key('country_picker_status', '1');
+        Helpers::insert_business_settings_key('manual_login_status', '1');
+
 
         $previousRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.php');
         $newRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.txt');
@@ -171,10 +174,10 @@ class InstallController extends Controller
                     DB_PORT=3306
                     DB_DATABASE=' . $request->DB_DATABASE . '
                     DB_USERNAME=' . $request->DB_USERNAME . '
-                    DB_PASSWORD=' . $request->DB_PASSWORD . '
+                    DB_PASSWORD="' . $request->DB_PASSWORD . '"
 
                     BROADCAST_DRIVER=log
-                    CACHE_DRIVER=file
+                    CACHE_DRIVER=database
                     SESSION_DRIVER=file
                     SESSION_LIFETIME=120
                     QUEUE_DRIVER=sync
@@ -192,7 +195,7 @@ class InstallController extends Controller
                     BUYER_USERNAME=' . session('username') . '
                     SOFTWARE_ID=MzY3NzIxMTI=
 
-                    SOFTWARE_VERSION=2.8.1
+                    SOFTWARE_VERSION=2.12
                     REACT_APP_KEY=45370351
                     ';
             $file = fopen(base_path('.env'), 'w');
@@ -217,6 +220,8 @@ class InstallController extends Controller
         try {
             $sql_path = base_path('installation/backup/database.sql');
             DB::unprepared(file_get_contents($sql_path));
+            // version_2.11.1
+            Artisan::call('cache:table');
             return redirect()->route('step5', ['token' => bcrypt('step_5')]);
         } catch (\Exception $exception) {
             session()->flash('error', 'Your database is not clean, do you want to clean database then import?');
@@ -230,6 +235,8 @@ class InstallController extends Controller
             Artisan::call('db:wipe', ['--force' => true]);
             $sql_path = base_path('installation/backup/database.sql');
             DB::unprepared(file_get_contents($sql_path));
+            // version_2.11.1
+            Artisan::call('cache:table');
             return redirect()->route('step5', ['token' => bcrypt('step_5')]);
         } catch (\Exception $exception) {
             session()->flash('error', 'Check your database permission!');

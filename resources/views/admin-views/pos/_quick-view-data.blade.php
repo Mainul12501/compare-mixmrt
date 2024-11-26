@@ -15,12 +15,7 @@
         <div class="d-flex align-items-center justify-content-center active">
             <img class="img-responsive initial--30 onerror-image"
 
-            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                $product,'image',
-                asset('storage/app/public/product').'/'.$product['image'] ?? '',
-                asset('public/assets/admin/img/160x160/img2.jpg'),
-                'product/'
-            ) }}"
+            src="{{ $product['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg')}}"
 
 
                 data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
@@ -84,6 +79,35 @@
             <span class="d-block text-dark text-break">
                 {!! $product->description !!}
             </span>
+
+            @if (in_array($product->module->module_type ,['food','grocery']))
+                @if (count($product->nutritions) )
+                    <h4 class="mt-2"> {{ translate('messages.Nutrition_Details') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        @foreach($product->nutritions as $nutrition)
+                        {{$nutrition->nutrition}}{{ !$loop->last ? ',' : '.'}}
+                        @endforeach
+                    </span>
+                @endif
+                @if (count($product->allergies))
+                    <h4 class="mt-2"> {{ translate('messages.Allergie_Ingredients') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        @foreach($product->allergies as $allergy)
+                        {{$allergy->allergy}}{{ !$loop->last ? ',' : '.'}}
+                        @endforeach
+                    </span>
+                @endif
+            @endif
+
+            @if (in_array($product->module->module_type ,['pharmacy']))
+                @if ($product->generic->pluck('generic_name')->first())
+                    <h4 class="mt-2"> {{ translate('generic_name') }}</h4>
+                    <span class="d-block text-dark text-break">
+                        {{ $product->generic->pluck('generic_name')->first() }}
+                    </span>
+                @endif
+            @endif
+
             <form id="add-to-cart-form" class="mb-2">
                 @csrf
                 <input type="hidden" name="id" value="{{ $product->id }}">
@@ -147,30 +171,6 @@
                     @endforeach
                 @endif
 
-                {{-- <!-- Quantity + Add to cart -->
-                <div class="d-flex justify-content-between">
-                    <div class="product-description-label mt-2 text-dark h3">{{ translate('messages.quantity') }}:
-                    </div>
-                    <div class="product-quantity d-flex align-items-center">
-                        <div class="input-group input-group--style-2 pr-3 initial--19">
-                            <span class="input-group-btn">
-                                <button class="btn btn-number p--10 text-dark" type="button" data-type="minus"
-                                    data-field="quantity" disabled="disabled">
-                                    <i class="tio-remove  font-weight-bold"></i>
-                                </button>
-                            </span>
-                            <input type="text" name="quantity"
-                                class="form-control input-number text-center cart-qty-field" placeholder="1"
-                                value="1" min="1" max="{{ $product->maximum_cart_quantity?? '9999999999' }}">
-                            <span class="input-group-btn">
-                                <button class="btn btn-number p--10 text-dark" type="button" data-type="plus"
-                                    data-field="quantity">
-                                    <i class="tio-add  font-weight-bold"></i>
-                                </button>
-                            </span>
-                        </div>
-                    </div>
-                </div> --}}
                 @php($add_ons = json_decode($product->add_ons))
                 @if (count($add_ons) > 0 && $add_ons[0])
                     <div class="h3 p-0 pt-2">{{ translate('messages.addon') }}</div>
@@ -228,9 +228,4 @@
 <script type="text/javascript">
     "use strict";
     setTimeout(check_stock, 100);
-    // cartQuantityInitialize();
-    // getVariantPrice();
-    // $('#add-to-cart-form input').on('change', function() {
-    //     getVariantPrice();
-    // });
 </script>

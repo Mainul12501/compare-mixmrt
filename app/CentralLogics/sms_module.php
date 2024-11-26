@@ -153,20 +153,37 @@ class SMS_module
         return $response;
     }
 
-    public static function alphanet_sms($receiver, $otp): string
+    public static function alphanet_sms($receiver, $otp ,$message = null): string
     {
         $config = self::get_settings('alphanet_sms');
         $response = 'error';
         if (isset($config) && $config['status'] == 1) {
+            if($message ==  null){
+                $message = str_replace("#OTP#", $otp, $config['otp_template']);
+            }
+
             $receiver = str_replace("+", "", $receiver);
-            $message = str_replace("#OTP#", $otp, $config['otp_template']);
             $api_key = $config['api_key'];
+            $sender_id = $config['sender_id'] ?? null;
+
+
+            $postfields = array(
+                'api_key' => $api_key,
+                'msg' => $message,
+                'to' => $receiver
+            );
+
+            if ($sender_id) {
+                $postfields['sender_id'] = $sender_id;
+            }
+
+
             $curl = curl_init();
             curl_setopt_array($curl, array(
                 CURLOPT_URL => 'https://api.sms.net.bd/sendsms',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => array('api_key' => $api_key, 'msg' => $message, 'to' => $receiver),
+                CURLOPT_POSTFIELDS => $postfields,
             ));
 
             $response = curl_exec($curl);

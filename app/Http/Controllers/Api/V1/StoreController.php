@@ -139,7 +139,6 @@ class StoreController extends Controller
 
     public function get_details(Request $request,$id)
     {
-    
         $longitude= $request->header('longitude');
         $latitude= $request->header('latitude');
         $store = StoreLogic::get_store_details($id,$longitude,$latitude);
@@ -160,8 +159,7 @@ class StoreController extends Controller
             ->select(DB::raw('MIN(price) AS min_price, MAX(price) AS max_price'))
             ->get(['min_price','max_price'])->toArray();
         }
-      
-        return response()->json($store);
+        return response()->json($store, 200);
     }
 
     public function get_searched_stores(Request $request)
@@ -215,6 +213,7 @@ class StoreController extends Controller
             $temp['item_name'] = null;
             $temp['item_image'] = null;
             $temp['customer_name'] = null;
+            // $temp->item=null;
             if($temp->item)
             {
                 $temp['item_name'] = $temp->item->name;
@@ -225,13 +224,14 @@ class StoreController extends Controller
                     $translate = array_column($temp->item->translations->toArray(), 'value', 'key');
                     $temp['item_name'] = $translate['name'];
                 }
+                unset($temp->item);
+                $temp['item'] = Helpers::product_data_formatting($temp->item, false, false, app()->getLocale());
             }
             if($temp->customer)
             {
                 $temp['customer_name'] = $temp->customer->f_name.' '.$temp->customer->l_name;
             }
 
-            unset($temp['item']);
             unset($temp['customer']);
             array_push($storage, $temp);
         }
@@ -319,6 +319,26 @@ class StoreController extends Controller
 
         $paginator['stores'] = Helpers::store_data_formatting($paginator['stores'], true);
         return response()->json($paginator, 200);
+    }
+
+    public function get_top_offer_near_me(Request $request)
+    {
+        if (!$request->hasHeader('zoneId')) {
+            $errors = [];
+            array_push($errors, ['code' => 'zoneId', 'message' => translate('messages.zone_id_required')]);
+            return response()->json([
+                'errors' => $errors
+            ], 403);
+        }
+        $type = $request->query('type', 'all');
+        $zone_id= $request->header('zoneId');
+        $longitude= $request->header('longitude');
+        $latitude= $request->header('latitude');
+        $stores = StoreLogic::get_top_offer_near_me($zone_id, $request['limit'], $request['offset'], $type,$longitude,$latitude);
+        $stores['stores'] = Helpers::store_data_formatting($stores['stores'], true);
+
+
+        return response()->json($stores, 200);
     }
 
 }

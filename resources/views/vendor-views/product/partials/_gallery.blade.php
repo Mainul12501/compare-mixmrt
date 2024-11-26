@@ -10,7 +10,7 @@
                         <div>
                             <div class="d-flex flex-wrap align-items-center food--media position-relative mr-4">
                                 <img class="avatar avatar-xxl avatar-4by3 onerror-image"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($item,'image', asset('storage/app/public/product/').'/'.$item['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                                src="{{ $item['image_full_url'] }}"
                                     data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                                     alt="Image Description">
                             </div>

@@ -10,7 +10,6 @@ use App\Models\OrderTransaction;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +21,7 @@ class DeliveryManController extends Controller
     public function index()
     {
         return view('vendor-views.delivery-man.index');
-}
+    }
 
     public function list(Request $request)
     {
@@ -72,9 +71,7 @@ class DeliveryManController extends Controller
             'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
-            'agreement_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff,pdf,doc,docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
-            'vehicle_id' => 'required_if:store_type,company'
         ]);
 
         if ($validator->fails()) {
@@ -106,19 +103,11 @@ class DeliveryManController extends Controller
         $dm->identity_number = $request->identity_number;
         $dm->identity_type = $request->identity_type;
         $dm->store_id =  Helpers::get_store_id();
-        $dm->zone_id =  Helpers::get_store_data()->zone_id;
         $dm->identity_image = $identity_image;
         $dm->image = $image_name;
         $dm->active = 0;
         $dm->earning = 0;
-        if($request->store_type == 'company'){
-            $dm->type = 'company_wise';
-            $dm->vehicle_id = $request->vehicle_id;
-        }else{
-            $dm->type = 'restaurant_wise';
-        }
-        $agreement_document_extension = $request->file('agreement_document')->extension();
-        $dm->agreement_document = Helpers::upload('delivery-man/', $agreement_document_extension, $request->file('agreement_document'));
+        $dm->type = 'restaurant_wise';
         $dm->password = bcrypt($request->password);
         $dm->save();
 
@@ -142,7 +131,7 @@ class DeliveryManController extends Controller
         {
             if($request->status == 0)
             {   $delivery_man->auth_token = null;
-                if(isset($delivery_man->fcm_token))
+                if(isset($delivery_man->fcm_token) && Helpers::getNotificationStatusData('deliveryman','deliveryman_account_block','push_notification_status') )
                 {
                     $data = [
                         'title' => translate('messages.suspended'),
@@ -161,6 +150,25 @@ class DeliveryManController extends Controller
                     ]);
                 }
 
+            } else{
+                if( Helpers::getNotificationStatusData('deliveryman','deliveryman_account_unblock','push_notification_status') && isset($delivery_man->fcm_token))
+                {
+                    $data = [
+                        'title' => translate('messages.Account_activation'),
+                        'description' => translate('messages.your_account_has_been_activated'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type'=> 'unblock'
+                    ];
+                    Helpers::send_push_notif_to_device($delivery_man->fcm_token, $data);
+
+                    DB::table('user_notifications')->insert([
+                        'data'=> json_encode($data),
+                        'delivery_man_id'=>$delivery_man->id,
+                        'created_at'=>now(),
+                        'updated_at'=>now()
+                    ]);
+                }
             }
 
         }
@@ -194,7 +202,6 @@ class DeliveryManController extends Controller
             'email' => 'required|unique:delivery_men,email,'.$id,
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men,phone,'.$id,
             'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
-            'vehicle_id' => 'required_if:store_type,company',
         ]);
 
         if ($validator->fails()) {
@@ -233,14 +240,8 @@ class DeliveryManController extends Controller
         $delivery_man->identity_type = $request->identity_type;
         $delivery_man->identity_image = $identity_image;
         $delivery_man->image = $image_name;
-        if($request->store_type == 'company'){
-            $delivery_man->vehicle_id = $request->vehicle_id;
-        }
+
         $delivery_man->password = strlen($request->password)>1?bcrypt($request->password):$delivery_man['password'];
-        if($request->file('agreement_document')){
-            $agreement_document_extension = $request->file('agreement_document')->extension();
-            $delivery_man->agreement_document = Helpers::upload('delivery-man/', $agreement_document_extension, $request->file('agreement_document'));
-           }
         $delivery_man->save();
 
         if($delivery_man->userinfo) {
@@ -326,12 +327,6 @@ class DeliveryManController extends Controller
             'view'=>view('vendor-views.delivery-man.partials._transation',compact('digital_transaction'))->render(),
             'count'=>$digital_transaction->count()
         ]);
-    }
-    public function download_document($fileName){
-        $path = '/delivery-man/';
-        if (Storage::disk('public')->exists($path . $fileName)) {
-            return Response::download(storage_path('app/public/delivery-man/' . $fileName));
-        }
     }
 
 }

@@ -68,7 +68,7 @@ active
                                     <select name="subscription_free_trial_type" class="form-control">
                                         <option {{ data_get($settings, 'subscription_free_trial_type') == 'day' ?'selected':''}} value="day" >{{ translate('Day') }}</option>
                                         <option {{ data_get($settings, 'subscription_free_trial_type') == 'month' ?'selected':''}} value="month" >{{ translate('Month') }}</option>
-                                        <option {{ data_get($settings, 'subscription_free_trial_type') == 'year' ?'selected':''}} value="year" >{{ translate('Year') }}</option>
+                                        {{-- <option {{ data_get($settings, 'subscription_free_trial_type') == 'year' ?'selected':''}} value="year" >{{ translate('Year') }}</option> --}}
                                     </select>
                                 </div>
                                 <div class="col-lg-4 col-xl-2">

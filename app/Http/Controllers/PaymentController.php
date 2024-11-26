@@ -49,6 +49,9 @@ class PaymentController extends Controller
         session()->put('order_id', $request->order_id);
 
         $order = Order::where(['id' => $request->order_id, 'user_id' => $request['customer_id']])->first();
+        if(!$order){
+            return response()->json(['errors' => ['code' => 'order-payment', 'message' => 'Data not found']], 403);
+        }
         if($order->is_guest){
             $customer_details = json_decode($order['delivery_address'],true);
         }else{
@@ -75,9 +78,6 @@ class PaymentController extends Controller
             ]);
         }
 
-        if(!$order){
-            return response()->json(['errors' => ['code' => 'order-payment', 'message' => 'Data not found']], 403);
-        }
 
         if (session()->has('payment_method') == false) {
             session()->put('payment_method', 'ssl_commerz_payment');
@@ -104,7 +104,7 @@ class PaymentController extends Controller
         $store_logo= BusinessSetting::where(['key' => 'logo'])->first();
         $additional_data = [
             'business_name' => BusinessSetting::where(['key'=>'business_name'])->first()?->value,
-            'business_logo' => \App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )
+            'business_logo' => \App\CentralLogics\Helpers::get_full_url('business',$store_logo?->value,$store_logo?->storage[0]?->value ?? 'public' )
         ];
 
         $payment_info = new PaymentInfo(

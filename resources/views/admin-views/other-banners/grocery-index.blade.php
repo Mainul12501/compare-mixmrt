@@ -46,12 +46,7 @@
                                         <div class="img">
                                             <img class="onerror-image"
 
-                                             src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $bottom_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner') . '/' . $bottom_section_banner?->value,
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                'promotional_banner/'
-                                            ) }}"
+                                             src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $bottom_section_banner?->value?? '', $bottom_section_banner?->storage[0]?->value ?? 'public','upload_placeholder')}}"
 
 
                                              data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
@@ -129,12 +124,7 @@
                                         <div class="position-relative">
                                         <div class="img">
                                             <img class="onerror-image"
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $best_reviewed_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner') . '/' . $best_reviewed_section_banner?->value,
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                               'promotional_banner/'
-                                            ) }}"
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $best_reviewed_section_banner?->value?? '', $best_reviewed_section_banner?->storage[0]?->value ?? 'public','upload_placeholder')}}"
 
                                             data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>

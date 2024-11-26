@@ -14,9 +14,7 @@ use App\CentralLogics\OrderLogic;
 use App\CentralLogics\CouponLogic;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\DeliveryMan;
 use App\Models\OrderPayment;
-use App\Scopes\ZoneScope;
 use Brian2694\Toastr\Facades\Toastr;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
@@ -26,132 +24,6 @@ class OrderController extends Controller
 {
     public function list($status)
     {
-        if(Helpers::get_store_data()->store_type == 'company'){
-            $key = explode(' ', request()?->search);
-            Order::where(['checked' => 0])->where('store_id',Helpers::get_store_id())->update(['checked' => 1]);
-
-            $orders = Order::with(['customer'])
-            ->when($status == 'searching_for_deliverymen', function($query){
-                return $query->SearchingForDeliveryman();
-            })
-            ->when($status == 'confirmed', function($query){
-                return $query->whereNull('parcel_company_id')
-                ->whereNotNull('confirmed')
-                ->whereIn('order_status',['confirmed', 'accepted'])
-                ->whereHas('store',function($q){
-                    $q->where('self_delivery_system',0);
-                })
-                ->orWhere(function($query){
-                    return $query->whereNotNull('confirmed')
-                    ->whereNotNull('parcel_company_id')
-                    ->where('parcel_company_id',Helpers::get_store_id())
-                    ->whereIn('order_status',['confirmed', 'accepted']);
-                });
-            })
-            ->when($status == 'pending', function ($query) {
-                if(config('order_confirmation_model') != 'store' ){
-                    return $query->Pending()
-                    ->whereHas('store',function($q){
-                        $q->where('self_delivery_system',0);
-                    });
-                }
-                else{
-                    return $query->where('order_status','pending')
-                    ->where('parcel_company_id',Helpers::get_store_id());
-                }
-            })
-            ->when($status == 'cooking', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','processing');
-            })
-            ->when($status == 'item_on_the_way', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','picked_up');
-            })
-            ->when($status == 'delivered', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->Delivered();
-            })
-            ->when($status == 'ready_for_delivery', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','handover');
-            })
-            ->when($status == 'refund_requested', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->RefundRequest();
-            })
-            ->when($status == 'refunded', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->Refunded();
-            })
-            // ->when($status == 'scheduled', function($query){
-            //     return $query->Scheduled()->where(function($q){
-            //         if(config('order_confirmation_model') == 'store' || Helpers::get_store_data()->self_delivery_system)
-            //         {
-            //             $q->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded']);
-            //         }
-            //         else
-            //         {
-            //             $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-            //                 $query->where('order_status','pending')->where('order_type', 'take_away');
-            //             });
-            //         }
-
-            //     });
-            // })
-            ->when($status == 'all', function($query){
-                if(config('order_confirmation_model') == 'store'){
-                 return $query->where(function($query){
-                    $query->where(function($query){
-                        return $query->whereHas('store',function($q){
-                           $q->where('self_delivery_system',0);
-                       })
-                       ->where(function($query){
-                           $query->whereNull('parcel_company_id')->whereNull('delivery_man_id');
-                       })->orWhere(function($query){
-                           $query->where('parcel_company_id',Helpers::get_store_id());
-                       })
-                        ->whereIn('order_status',['confirmed','accepted']);
-                    })->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded','pending']);
-                 })
-                 ->orWhere(function($query){
-                     return $query->whereNotNull('parcel_company_id')->where('parcel_company_id',Helpers::get_store_id());
-                 });
-                }else{
-                 return $query->where(function($query){
-                     $query->where(function($query){
-                         return $query->whereHas('store',function($q){
-                            $q->where('self_delivery_system',0);
-                        })
-                        ->where(function($query){
-                            $query->whereNull('parcel_company_id')->whereNull('delivery_man_id');
-                        })->orWhere(function($query){
-                            $query->where('parcel_company_id',Helpers::get_store_id());
-                        })
-                         ->whereIn('order_status',['confirmed','accepted','pending']);
-                     })->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded']);
-
-                 })
-                 ->orWhere(function($query){
-                     return $query->whereNotNull('parcel_company_id')->where('parcel_company_id',Helpers::get_store_id());
-                 });
-                }
-             })
-            // ->when(in_array($status, ['pending','confirmed']), function($query){
-            //     return $query->OrderScheduledIn(30);
-            // })
-            ->when(isset($key), function ($query) use ($key) {
-                return $query->where(function ($q) use ($key) {
-                    foreach ($key as $value) {
-                        $q->orWhere('id', 'like', "%{$value}%")
-                            ->orWhere('order_status', 'like', "%{$value}%")
-                            ->orWhere('transaction_reference', 'like', "%{$value}%");
-                    }
-                });
-            })
-            ->NotDigitalOrder()
-            ->Not_take_away()
-            ->where('zone_id',\App\CentralLogics\Helpers::get_store_data()?->zone_id)
-            ->latest()
-            // ->orderBy('schedule_at', 'desc')
-            ->paginate(config('default_pagination'));
-            $status = $status;
-            return view('vendor-views.order.list', compact('orders', 'status'));
-        }
         $key = explode(' ', request()?->search);
         Order::where(['checked' => 0])->where('store_id',Helpers::get_store_id())->update(['checked' => 1]);
 
@@ -236,134 +108,6 @@ class OrderController extends Controller
 
     public function export_orders($file_type, $status, $type, Request $request)
     {
-        if(Helpers::get_store_data()->store_type == 'company'){
-            $key = explode(' ', request()?->search);
-            Order::where(['checked' => 0])->where('store_id',Helpers::get_store_id())->update(['checked' => 1]);
-
-            $orders = Order::with(['customer'])
-            ->when($status == 'searching_for_deliverymen', function($query){
-                return $query->SearchingForDeliveryman();
-            })
-            ->when($status == 'confirmed', function($query){
-                return $query->whereNull('parcel_company_id')
-                ->whereNotNull('confirmed')
-                ->whereIn('order_status',['confirmed', 'accepted'])
-                ->whereHas('store',function($q){
-                    $q->where('self_delivery_system',0);
-                })
-                ->orWhere(function($query){
-                    return $query->whereNotNull('confirmed')
-                    ->whereNotNull('parcel_company_id')
-                    ->where('parcel_company_id',Helpers::get_store_id())
-                    ->whereIn('order_status',['confirmed', 'accepted']);
-                });
-            })
-            ->when($status == 'pending', function ($query) {
-                if(config('order_confirmation_model') != 'store' ){
-                    return $query->Pending()
-                    ->whereHas('store',function($q){
-                        $q->where('self_delivery_system',0);
-                    });
-                }
-                else{
-                    return $query->where('order_status','pending')
-                    ->where('parcel_company_id',Helpers::get_store_id());
-                }
-            })
-            ->when($status == 'cooking', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','processing');
-            })
-            ->when($status == 'item_on_the_way', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','picked_up');
-            })
-            ->when($status == 'delivered', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->Delivered();
-            })
-            ->when($status == 'ready_for_delivery', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->where('order_status','handover');
-            })
-            ->when($status == 'refund_requested', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->RefundRequest();
-            })
-            ->when($status == 'refunded', function($query){
-                return $query->where('parcel_company_id',Helpers::get_store_id())->Refunded();
-            })
-            // ->when($status == 'scheduled', function($query){
-            //     return $query->Scheduled()->where(function($q){
-            //         if(config('order_confirmation_model') == 'store' || Helpers::get_store_data()->self_delivery_system)
-            //         {
-            //             $q->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded']);
-            //         }
-            //         else
-            //         {
-            //             $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-            //                 $query->where('order_status','pending')->where('order_type', 'take_away');
-            //             });
-            //         }
-
-            //     });
-            // })
-            ->when($status == 'all', function($query){
-                if(config('order_confirmation_model') == 'store'){
-                 return $query->where(function($query){
-                     $query->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded','pending'])
-                     ->where(function($query){
-                         return $query->whereNull('parcel_company_id')
-                         ->whereIn('order_status',['confirmed','accepted'])
-                         ->whereHas('store',function($q){
-                             $q->where('self_delivery_system',0);
-                         });
-                     });
-                 })
-                 ->orWhere(function($query){
-                     return $query->whereNotNull('parcel_company_id')->where('parcel_company_id',Helpers::get_store_id());
-                 });
-                }else{
-                 return $query->where(function($query){
-                     $query->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded'])
-                     ->where(function($query){
-                         return $query->whereNull('parcel_company_id')
-                         ->whereIn('order_status',['confirmed','accepted','pending'])
-                         ->whereHas('store',function($q){
-                             $q->where('self_delivery_system',0);
-                         });
-                     });
-                 })
-                 ->orWhere(function($query){
-                     return $query->whereNotNull('parcel_company_id')->where('parcel_company_id',Helpers::get_store_id());
-                 });
-                }
-             })
-            // ->when(in_array($status, ['pending','confirmed']), function($query){
-            //     return $query->OrderScheduledIn(30);
-            // })
-            ->when(isset($key), function ($query) use ($key) {
-                return $query->where(function ($q) use ($key) {
-                    foreach ($key as $value) {
-                        $q->orWhere('id', 'like', "%{$value}%")
-                            ->orWhere('order_status', 'like', "%{$value}%")
-                            ->orWhere('transaction_reference', 'like', "%{$value}%");
-                    }
-                });
-            })
-            ->NotDigitalOrder()
-            ->Not_take_away()
-            ->where('zone_id',\App\CentralLogics\Helpers::get_store_data()?->zone_id)
-            // ->orderBy('schedule_at', 'desc')
-            ->get();
-            $data = [
-                'orders'=>$orders,
-                'type'=>$type,
-                'status'=>$status,
-                'order_status'=>isset($request->orderStatus)?implode(', ', $request->orderStatus):null,
-                'search'=>$request->search??null,
-                'from'=>$request->from_date??null,
-                'to'=>$request->to_date??null,
-                'zones'=>isset($request->zone)?Helpers::get_zones_name($request->zone):null,
-                'stores'=>isset($request->vendor)?Helpers::get_stores_name(Helpers::get_store_id()):null,
-            ];
-        }
-     else{
         $key = explode(' ', request()?->search);
         Order::where(['checked' => 0])->where('store_id',Helpers::get_store_id())->update(['checked' => 1]);
         $orders = Order::with(['customer'])
@@ -452,7 +196,6 @@ class OrderController extends Controller
             'zones'=>isset($request->zone)?Helpers::get_zones_name($request->zone):null,
             'stores'=>isset($request->vendor)?Helpers::get_stores_name(Helpers::get_store_id()):null,
         ];
-    }
 
     if ($file_type == 'excel') {
         return Excel::download(new OrderExport($data), 'Orders.xlsx');
@@ -478,29 +221,6 @@ class OrderController extends Controller
 
     public function details(Request $request,$id)
     {
-        if(Helpers::get_store_data()->store_type == 'company'){
-        $order = Order::with(['details','offline_payments','customer'=>function($query){
-            return $query->withCount('orders');
-        },'delivery_man'=>function($query){
-            return $query->withCount('orders');
-        }])->where(['id' => $id])
-      ->first();
-      if($order?->delivery_man && $order->delivery_man != 'company_wise' && $order?->delivery_man?->store_id != Helpers::get_store_id() ){
-        Toastr::info('No more orders!');
-        return back();
-      }
-        if (isset($order)) {
-            $reasons=OrderCancelReason::where('status', 1)->where('user_type' ,'store' )->get();
-            $deliveryMen = DeliveryMan::where('store_id',Helpers::get_store_id())->where(function($query)use($order){
-                $query->where('vehicle_id',$order->dm_vehicle_id)->orWhereNull('vehicle_id');
-        })->available()->active()->get();
-        $deliveryMen=Helpers::deliverymen_list_formatting($deliveryMen);
-            return view('vendor-views.order.order-view', compact('order' ,'reasons','deliveryMen'));
-        } else {
-            Toastr::info('No more orders!');
-            return back();
-        }
-      }else{
         $order = Order::with(['details','offline_payments','customer'=>function($query){
             return $query->withCount('orders');
         },'delivery_man'=>function($query){
@@ -508,13 +228,11 @@ class OrderController extends Controller
         }])->where(['id' => $id, 'store_id' => Helpers::get_store_id()])->first();
         if (isset($order)) {
             $reasons=OrderCancelReason::where('status', 1)->where('user_type' ,'store' )->get();
-            $deliveryMen = [];
-            return view('vendor-views.order.order-view', compact('order' ,'reasons','deliveryMen'));
+            return view('vendor-views.order.order-view', compact('order' ,'reasons'));
         } else {
             Toastr::info('No more orders!');
             return back();
         }
-      }
     }
 
     public function status(Request $request)
@@ -527,7 +245,7 @@ class OrderController extends Controller
             'id.required' => 'Order id is required!'
         ]);
 
-        $order = Order::where(['id' => $request->id])->first();
+        $order = Order::where(['id' => $request->id, 'store_id' => Helpers::get_store_id()])->first();
 
         if($order->delivered != null)
         {
@@ -549,13 +267,13 @@ class OrderController extends Controller
 
 
 
-        if($request['order_status']=='delivered' && $order->order_type != 'take_away' && !Helpers::get_store_data()->sub_self_delivery && Helpers::get_store_data()->store_type == 'store')
+        if($request['order_status']=='delivered' && $order->order_type != 'take_away' && !Helpers::get_store_data()->sub_self_delivery)
         {
             Toastr::warning(translate('messages.you_can_not_delivered_delivery_order'));
             return back();
         }
 
-        if($request['order_status'] =="confirmed" && Helpers::get_store_data()->store_type == 'store')
+        if($request['order_status'] =="confirmed")
         {
             if(!Helpers::get_store_data()->sub_self_delivery && config('order_confirmation_model') == 'deliveryman' && $order->order_type != 'take_away')
             {
@@ -632,7 +350,7 @@ class OrderController extends Controller
 
                 $order->cancellation_reason = $request->reason;
                 $order->canceled_by = 'store';
-
+                
                 $order?->store ?   Helpers::increment_order_count($order?->store) : '';
 
             }
@@ -641,9 +359,7 @@ class OrderController extends Controller
 
         if($request->order_status == 'delivered')
         {
-            if($order?->store){
-                $order->store->increment('order_count');
-            }
+            $order->store->increment('order_count');
             if($order->delivery_man)
             {
                 $order->delivery_man->increment('order_count');
@@ -656,10 +372,6 @@ class OrderController extends Controller
             $order->processing_time = ($request?->processing_time) ? $request->processing_time : explode('-', $order['store']['delivery_time'])[0];
         }
         $order[$request['order_status']] = now();
-        if($request['order_status'] =='confirmed' && Helpers::get_store_data()->store_type == 'company'){
-            $order->parcel_company_id = Helpers::get_store_id();
-
-        }
         $order->save();
         if(!Helpers::send_order_notification($order))
         {
@@ -931,9 +643,9 @@ class OrderController extends Controller
             Toastr::warning(translate('all_image_delete_warning'));
             return back();
         }
-
+      
         Helpers::check_and_delete('order/' , $request['name']);
-
+        
         foreach ($proof as $image) {
             if ($image != $request['name']) {
                 array_push($array, $image);
@@ -944,108 +656,5 @@ class OrderController extends Controller
         ]);
         Toastr::success(translate('order_proof_image_removed_successfully'));
         return back();
-    }
-
-    public function add_delivery_man($order_id, $delivery_man_id)
-    {
-        if ($delivery_man_id == 0) {
-            return response()->json(['message'=> translate('messages.deliveryman_not_found')  ], 400);
-        }
-        $order = Order::withOutGlobalScope(ZoneScope::class)->find($order_id);
-
-        $deliveryman = DeliveryMan::where('id', $delivery_man_id)->available()->active()->first();
-        if ($order->delivery_man_id == $delivery_man_id) {
-            return response()->json(['message'=> translate('messages.order_already_assign_to_this_deliveryman')  ], 400);
-        }
-        if ($deliveryman) {
-            if ($deliveryman->current_orders >= config('dm_maximum_orders')) {
-                return response()->json(['message'=> translate('messages.dm_maximum_order_exceed_warning')  ], 400);
-            }
-
-            $payments = $order->payments()->where('payment_method','cash_on_delivery')->exists();
-            $cash_in_hand = $deliveryman?->wallet?->collected_cash ?? 0;
-            $dm_max_cash=BusinessSetting::where('key','dm_max_cash_in_hand')->first();
-            $value=  $dm_max_cash?->value ?? 0;
-
-            if(($order->payment_method == "cash_on_delivery" || $payments) && (($cash_in_hand+$order->order_amount) >= $value)){
-                return response()->json(['message'=> \App\CentralLogics\Helpers::format_currency($value) ." ".translate('max_cash_in_hand_exceeds')  ], 400);
-            }
-
-            if ($order->delivery_man) {
-                $dm = $order->delivery_man;
-                $dm->current_orders = $dm->current_orders > 1 ? $dm->current_orders - 1 : 0;
-                $dm->save();
-
-                $data = [
-                    'title' => translate('messages.order_push_title'),
-                    'description' => translate('messages.you_are_unassigned_from_a_order'),
-                    'order_id' => '',
-                    'image' => '',
-                    'type' => 'assign'
-                ];
-                Helpers::send_push_notif_to_device($dm->fcm_token, $data);
-
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'delivery_man_id' => $dm->id,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            }
-            $order->delivery_man_id = $delivery_man_id;
-            $order->order_status = in_array($order->order_status, ['pending', 'confirmed']) ? 'accepted' : $order->order_status;
-            $order->accepted = now();
-            $order->store_id=Helpers::get_store_id();
-            $order->save();
-
-            $deliveryman->current_orders = $deliveryman->current_orders + 1;
-            $deliveryman->save();
-            $deliveryman->increment('assigned_order_count');
-
-            $fcm_token= $order->is_guest == 0 ? $order?->customer?->cm_firebase_token : $order?->guest?->fcm_token;
-            $value = Helpers::order_status_update_message('accepted',$order->module->module_type,$order->customer?
-            $order?->customer?->current_language_key:'en');
-            $value = Helpers::text_variable_data_format(value:$value,store_name:$order->store?->name,order_id:$order->id,user_name:"{$order?->customer?->f_name} {$order?->customer?->l_name}",delivery_man_name:"{$order->delivery_man?->f_name} {$order->delivery_man?->l_name}");
-            try {
-                if ($value) {
-                    $data = [
-                        'title' => translate('messages.order_push_title'),
-                        'description' => $value,
-                        'order_id' => $order['id'],
-                        'image' => '',
-                        'type' => 'order_status'
-                    ];
-
-                    if($fcm_token){
-                        Helpers::send_push_notif_to_device($fcm_token, $data);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'user_id' => $order?->customer?->id ,
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
-                }
-                $data = [
-                    'title' => translate('messages.order_push_title'),
-                    'description' => translate('messages.you_are_assigned_to_a_order'),
-                    'order_id' => $order['id'],
-                    'image' => '',
-                    'type' => 'assign'
-                ];
-                Helpers::send_push_notif_to_device($deliveryman->fcm_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'delivery_man_id' => $deliveryman->id,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            } catch (\Exception $e) {
-                info($e->getMessage());
-                Toastr::warning(translate('messages.push_notification_faild'));
-            }
-            return response()->json([], 200);
-        }
-        return response()->json(['message' => 'Deliveryman not available!'], 400);
     }
 }

@@ -6,10 +6,10 @@
                 @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
                 <a class="navbar-brand" href="{{ route('admin.dispatch.dashboard') }}" aria-label="Front">
                        <img class="navbar-brand-logo initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                     <img class="navbar-brand-logo-mini initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                 </a>
 
@@ -104,15 +104,6 @@
                     </a>
                 </li>
 
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/users/delivery-man/dm-pending-disbursement-requests*')  ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.users.delivery-man.dm-pending-disbursement-requests') }}" title="{{ translate('messages.DM Pending Disbursement Requests') }}">
-                        <i class="tio-filter-list nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                            {{ translate('messages.DM Pending Disbursement Requests') }}
-                        </span>
-                    </a>
-                </li>
-
                 <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/users/delivery-man/reviews') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.users.delivery-man.reviews.list') }}" title="{{ translate('messages.reviews') }}">
                         <i class="tio-star-outlined nav-icon"></i>
@@ -169,13 +160,6 @@
                             <a class="nav-link " href="{{ route('admin.users.customer.wallet.bonus.add-new') }}" title="{{ translate('messages.bonus') }}">
                                 <span class="tio-circle nav-indicator-icon"></span>
                                 <span class="text-truncate text-capitalize">{{ translate('messages.bonus') }}</span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item {{ Request::is('admin/users/customer/wallet/show-wallet-transfer-list*') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('admin.users.customer.wallet.show-wallet-transfer-list') }}" title="{{ translate('messages.Bank Transfer Requests') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate text-capitalize">{{ translate('messages.Bank Transfer Requests') }}</span>
                             </a>
                         </li>
                     </ul>
@@ -280,7 +264,7 @@
                                     <img class="avatar-img onerror-image"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                        src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                         alt="Image Description">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
@@ -303,7 +287,7 @@
                                         <img class="avatar-img onerror-image"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                        src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                        src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                         alt="Image Description">
                                     </div>

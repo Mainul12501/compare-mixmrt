@@ -15,7 +15,7 @@
             <div class="row align-items-center py-2">
                 <div class="col-sm mb-2 mb-sm-0">
                     <div class="d-flex align-items-center">
-                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/grocery.svg')}}" src="{{\App\CentralLogics\Helpers::get_image_helper($mod,'icon', asset('storage/app/public/module/').'/'.$mod->icon, asset('public/assets/admin/img/grocery.svg'), 'module/') }}"
+                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/grocery.svg')}}" src="{{$mod->icon_full_url }}"
                         width="38" alt="img">
                         <div class="w-0 flex-grow pl-2">
                             <h1 class="page-header-title mb-0">{{translate($mod->module_name)}} {{translate('messages.Dashboard')}}.</h1>
@@ -438,48 +438,48 @@
         chart.render();
 
 
-    options = {
-          series: [{
-          name: '{{ translate('Gross Sale') }}',
-          data: [{{ implode(",",$total_sell) }}]
-        },{
-          name: '{{ translate('Admin Comission') }}',
-          data: [{{ implode(",",$commission) }}]
-        },{
-          name: '{{ translate('Delivery Comission') }}',
-          data: [{{ implode(",",$delivery_commission) }}]
-        }],
-          chart: {
-          height: 350,
-          type: 'area',
-          toolbar: {
-            show:false
-        },
+        options = {
+            series: [{
+                name: '{{ translate('Gross Sale') }}',
+                data: [{{ implode(",",$total_sell) }}]
+            },{
+                name: '{{ translate('Admin Comission') }}',
+                data: [{{ implode(",",$commission) }}]
+            },{
+                name: '{{ translate('Delivery Comission') }}',
+                data: [{{ implode(",",$delivery_commission) }}]
+            }],
+            chart: {
+                height: 350,
+                type: 'area',
+                toolbar: {
+                    show:false
+                },
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
             colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        dataLabels: {
-          enabled: false,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        stroke: {
-          curve: 'smooth',
-          width: 2,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        fill: {
-            type: 'gradient',
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        xaxis: {
-        //   type: 'datetime',
-          categories: [{!! implode(",",$label) !!}]
-        },
-        tooltip: {
-          x: {
-            format: 'dd/MM/yy HH:mm'
-          },
-        },
+            dataLabels: {
+                enabled: false,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 2,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            fill: {
+                type: 'gradient',
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            xaxis: {
+                //   type: 'datetime',
+                categories: [{!! implode(",",$label) !!}]
+            },
+            tooltip: {
+                x: {
+                    format: 'dd/MM/yy HH:mm'
+                },
+            },
         };
 
         chart = new ApexCharts(document.querySelector("#grow-sale-chart"), options);

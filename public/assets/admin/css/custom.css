@@ -174,8 +174,23 @@ div.scroll-down {
     width: 280px;
 }
 @media screen and (min-width: 576px) {
-
-.created-package-slide-item {
-    width: 320px;
+    .created-package-slide-item {
+        width: 320px;
+    }
 }
+@media screen and (min-width: 564px) {
+    .daterangepicker {
+        top: 40% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        right: unset !important;
+    }
+    .daterangepicker::after,
+    .daterangepicker::before {
+        display: none;
+    }
+
+    .daterangepicker.opensright {
+        min-width: 564px;
+    }
 }

@@ -70,7 +70,7 @@
                     {{$item->module->module_type == 'food'? translate('N/A') : $item->stock}}
                 </td>
                 <td>
-                    {{$item->orders_count}}
+                    {{$item->orders_sum_quantity ?? 0}}
                 </td>
                 <td>
                     {{ \App\CentralLogics\Helpers::format_currency($item->price) }}
@@ -79,10 +79,10 @@
                     {{ \App\CentralLogics\Helpers::format_currency($item->orders_sum_price) }}
                 </td>
                 <td>
-                    {{ \App\CentralLogics\Helpers::format_currency($item->orders_sum_discount_on_item) }}
+                    {{ \App\CentralLogics\Helpers::format_currency($item->total_discount) }}
                 </td>
                 <td>
-                    {{ $item->orders_count>0? \App\CentralLogics\Helpers::format_currency(($item->orders_sum_price-$item->orders_sum_discount_on_item)/$item->orders_count):0 }}
+                    {{ $item->orders_count>0? \App\CentralLogics\Helpers::format_currency(($item->orders_sum_price-$item->total_discount)/($item->orders_sum_quantity ?? 0) ) :0 }}
                 </td>
                 <td>{{ $item->rating_count }}</td>
                 <td>{{ round($item->avg_rating,1) }}</td>

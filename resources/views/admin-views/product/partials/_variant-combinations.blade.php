@@ -17,35 +17,53 @@
         </thead>
         <tbody>
 
-        @foreach ($combinations as $key => $combination)
-            @php
-                $str = '';
-                foreach ($combination as $key => $item){
-                    if($key > 0 ){
-                        $str .= '-'.str_replace(' ', '', $item);
-                    }
-                    else{
-                        $str .= str_replace(' ', '', $item);
-                    }
-                }
-            @endphp
-            @if(strlen($str) > 0)
-                <tr>
-                    <td class="text-center">
-                        <label class="control-label m-0">{{ $str }}</label>
-                    </td>
-                    <td>
-                        <input type="number" name="price_{{ $str }}" value="{{ $price }}" min="0" step="0.01"
-                               class="form-control" required>
-                    </td>
-                    @if ($stock)
-                        <td><input type="number" name="stock_{{ $str }}" value="1" min="0"
-                               class="form-control" required></td>
-                    @endif
+{{--        @foreach ($combinations as $key => $combination)--}}
+{{--            @php--}}
+{{--                $str = '';--}}
+{{--                foreach ($combination as $key => $item){--}}
+{{--                    if($key > 0 ){--}}
+{{--                        $str .= '-'.str_replace(' ', '', $item);--}}
+{{--                    }--}}
+{{--                    else{--}}
+{{--                        $str .= str_replace(' ', '', $item);--}}
+{{--                    }--}}
+{{--                }--}}
+{{--            @endphp--}}
+{{--            @if(strlen($str) > 0)--}}
+{{--                <tr>--}}
+{{--                    <td class="text-center">--}}
+{{--                        <label class="control-label m-0">{{ $str }}</label>--}}
+{{--                    </td>--}}
+{{--                    <td>--}}
+{{--                        <input type="number" name="price_{{ $str }}" value="{{ $price }}" min="0" step="0.01"--}}
+{{--                               class="form-control" required>--}}
+{{--                    </td>--}}
+{{--                    @if ($stock)--}}
+{{--                        <td><input type="number" name="stock_{{ $str }}" value="1" min="0"--}}
+{{--                               class="form-control" required></td>--}}
+{{--                    @endif--}}
 
-                </tr>
-            @endif
-        @endforeach
+{{--                </tr>--}}
+{{--            @endif--}}
+{{--        @endforeach--}}
+            @foreach ($data as $key => $combination)
+                @if(strlen($combination['name']) > 0)
+                    <tr>
+                        <td class="text-center">
+                            <label class="control-label m-0">{{ $combination['name'] }}</label>
+                        </td>
+                        <td>
+                            <input type="number" name="price_{{ $combination['name'] }}" value="{{ $combination['price'] }}" min="0" step="0.01"
+                                   class="form-control" required>
+                        </td>
+                        @if ($stock)
+                            <td><input type="number" name="stock_{{ $combination['name'] }}" value="{{ $combination['stock'] }}" min="0"
+                                       class="form-control" required></td>
+                        @endif
+
+                    </tr>
+                @endif
+            @endforeach
         </tbody>
     </table>
     <script>

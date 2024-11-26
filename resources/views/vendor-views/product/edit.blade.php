@@ -160,17 +160,10 @@
                                     @foreach ($product->images as $key => $photo)
                                     @php($photo = is_array($photo)?$photo:['img'=>$photo,'storage'=>'public'])
                                         <div class="col-xl-2 col-lg-3 col-md-4 col-sm-4 col-6 spartan_item_wrapper" id="product_images_{{ $key }}">
-                                            <img class="img--square onerror-image" src="{{\App\CentralLogics\Helpers::onerror_image_helper($photo['img'], asset('storage/app/public/product/').'/'.$photo['img'], asset('public/assets/admin/img/400x400/img2.jpg'), 'product/',$photo['storage'] ?? 'public') }}"
+                                            <img class="img--square onerror-image" src="{{\App\CentralLogics\Helpers::get_full_url('product',$photo['img'],$photo['storage'] ?? 'public') }}"
                                             data-onerror-image ="{{asset('/public/assets/admin/img/400x400/img2.jpg')}}" alt="Product image">
-
-
-                                        @if (request()->product_gellary  == 1)
-                                            <a href="#"  data-key={{ $key }} data-photo="{{ $photo }}"
-                                            class="spartan_remove_row"><i class="tio-add-to-trash"></i></a>
-                                        @else
-                                            <a href="{{ route('vendor.item.remove-image', ['id' => $product['id'], 'name' => $photo ,'temp_product' => $temp_product]) }}"
-                                                class="spartan_remove_row"><i class="tio-add-to-trash"></i></a>
-                                        @endif
+                                            <a href="#"  data-key={{ $key }} data-photo="{{ $photo['img'] }}"
+                                             class="spartan_remove_row function_remove_img" ><i class="tio-add-to-trash"></i></a>
                                         </div>
                                     @endforeach
 
@@ -180,13 +173,13 @@
                                 <label class="text-dark">{{translate('messages.item_thumbnail')}} <small class="text-danger">* ( {{translate('messages.ratio')}} 1:1 )</small></label>
                                 <div class="text-center d-block" id="image-viewer-section" class="pt-2">
                                     <img class="img--100 onerror-image" id="viewer"
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper($product,'image', asset('storage/app/public/product/').'/'.$product['image'], asset('public/assets/admin/img/400x400/img2.jpg'), 'product/') }}"
+                                    src="{{ $product['image_full_url'] }}"
                                             data-onerror-image ="{{asset('/public/assets/admin/img/400x400/img2.jpg')}}"
                                             alt="product image"/>
                                 </div>
                                 <div class="custom-file mt-3">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
-                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
+                                            accept=".jpg, .png, .jpeg, .webp , .gif, .bmp, .tif, .tiff|image/*">
                                     <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
@@ -289,6 +282,44 @@
                                     </div>
                                 </div>
                             @endif
+                                @if($module_type == 'grocery' || $module_type == 'food')
+                                    @if (isset($temp_product) && $temp_product == 1 )
+                                        @php($product_nutritions = \App\Models\Nutrition::whereIn('id', json_decode($product?->nutrition_ids))->pluck('id'))
+                                        @php($product_allergies = \App\Models\Allergy::whereIn('id', json_decode($product?->allergy_ids))->pluck('id'))
+                                    @else
+                                        @php($product_nutritions = $product->nutritions->pluck('id'))
+                                        @php($product_allergies = $product->allergies->pluck('id'))
+                                    @endif
+
+                                    <div class="col-sm-6" id="nutrition">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Nutrition')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the necessary keywords relating to energy values for the item.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="nutritions[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Nutrition::all() as $nutrition)
+                                                <option value="{{ $nutrition->nutrition }}" {{ $product_nutritions->contains($nutrition->id) ? 'selected' : '' }}>{{ $nutrition->nutrition }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+
+                                    <div class="col-sm-6" id="allergy">
+                                        <label class="input-label" for="sub-categories">
+                                            {{translate('Allegren Ingredients')}}
+                                            <span class="input-label-secondary" title="{{ translate('Specify the ingredients of the item which can make a reaction as an allergen.') }}" data-toggle="tooltip">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
+                                        <select name="allergies[]" class="form-control multiple-select2" data-placeholder="{{ translate('messages.Type your content and press enter') }}" multiple>
+                                            @foreach (\App\Models\Allergy::all() as $allergy)
+                                                <option value="{{ $allergy->allergy }}" {{ $product_allergies->contains($allergy->id) ? 'selected' : '' }}>{{ $allergy->allergy }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
                                 <div class="col-sm-6 col-lg-4">
                                     <div class="form-group mb-0">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.price')}}</label>
@@ -297,17 +328,6 @@
                                                 placeholder="{{ translate('messages.Ex:') }} 100" required>
                                     </div>
                                 </div>
-                                <div class="col-sm-6 col-lg-4">
-                                    <div class="form-group mb-0">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.weight')}}</label>
-                                        <input type="number" value="{{$product->weight}}" min="0.001" max="999999999999.999" name="weight"
-                                                class="form-control" step="0.001"
-                                                placeholder="{{ translate('messages.Ex:') }} 10" required>
-                                                
-                                                <input type="hidden" name="module_type" value="{{ $module_type}}">
-                                    </div>
-                                </div>
-                                
                                 <div class="col-sm-6 col-lg-4">
                                     <div class="form-group mb-0">
                                         <label class="input-label" for="exampleFormControlInput1">{{translate('messages.discount')}}</label>
@@ -351,6 +371,28 @@
                                         <input type="number"  placeholder="{{ translate('messages.Ex:_10') }}" class="form-control" name="maximum_cart_quantity" min="0" value="{{ $product->maximum_cart_quantity }}" id="cart_quantity">
                                     </div>
                                 </div>
+
+
+                                <div class="col-sm-6" id="generic_name">
+                                    <label class="input-label" for="sub-categories">
+                                        {{translate('generic_name')}}
+                                        <span class="input-label-secondary" title="{{ translate('Specify the medicine`s active ingredient that makes it work') }}" data-toggle="tooltip">
+                                            <i class="tio-info-outined"></i>
+                                        </span>
+                                    </label>
+                                    <div class="dropdown suggestion_dropdown">
+                                        <input type="text" class="form-control" name="generic_name" placeholder="{{ translate('messages.Type your content here') }}" value="{{ isset($temp_product) && $temp_product == 1 ?  \App\Models\GenericName::where('id', json_decode($product?->generic_ids))->first()?->generic_name : $product->generic->pluck('generic_name')->first() }}" autocomplete="off">
+                                        @if(count(\App\Models\GenericName::select(['generic_name'])->get())>0)
+                                        <div class="dropdown-menu">
+                                            @foreach (\App\Models\GenericName::select(['generic_name'])->get() as $generic_name)
+                                            <div class="dropdown-item">{{ $generic_name->generic_name }}</div>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+
                                 <div class="col-sm-6 col-lg-4" id="organic">
                                     <div class="form-check mb-0 p-6">
                                         <input class="form-check-input" name="organic" type="checkbox" value="1" id="flexCheckDefault" {{ $product->organic == 1?'checked':'' }}>
@@ -360,7 +402,7 @@
                                       </div>
                                 </div>
                                 @if ($module_data['basic'])
-                                <div class="col-sm-6 col-lg-4" id="basic">
+                                <div class="col-sm-3 col-lg-3" id="basic">
                                     <div class="form-check mb-0 p-6">
                                         <input class="form-check-input" name="basic" type="checkbox" value="1" id="flexCheckDefaultbasic" {{ $product->pharmacy_item_details?->is_basic == 1?'checked':'' }}>
                                         <label class="form-check-label" for="flexCheckDefaultbasic">
@@ -370,7 +412,7 @@
                                 </div>
                                 @endif
                                 @if ($module_type == 'pharmacy')
-                                <div class="col-sm-6 col-lg-4" id="is_prescription_required">
+                                <div class="col-sm-3 col-lg-3" id="is_prescription_required">
                                     <div class="form-check mb-0 p-6">
                                         <input class="form-check-input" name="is_prescription_required" type="checkbox" value="1" id="flexCheckDefaultPrescription" {{ $product->pharmacy_item_details?->is_prescription_required == 1?'checked':'' }}>
                                         <label class="form-check-label" for="flexCheckDefaultPrescription">
@@ -848,6 +890,16 @@
                 }
             });
         });
+        // $('#product_form').on('keydown', function(e) {
+        //     if (e.key === 'Enter') {
+        //     e.preventDefault(); // Prevent submission on Enter
+        //     }
+        // });
+
+
+
+
+
     </script>
 @endpush
 

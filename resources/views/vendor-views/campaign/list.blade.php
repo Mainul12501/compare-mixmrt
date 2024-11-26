@@ -66,7 +66,7 @@
                             </td>
                             <td>
                                 <div class="overflow-hidden">
-                                    <img class="img--vertical max--200 mw--200 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($campaign,'image', asset('storage/app/public/campaign').'/'.$campaign['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'campaign/') }}"
+                                    <img class="img--vertical max--200 mw--200 onerror-image" src="{{ $campaign['image_full_url'] }}"
                                          data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"  alt="image">
                                 </div>
                             </td>

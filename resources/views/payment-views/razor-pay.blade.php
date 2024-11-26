@@ -21,12 +21,13 @@
                 data-image="{{ $business_logo ?? 'default.png' }}"
                 data-prefill.name="{{$payer->name ?? ''}}"
                 data-prefill.email="{{$payer->email ?? ''}}"
+                data-callback_url="{{ route('razor-pay.callback') }}"
                 data-theme.color="#ff7529">
         </script>
         <button class="btn btn-block" id="pay-button" type="submit" style="display:none"></button>
     </form>
 
-    
+
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("pay-button").click();

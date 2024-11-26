@@ -65,7 +65,7 @@
                                 <div class="text-center mb-auto">
                                     <img class="store-banner onerror-image" id="viewer"
                                          data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                         src="{{\App\CentralLogics\Helpers::get_image_helper($e,'image', asset('storage/app/public/vendor').'/'.$e['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'vendor/') }}"
+                                         src="{{ $e['image_full_url'] }}"
                                          alt="Employee thumbnail"/>
                                 </div>
 

@@ -47,10 +47,6 @@
                         <th class="border-0 text-capitalize">{{translate('messages.name')}}</th>
                         <th class="border-0 text-capitalize">{{translate('messages.availability_status')}}</th>
                         <th class="border-0 text-capitalize">{{translate('messages.phone')}}</th>
-                        @if (\App\CentralLogics\Helpers::get_store_data()->store_type = 'company')
-                        <th class="border-0 text-capitalize">{{translate('messages.cash_in_hand')}}</th>
-                        @endif
-
                         <th class="border-0 text-capitalize text-center">{{translate('messages.active_orders')}}</th>
                         <th class="border-0 text-capitalize text-center">{{translate('messages.action')}}</th>
                     </tr>
@@ -64,7 +60,7 @@
                                 <a class="media align-items-center" href="{{route('vendor.delivery-man.preview',[$dm['id']])}}">
                                     <img class="avatar avatar-lg mr-3 onerror-image"
                                          data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                         src="{{\App\CentralLogics\Helpers::get_image_helper($dm,'image', asset('storage/app/public/delivery-man').'/'.$dm['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'delivery-man/') }}"
+                                         src="{{ $dm['image_full_url']}}"
                                          alt="{{$dm['f_name']}} {{$dm['l_name']}}">
                                     <div class="media-body">
                                         <h5 class="text-hover-primary mb-0">{{$dm['f_name'].' '.$dm['l_name']}}</h5>
@@ -96,11 +92,6 @@
                             <td>
                                 <a class="deco-none" href="tel:{{$dm['phone']}}">{{$dm['phone']}}</a>
                             </td>
-                            @if (\App\CentralLogics\Helpers::get_store_data()->store_type = 'company')
-                            <td >
-                                {{ $dm->collected_cash}}
-                            </td>
-                            @endif
                             <td class="text-center">
                                 {{ $dm->orders ? count($dm->orders):0 }}
                             </td>

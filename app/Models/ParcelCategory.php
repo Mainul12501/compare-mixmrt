@@ -16,7 +16,6 @@ class ParcelCategory extends Model
     protected $casts = [
         'parcel_per_km_shipping_charge'=>'float',
         'parcel_minimum_shipping_charge'=>'float',
-        'parcel_per_kg_charge'=>'float',
     ];
 
     protected $appends = ['image_full_url'];
@@ -70,18 +69,12 @@ class ParcelCategory extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('parcel_category',$value);
-                    }else{
-                        return Helpers::local_storage_link('parcel_category',$value);
-                    }
+                    return Helpers::get_full_url('parcel_category',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('parcel_category',$value);
+        return Helpers::get_full_url('parcel_category',$value,'public');
     }
 
     public function storage()

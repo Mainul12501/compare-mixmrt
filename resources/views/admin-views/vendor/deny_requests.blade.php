@@ -38,9 +38,6 @@
                             <li class="nav-item">
                                 <a class="nav-link active" href="{{ route('admin.store.deny-requests') }}"  aria-disabled="true">{{translate('messages.denied_stores')}}</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.store.pending-method-requests') }}"  aria-disabled="true">{{translate('messages.Disbursement Requests')}}</a>
-                            </li>
                         </ul>
                         <!-- End Nav -->
                     </div>
@@ -87,7 +84,6 @@
                         <th class="border-0">{{translate('messages.owner_information')}}</th>
                         <th class="border-0">{{translate('messages.zone')}}</th>
                         <th class="text-uppercase border-0">{{translate('messages.status')}}</th>
-                        <th class="text-uppercase border-0">{{translate('messages.Reason')}}</th>
                         <th class="border-0">{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
@@ -101,12 +97,7 @@
                                     <a href="{{route('admin.store.view', $store->id)}}" class="table-rest-info" alt="view store">
                                         <img class="img--60 circle onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $store,'logo',
-                                            asset('storage/app/public/store').'/'.$store['logo'] ?? '',
-                                            asset('public/assets/admin/img/160x160/img1.jpg'),
-                                            'store/'
-                                        ) }}" >
+                                        src="{{ $store['logo_full_url'] ?? asset('public/assets/admin/img/160x160/img1.jpg') }}" >
                                         <div class="info"><div class="text--title">
                                             {{Str::limit($store->name,20,'...')}}
                                             </div>
@@ -144,7 +135,7 @@
                                     <span class="badge badge-soft-danger">{{translate('messages.pending')}}</span>
                                 @endif
                             </td>
-                            <td>{{ $store->reason }}</td>
+
                             <td>
                                 @if($store->vendor->status == 0)
                                     <a class="btn action-btn btn--primary btn-outline-primary float-right mr-2 request_alert" data-toggle="tooltip" data-placement="top"

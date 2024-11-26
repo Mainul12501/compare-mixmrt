@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\DeliveryMan\DeliveryManController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Vendor\SubscriptionController;
 
@@ -90,26 +89,13 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::delete('delete/{id}', 'DeliveryManController@delete')->name('delete');
             Route::get('get-deliverymen', 'DeliveryManController@get_deliverymen')->name('get-deliverymen');
             Route::post('transation/search', 'DeliveryManController@transaction_search')->name('transaction-search');
-            Route::get('download-document/{fileName}', 'DeliveryManController@download_document')->name('download-document');
 
             Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
                 Route::get('list', 'DeliveryManController@reviews_list')->name('list');
             });
-            Route::group(['prefix' => 'account-transaction', 'as' => 'account-transaction.', 'middleware' => ['module:collect_cash']], function () {
-                Route::get('list', 'AccountTransactionController@index')->name('index');
-                Route::post('store', 'AccountTransactionController@store')->name('store');
-                Route::get('details/{id}', 'AccountTransactionController@show')->name('view');
-                Route::delete('delete/{id}', 'AccountTransactionController@distroy')->name('delete');
-                Route::post('search', 'EmployeeController@search')->name('search');
-                Route::get('export', 'AccountTransactionController@export_account_transaction')->name('export');
-                Route::post('search', 'AccountTransactionController@search_account_transaction')->name('search');
-
-                Route::get('dm-list', 'AccountTransactionController@dm_list')->name('dm_list');
-                Route::get('get-account-data/{deliveryman}', 'AccountTransactionController@get_account_data')->name('store-filter');
-            });
         });
 
-        Route::group(['prefix' => 'employee', 'as' => 'employee.', 'middleware' => ['module:employee']], function () {
+        Route::group(['prefix' => 'employee', 'as' => 'employee.', 'middleware' => ['module:employee' ,'subscription:employee']], function () {
             Route::get('add-new', 'EmployeeController@add_new')->name('add-new');
             Route::post('add-new', 'EmployeeController@store');
             Route::get('list', 'EmployeeController@list')->name('list');
@@ -142,6 +128,7 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             //Mainul
             Route::get('get-variations', 'ItemController@get_variations')->name('get-variations');
             Route::get('stock-limit-list', 'ItemController@stock_limit_list')->name('stock-limit-list');
+            Route::get('get-stock', 'ItemController@get_stock')->name('get_stock');
             Route::post('stock-update', 'ItemController@stock_update')->name('stock-update');
 
             Route::post('food-variation-generate', 'ItemController@food_variation_generator')->name('food-variation-generate');
@@ -181,27 +168,20 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('request', 'WalletController@w_request')->name('withdraw-request');
             Route::delete('close/{id}', 'WalletController@close_request')->name('close-request');
             Route::get('method-list', 'WalletController@method_list')->name('method-list');
-            Route::get('make-collected-cash-payment', 'WalletController@make_payment')->name('make_payment');
+            Route::post('make-collected-cash-payment', 'WalletController@make_payment')->name('make_payment');
             Route::post('make-wallet-adjustment', 'WalletController@make_wallet_adjustment')->name('make_wallet_adjustment');
 
             Route::get('wallet-payment-list', 'WalletController@wallet_payment_list')->name('wallet_payment_list');
             Route::get('disbursement-list', 'WalletController@getDisbursementList')->name('getDisbursementList');
-            Route::get('offline-payment-list', 'WalletController@offline_payment_list')->name('offline_payment_list');
-            Route::get('offline-payment-recheck', 'WalletController@offline_payment_recheck')->name('offline_payment_recheck');
-            Route::post('offline-payment-edit/{id}', 'WalletController@offline_payment_edit')->name('offline_payment_edit');
             Route::get('export', 'WalletController@getDisbursementExport')->name('export');
-
-            Route::post('offline-payment', 'WalletController@offline_payment')->name('offline-payment');
 
         });
 
         Route::group(['prefix' => 'withdraw-method', 'as' => 'wallet-method.', 'middleware' => ['module:wallet' ,'subscription:wallet' ]], function () {
             Route::get('/', 'WalletMethodController@index')->name('index');
             Route::post('store/', 'WalletMethodController@store')->name('store');
-            Route::post('store-from-profile/', 'WalletMethodController@storeFromProfile')->name('store-from-profile');
             Route::get('default/{id}/{default}', 'WalletMethodController@default')->name('default');
             Route::delete('delete/{id}', 'WalletMethodController@delete')->name('delete');
-
         });
 
         Route::group(['prefix' => 'coupon', 'as' => 'coupon.', 'middleware' => ['module:coupon','subscription:coupon']], function () {
@@ -211,6 +191,20 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('update/{id}', 'CouponController@update');
             Route::get('status/{id}/{status}', 'CouponController@status')->name('status');
             Route::delete('delete/{id}', 'CouponController@delete')->name('delete');
+        });
+
+        Route::group([ 'prefix' => 'advertisement', 'as' => 'advertisement.' ,'middleware' => ['module:advertisement','subscription:coupon']], function () {
+
+            Route::get('/', 'AdvertisementController@index')->name('index');
+            Route::get('create/', 'AdvertisementController@create')->name('create');
+            Route::get('details/{advertisement}', 'AdvertisementController@show')->name('show');
+            Route::get('{advertisement}/edit', 'AdvertisementController@edit')->name('edit');
+            Route::post('store', 'AdvertisementController@store')->name('store');
+            Route::put('update/{advertisement}', 'AdvertisementController@update')->name('update');
+            Route::delete('delete/{id}', 'AdvertisementController@destroy')->name('destroy');
+            Route::get('/status', 'AdvertisementController@status')->name('status');
+            Route::get('/copy-advertisement/{advertisement}', 'AdvertisementController@copyAdd')->name('copyAdd');
+            Route::post('/copy-add-post/{advertisement}', 'AdvertisementController@copyAddPost')->name('copyAddPost');
         });
 
         Route::group(['prefix' => 'addon', 'as' => 'addon.', 'middleware' => ['module:addon','subscription:addon']], function () {
@@ -239,7 +233,6 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('add-order-proof/{id}', 'OrderController@add_order_proof')->name('add-order-proof');
             Route::get('remove-proof-image', 'OrderController@remove_proof_image')->name('remove-proof-image');
             Route::get('export-orders/{file_type}/{status}/{type}', 'OrderController@export_orders')->name('export');
-            Route::get('add-delivery-man/{order_id}/{delivery_man_id}', 'OrderController@add_delivery_man')->name('add-delivery-man');
 
         });
 
@@ -251,6 +244,8 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('update-setup/{store}', 'BusinessSettingsController@store_setup')->name('update-setup');
             Route::post('update-meta-data/{store}', 'BusinessSettingsController@updateStoreMetaData')->name('update-meta-data');
             Route::get('toggle-settings-status/{store}/{status}/{menu}', 'BusinessSettingsController@store_status')->name('toggle-settings');
+            Route::get('notification-setup', 'BusinessSettingsController@notification_index')->name('notification-setup');
+            Route::get('notification-status-change/{key}/{type}', 'BusinessSettingsController@notification_status_change')->name('notification_status_change');
         });
 
         Route::group(['prefix' => 'profile', 'as' => 'profile.', 'middleware' => ['module:bank_info' ,'subscription:bank_info']], function () {
@@ -269,24 +264,13 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('update', 'RestaurantController@update')->name('update');
             Route::post('update-message', 'RestaurantController@update_message')->name('update-message');
         });
-        Route::group(['prefix' => 'offline_payment', 'as' => 'offline_payment.', 'middleware' => ['module:offline_payment']], function () {
-            Route::get('', 'OfflinePaymentController@view')->name('view');
-            Route::get('list', 'OfflinePaymentController@list')->name('list');
-            Route::post('update', 'OfflinePaymentController@update')->name('update');
-            Route::post('update-message', 'OfflinePaymentController@update_message')->name('update-message');
-        });
 
-        Route::group(['prefix' => 'message', 'as' => 'message.'], function () {
+        Route::group(['prefix' => 'message', 'as' => 'message.', 'middleware' => ['subscription:chat']], function () {
             Route::get('list', 'ConversationController@list')->name('list');
             Route::post('store/{user_id}/{user_type}', 'ConversationController@store')->name('store');
             Route::get('view/{conversation_id}/{user_id}', 'ConversationController@view')->name('view');
         });
-        Route::group(['prefix' => 'report', 'as' => 'report.', 'middleware' => ['module:parcel']], function () {
-            //parcel report
-            Route::get('parcel-report', 'ReportController@parcel_report')->name('parcel-report');
-            Route::get('parcel-export', 'ReportController@parcel_export')->name('parcel-export');
-            Route::post('parcel-report-search', 'ReportController@parcel_search')->name('parcel-report-search');
-        });
+
         Route::group(['prefix' => 'report', 'as' => 'report.', 'middleware' => ['module:report' ,'subscription:report']], function () {
             Route::post('set-date', 'ReportController@set_date')->name('set-date');
             Route::get('expense-report', 'ReportController@expense_report')->name('expense-report');
@@ -294,33 +278,6 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('expense-report-search', 'ReportController@expense_search')->name('expense-report-search');
             Route::get('disbursement-report', 'ReportController@disbursement_report')->name('disbursement-report');
             Route::get('disbursement-report-export/{type}', 'ReportController@disbursement_report_export')->name('disbursement-report-export');
-
-            // //parcel report
-
-            // Route::get('parcel-report', 'ReportController@parcel_report')->name('parcel-report');
-            // Route::get('parcel-export', 'ReportController@parcel_export')->name('parcel-export');
-            // Route::post('parcel-report-search', 'ReportController@parcel_search')->name('parcel-report-search');
-        });
-
-
-         Route::group(['prefix' => 'parcel', 'as' => 'parcel.', 'middleware' => ['module:parcel']], function () {
-       // Route::group(['prefix' => 'parcel', 'as' => 'parcel.'], function () {
-            Route::get('category/status/{id}/{status}', 'ParcelCategoryController@status')->name('category.status');
-            Route::resource('category', 'ParcelCategoryController');
-            Route::get('orders/{status}', 'ParcelController@orders')->name('orders');
-            Route::get('details/{id}', 'ParcelController@order_details')->name('order.details');
-            Route::get('settings', 'ParcelController@settings')->name('settings');
-            Route::post('settings', 'ParcelController@update_settings')->name('update.settings');
-            Route::get('dispatch/{status}', 'ParcelController@dispatch_list')->name('list');
-            Route::post('instruction', 'ParcelController@instruction')->name('instruction');
-            Route::get('/instruction/{id}/{status}', 'ParcelController@instruction_status')->name('instruction_status');
-            Route::put('instruction_edit/', 'ParcelController@instruction_edit')->name('instruction_edit');
-            Route::delete('instruction_delete/{id}', 'ParcelController@instruction_delete')->name('instruction_delete');
-            Route::get('offline/payment/list/{status}', 'OrderController@offline_verification_list')->name('offline_verification_list');
-            Route::get('third-party-company', 'ParcelController@third_party_company')->name('third-party-company');
-            Route::get('status', 'ParcelController@status')->name('status');
-            Route::get('generate-invoice/{id}', 'ParcelController@generate_invoice')->name('generate-invoice');
-            Route::get('add-delivery-man/{order_id}/{delivery_man_id}', 'ParcelController@add_delivery_man')->name('add-delivery-man');
         });
     });
 });

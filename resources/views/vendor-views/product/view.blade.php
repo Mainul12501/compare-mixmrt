@@ -7,6 +7,8 @@
 @endpush
 
 @section('content')
+@php($store_data=\App\CentralLogics\Helpers::get_store_data())
+
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
@@ -17,9 +19,17 @@
                     </span>
                     <span>{{$product['name']}}</span>
                 </h1>
-                <a href="{{route('vendor.item.edit',[$product['id']])}}" class="btn btn--primary">
-                    <i class="tio-edit"></i> {{translate('messages.edit')}}
-                </a>
+                <div>
+
+                    @if ($store_data->module->module_type != 'food')
+                    <a data-toggle="modal"  data-id="{{ $product->id }}"  data-target="#update-quantity" class="btn btn--primary update-quantity">
+                        {{ translate('messages.Update_Stock') }}
+                    </a>
+                    @endif
+                    <a href="{{route('vendor.item.edit',[$product['id']])}}" class="btn btn--primary">
+                        <i class="tio-edit"></i> {{translate('messages.edit')}}
+                    </a>
+                </div>
             </div>
         </div>
         <!-- End Page Header -->
@@ -33,7 +43,7 @@
                         <div class="col-lg-5 col-md-6 mb-3 mb-md-0">
                             <div class="d-flex flex-wrap align-items-center food--media">
                                 <img class="avatar avatar-xxl avatar-4by3 mr-4 onerror-image"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($product,'image', asset('storage/app/public/product/').'/'.$product['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                                src="{{ $product['image_full_url'] }}"
                                         data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"
                                         alt="Image Description">
                                         <div class="d-block">
@@ -232,14 +242,32 @@
                         <thead class="thead-light">
                             <tr>
                                 <th class="px-4 border-0"><h4 class="m-0 text-capitalize">{{translate('short_description')}}</h4></th>
+                                @if (in_array($product->module->module_type ,['food','grocery']))
+                                <th class="px-4 border-0">
+                                    <h4 class="m-0 text-capitalize">{{ translate('Nutrition') }}</h4>
+                                </th>
+                                <th class="px-4 border-0">
+                                    <h4 class="m-0 text-capitalize">{{ translate('Allergy') }}</h4>
+                                </th>
+
+                            @endif
+
+
+                            @if ($store_data->module->module_type != 'food')
+                            <th class="px-4 border-0">
+                                <h4 class="m-0 text-capitalize">{{ translate('Stock') }}</h4>
+                            </th>
+                            @endif
+                            @if (in_array($product->module->module_type ,['pharmacy']))
+                            <th class="px-4 border-0">
+                                <h4 class="m-0 text-capitalize">{{ translate('Generic_Name') }}</h4>
+                            </th>
+                        @endif
                                 <th class="px-4 border-0"><h4 class="m-0 text-capitalize">{{translate('price')}}</h4></th>
                                 <th class="px-4 border-0"><h4 class="m-0 text-capitalize">{{translate('variations')}}</h4></th>
                                 @if(\App\CentralLogics\Helpers::get_store_data()->module->module_type == 'food')
                                 <th class="px-4 border-0"><h4 class="m-0 text-capitalize">{{translate('addons')}}</h4></th>
                                 @endif
-                                <th class="px-4 border-0">
-                                    <h4 class="m-0 text-capitalize">{{ translate('Weight (Kg)') }}</h4>
-                                </th>
                                 <th class="px-4 border-0">
                                     <h4 class="m-0 text-capitalize">{{ translate('tags') }}</h4>
                                 </th>
@@ -252,6 +280,36 @@
                                         {!!$product['description'] !!}
                                     </div>
                                 </td>
+                                @if (in_array($product->module->module_type ,['food','grocery']))
+                                    <td class="px-4">
+                                        @if ($product->nutritions)
+                                            @foreach($product->nutritions as $nutrition)
+                                                {{$nutrition->nutrition}}{{ !$loop->last ? ',' : '.'}}
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    <td class="px-4">
+                                        @if ($product->allergies)
+                                            @foreach($product->allergies as $allergy)
+                                                {{$allergy->allergy}}{{ !$loop->last ? ',' : '.'}}
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                @endif
+
+                                @if ($product->module->module_type != 'food')
+                                <td class="px-4">{{$product->stock}}</td>
+                                @endif
+
+                                @if (in_array($product->module->module_type ,['pharmacy']))
+                                    <td class="px-4">
+                                        @if ($product->generic->pluck('generic_name')->first())
+                                            {{ $product->generic->pluck('generic_name')->first() }}
+                                        @endif
+                                    </td>
+
+                                @endif
+
                                 <td class="px-4">
                                     <span class="d-block mb-1">
                                         <span>{{translate('messages.price')}} : </span>
@@ -335,15 +393,6 @@
                                 @endif
                                 </td>
                                 @endif
-
-                                @if($product->weight)
-                                <td>
-                                        
-                                        {{$product->weight}}
-                                </td>
-                                        
-                                    @endif
-
                                 @if ($product->tags)
                                 <td>
                                     @foreach($product->tags as $c)
@@ -395,7 +444,7 @@
                                         <div class="position-relative media align-items-center">
                                             <a class=" text-hover-primary absolute--link" href="{{route('vendor.item.view',[$review->item['id']])}}">
                                                 <img class="avatar avatar-lg mr-3  onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                                     src="{{\App\CentralLogics\Helpers::get_image_helper($review->item,'image', asset('storage/app/public/product/').'/'.$review->item['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'product/') }}" alt="{{$review->item->name}} image">
+                                                     src="{{ $review->item['image_full_url'] }}" alt="{{$review->item->name}} image">
                                             </a>
                                             <div class="media-body">
                                                 <h5 class="text-hover-primary important--link mb-0">{{Str::limit($review->item['name'],10)}}</h5>
@@ -460,7 +509,7 @@
                                                     <a class="absolute--link" href="{{route('vendor.item.view',[$review->item['id']])}}">
                                                     </a>
                                                     <img class="avatar avatar-lg mr-3  onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                                         src="{{\App\CentralLogics\Helpers::get_image_helper($review->item,'image', asset('storage/app/public/product/').'/'.$review->item['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'product/') }}" alt="{{$review->item->name}} image">
+                                                         src="{{ $review->item['image_full_url'] }}" alt="{{$review->item->name}} image">
                                                     <div>
                                                         <h5 class="text-hover-primary mb-0">{{ $review->item['name'] }}</h5>
                                                         @if ($review->item['avg_rating'] == 5)
@@ -614,4 +663,63 @@
         <!-- End Card -->
         @endif
     </div>
+        {{-- Add Quantity Modal --}}
+        <div class="modal fade update-quantity-modal" id="update-quantity" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body pt-0">
+
+                        <form action="{{route('vendor.item.stock-update')}}" method="post">
+                            @csrf
+                            <div class="mt-2 rest-part w-100"></div>
+                            <div class="btn--container justify-content-end">
+                                <button type="reset" data-dismiss="modal" aria-label="Close" class="btn btn--reset">{{translate('cancel')}}</button>
+                                <button type="submit" id="submit_new_customer" class="btn btn--primary">{{translate('update_stock')}}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 @endsection
+
+@push('script_2')
+<script>
+    "use strict";
+
+    $('.update-quantity').on('click', function (){
+        let val = $(this).data('id');
+        $.get({
+            url: '{{ route('vendor.item.get_stock') }}',
+            data: { id: val },
+            dataType: 'json',
+            success: function (data) {
+                $('.rest-part').empty().html(data.view);
+                update_qty();
+            },
+        });
+    })
+
+    function update_qty() {
+            let total_qty = 0;
+            let qty_elements = $('input[name^="stock_"]');
+            for (let i = 0; i < qty_elements.length; i++) {
+                total_qty += parseInt(qty_elements.eq(i).val());
+            }
+            if(qty_elements.length > 0)
+            {
+
+                $('input[name="current_stock"]').attr("readonly", 'readonly');
+                $('input[name="current_stock"]').val(total_qty);
+            }
+            else{
+                $('input[name="current_stock"]').attr("readonly", false);
+            }
+        }
+</script>
+@endpush

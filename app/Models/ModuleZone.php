@@ -19,6 +19,5 @@ class ModuleZone extends Pivot
         'minimum_shipping_charge'=>'float',
         'maximum_shipping_charge'=>'float',
         'maximum_cod_order_amount'=>'float',
-        'per_kg_charge'=>'float',
     ];
 }

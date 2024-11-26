@@ -143,12 +143,7 @@
                                     <label class="text-center position-relative">
                                         <img class="img--110 min-height-170px min-width-170px onerror-image image--border" id="viewer"
                                         data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $store,'logo',
-                                            asset('storage/app/public/store').'/'.$store->logo ?? '',
-                                            asset('public/assets/admin/img/upload-img.png'),
-                                            'store/'
-                                        ) }}"
+                                        src="{{ $store->logo_full_url ?? asset('public/assets/admin/img/upload-img.png') }}"
                                             alt="logo image" />
                                         <div class="icon-file-group">
                                             <div class="icon-file">
@@ -169,12 +164,7 @@
                                     <label class="text-center position-relative">
                                         <img class="img--vertical min-height-170px min-width-170px onerror-image image--border" id="coverImageViewer"
                                         data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $store,'cover_photo',
-                                            asset('storage/app/public/store/cover').'/'.$store->cover_photo ?? '',
-                                            asset('public/assets/admin/img/upload-img.png'),
-                                            'store/cover/'
-                                        ) }}"
+                                        src="{{ $store->cover_photo_full_url ?? asset('public/assets/admin/img/upload-img.png') }}"
                                             alt="Fav icon" />
                                         <div class="icon-file-group">
                                             <div class="icon-file">
@@ -325,103 +315,6 @@
                         </div>
                     </div>
                 </div>
-
-
-        <div class="col-lg-12">
-                    <div class="card shadow--card-2">
-                        <div class="card-header">
-                            <h5 class="card-title">
-                                <span class="card-header-icon mr-1"><i class="tio-dashboard"></i></span>
-                                <span>{{translate('Additional Information')}}</span>
-                            </h5>
-                        </div>
-                <div class="card-body d-flex justify-content-center align-items-center">
-
-                    <div class="row g-12 w-100 d-flex justify-content-start align-items-center">
-
-
-                        <div class="col-md-4 col-lg-4 col-sm-12">
-                            <div class="form-group">
-                                <label class="input-label"
-                                    for="tex_id">{{ translate('messages.Tax_Id') }}</label>
-                                <input type="text" id="tax_id"
-                                    name="tax_id" class="form-control __form-control"
-                                    placeholder="{{ translate('messages.Tax_Id') }}"
-                                    value="{{ $store->tax_id }}" required>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 col-lg-4 col-sm-12">
-                            <div class="form-group">
-                                <label class="input-label"
-                                    for="reg_no">{{ translate('messages.registration_number') }}</label>
-                                <input type="text" id="reg_no"
-                                    name="register_no" class="form-control __form-control"
-                                    placeholder="{{ translate('messages.registration_number') }}"
-                                    value="{{ $store->register_no }}" required>
-                            </div>
-                        </div>
-
-                        <div class="col-2 card p-5 mx-5">
-                            <label class="__custom-upload-img">
-                                <label class="form-label">
-                                    {{ translate('tax_document') }}
-                                </label>
-
-                                <div class="text-center">
-                                    <img class="img--110 onerror-image" id="tax_document_view"
-                                        data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                        src="{{\App\CentralLogics\Helpers::onerror_file_or_image_helper($store['tax_document'], asset('storage/app/public/store/').'/'.$store['tax_document'], asset('public/assets/admin/img/important-file.png'), 'store/') }}"
-                                        alt="tax_document" />
-                                </div>
-
-                                <input type="file" name="tax_document" id="tax_document" class="custom-file-input"
-                                    accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
-                            </label>
-                        </div>
-                        <div class="col-2 card p-5 mx-5">
-                            <label class="__custom-upload-img">
-                                <label class="form-label">
-                                    {{ translate('registration_document') }}
-                                </label>
-
-                                <div class="text-center">
-                                    <img class="img--110 onerror-image" id="registration_document_view"
-                                        data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                        src="{{\App\CentralLogics\Helpers::onerror_file_or_image_helper($store['registration_document'], asset('storage/app/public/store/').'/'.$store['registration_document'], asset('public/assets/admin/img/important-file.png'), 'store/') }}"
-                                        alt="registration_document" />
-                                </div>
-
-                                <input type="file" name="registration_document" id="registration_document" class="custom-file-input"
-                                    accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
-                            </label>
-                        </div>
-                        <div class="col-2 card p-5 mx-5">
-                            <label class="__custom-upload-img">
-                                <label class="form-label">
-                                    {{ translate('agreement_document') }}
-                                </label>
-
-                                <div class="text-center">
-                                    <img class="img--110 onerror-image" id="agreement_document_view"
-                                        data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                        src="{{\App\CentralLogics\Helpers::onerror_file_or_image_helper($store['agreement_document'], asset('storage/app/public/store/').'/'.$store['agreement_document'], asset('public/assets/admin/img/important-file.png'), 'store/') }}"
-                                        alt="agreement_document" />
-                                </div>
-
-                                <input type="file" name="agreement_document" id="agreement_document" class="custom-file-input"
-                                    accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
-                            </label>
-                        </div>
-
-
-                    </div>
-
-                </div>
-                    </div>
-            </div>
-
-
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-header">
@@ -504,53 +397,13 @@
     <script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{\App\Models\BusinessSetting::where('key', 'map_api_key')->first()->value}}&libraries=places&callback=initMap&v=3.45.8"></script>
-
-    <script>
-        $("#tax_document").change(function() {
-            var fallbackImageUrl = $("#tax_document_view").data("onerror-image");
-            $("#tax_document_view").on("error", function() {
-                $(this).attr("src", fallbackImageUrl);
-            });
-            var file = this.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $("#tax_document_view").attr("src", e.target.result);
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-        $("#registration_document").change(function() {
-            var fallbackImageUrl = $("#registration_document_view").data("onerror-image");
-            $("#registration_document_view").on("error", function() {
-                $(this).attr("src", fallbackImageUrl);
-            });
-            var file = this.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $("#registration_document_view").attr("src", e.target.result);
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-        $("#agreement_document").change(function() {
-            var fallbackImageUrl = $("#agreement_document_view").data("onerror-image");
-            $("#agreement_document_view").on("error", function() {
-                $(this).attr("src", fallbackImageUrl);
-            });
-            var file = this.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $("#agreement_document_view").attr("src", e.target.result);
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
     <script>
         "use strict";
+        $("#vendor_form").on('keydown', function(e){
+            if (e.keyCode === 13) {
+                e.preventDefault();
+            }
+        })
       $(document).on('ready', function () {
             $('.offcanvas').on('click', function(){
                 $('.offcanvas, .floating--date').removeClass('active')

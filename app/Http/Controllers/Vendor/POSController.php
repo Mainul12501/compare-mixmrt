@@ -218,6 +218,7 @@ class POSController extends Controller
         $data['name'] = $product->name;
         $data['discount'] = Helpers::product_discount_calculate($product, $price,Helpers::get_store_data())['discount_amount'];
         $data['image'] = $product->image;
+        $data['image_full_url'] = $product->image_full_url;
         $data['storage'] = $product->storage?->toArray();
         $data['add_ons'] = [];
         $data['add_on_qtys'] = [];
@@ -302,6 +303,7 @@ class POSController extends Controller
         $data['name'] = $product->name;
         $data['discount'] = Helpers::product_discount_calculate($product, $price,Helpers::get_store_data())['discount_amount'];
         $data['image'] = $product->image;
+        $data['image_full_url'] = $product->image_full_url;
         $data['storage'] = $product->storage?->toArray();
         $data['add_ons'] = [];
         $data['add_on_qtys'] = [];
@@ -687,7 +689,7 @@ class POSController extends Controller
                 $mail_status = Helpers::get_mail_status('place_order_mail_status_user');
                 //PlaceOrderMail
                 try{
-                    if($order->order_status == 'pending' && config('mail.status') && $mail_status == '1')
+                    if($order->order_status == 'pending' && config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('customer','customer_order_notification','mail_status'))
                     {
                         Mail::to($order->customer->email)->send(new PlaceOrder($order->id));
                     }
@@ -724,10 +726,11 @@ class POSController extends Controller
             'l_name' => $request['l_name'],
             'email' => $request['email'],
             'phone' => $request['phone'],
-            'password' => bcrypt('password')
+            'password' => bcrypt('password'),
+            'is_from_pos' => 1
         ]);
         try {
-            if (config('mail.status') && $request->email && Helpers::get_mail_status('pos_registration_mail_status_user') == '1') {
+            if (config('mail.status') && $request->email && Helpers::get_mail_status('pos_registration_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer','customer_pos_registration','mail_status')) {
                 Mail::to($request->email)->send(new \App\Mail\CustomerRegistrationPOS($request->f_name . ' ' . $request->l_name,$request['email'],'password'));
                 Toastr::success(translate('mail_sent_to_the_user'));
             }

@@ -15,7 +15,7 @@
             <div class="row align-items-center py-2">
                 <div class="col-sm mb-2 mb-sm-0">
                     <div class="d-flex align-items-center">
-                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/grocery.svg')}}" src="{{\App\CentralLogics\Helpers::get_image_helper($mod,'icon', asset('storage/app/public/module/').'/'.$mod->icon, asset('public/assets/admin/img/grocery.svg'), 'module/') }}"
+                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/grocery.svg')}}" src="{{$mod->icon_full_url }}"
                         width="38" alt="img">
                         <div class="w-0 flex-grow pl-2">
                             <h1 class="page-header-title mb-0">{{translate($mod->module_name)}} {{translate('messages.Dashboard')}}.</h1>
@@ -440,47 +440,47 @@
         chart = new ApexCharts(document.querySelector("#dognut-pie"), options);
         chart.render();
         options = {
-          series: [{
-          name: '{{ translate('Gross Sale') }}',
-          data: [{{$total_sell[1]}},{{$total_sell[2]}},{{$total_sell[3]}},{{$total_sell[4]}},{{$total_sell[5]}},{{$total_sell[6]}},{{$total_sell[7]}},{{$total_sell[8]}},{{$total_sell[9]}},{{$total_sell[10]}},{{$total_sell[11]}},{{$total_sell[12]}}]
-        },{
-          name: '{{ translate('Admin Comission') }}',
-          data: [{{$commission[1]}},{{$commission[2]}},{{$commission[3]}},{{$commission[4]}},{{$commission[5]}},{{$commission[6]}},{{$commission[7]}},{{$commission[8]}},{{$commission[9]}},{{$commission[10]}},{{$commission[11]}},{{$commission[12]}}]
-        },{
-          name: '{{ translate('Delivery Comission') }}',
-          data: [{{$delivery_commission[1]}},{{$delivery_commission[2]}},{{$delivery_commission[3]}},{{$delivery_commission[4]}},{{$delivery_commission[5]}},{{$delivery_commission[6]}},{{$delivery_commission[7]}},{{$delivery_commission[8]}},{{$delivery_commission[9]}},{{$delivery_commission[10]}},{{$delivery_commission[11]}},{{$delivery_commission[12]}}]
-        }],
-          chart: {
-          height: 350,
-          type: 'area',
-          toolbar: {
-            show:false
-        },
+            series: [{
+                name: '{{ translate('Gross Sale') }}',
+                data: [{{ implode(",",$total_sell) }}]
+            },{
+                name: '{{ translate('Admin Comission') }}',
+                data: [{{ implode(",",$commission) }}]
+            },{
+                name: '{{ translate('Delivery Comission') }}',
+                data: [{{ implode(",",$delivery_commission) }}]
+            }],
+            chart: {
+                height: 350,
+                type: 'area',
+                toolbar: {
+                    show:false
+                },
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
             colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        dataLabels: {
-          enabled: false,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        stroke: {
-          curve: 'smooth',
-          width: 2,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        fill: {
-            type: 'gradient',
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        xaxis: {
-        //   type: 'datetime',
-          categories: ["{{ translate('Jan') }}", "{{ translate('Feb') }}", "{{ translate('Mar') }}", "{{ translate('Apr') }}", "{{ translate('May') }}", "{{ translate('Jun') }}", "{{ translate('Jul') }}", "{{ translate('Aug') }}", "{{ translate('Sep') }}", "{{ translate('Oct') }}", "{{ translate('Nov') }}", "{{ translate('Dec') }}" ]
-        },
-        tooltip: {
-          x: {
-            format: 'dd/MM/yy HH:mm'
-          },
-        },
+            dataLabels: {
+                enabled: false,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 2,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            fill: {
+                type: 'gradient',
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            xaxis: {
+                //   type: 'datetime',
+                categories: [{!! implode(",",$label) !!}]
+            },
+            tooltip: {
+                x: {
+                    format: 'dd/MM/yy HH:mm'
+                },
+            },
         };
 
         chart = new ApexCharts(document.querySelector("#grow-sale-chart"), options);

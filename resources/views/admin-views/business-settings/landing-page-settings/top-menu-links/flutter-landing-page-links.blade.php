@@ -11,6 +11,10 @@
                 href="{{ route('admin.business-settings.flutter-landing-page-settings', 'special-criteria') }}">{{translate('messages.special_criteria')}}</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/pages/flutter-landing-page-settings/available-zone*') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.flutter-landing-page-settings', 'available-zone') }}">{{translate('messages.available_zone')}}</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/flutter-landing-page-settings/join-as') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.flutter-landing-page-settings', 'join-as') }}">{{translate('messages.join_as')}}</a>
             </li>

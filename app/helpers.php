@@ -16,6 +16,7 @@ use App\CentralLogics\CustomerLogic;
 use Illuminate\Support\Facades\Mail;
 use App\Models\SubscriptionTransaction;
 use App\Models\SubscriptionBillingAndRefundHistory;
+use Brian2694\Toastr\Facades\Toastr;
 
 if (! function_exists('translate')) {
     function translate($key, $replace = [])
@@ -100,7 +101,7 @@ if (! function_exists('collect_cash_success')) {
 
 
         try {
-            if($data->attribute == 'deliveryman_collect_cash_payments' && config('mail.status') && Helpers::get_mail_status('cash_collect_mail_status_dm') == 1 ){
+            if($data->attribute == 'deliveryman_collect_cash_payments' && config('mail.status') &&  Helpers::getNotificationStatusData('deliveryman','deliveryman_collect_cash','mail_status') && Helpers::get_mail_status('cash_collect_mail_status_dm') == 1 ){
                 Mail::to($user_data['email'])->send(new \App\Mail\CollectCashMail($account_transaction,$user_data['f_name']));
             }
         } catch (\Exception $exception) {
@@ -136,13 +137,16 @@ if (! function_exists('order_place')) {
             Helpers::send_order_notification($order);
             $address = json_decode($order->delivery_address, true);
 
-            $order_verification_mail_status = Helpers::get_mail_status('order_verification_mail_status_user');
-            if ( config('order_delivery_verification') == 1 && $order_verification_mail_status == '1' && $order->is_guest == 0) {
-                Mail::to($order->customer->email)->send(new OrderVerificationMail($order->otp,$order->customer->f_name));
-            }
 
-            if ($order->is_guest == 1 && config('mail.status') && $order_verification_mail_status == '1' && isset($address['contact_person_email'])) {
-                Mail::to($address['contact_person_email'])->send(new OrderVerificationMail($order->otp,$order->customer->f_name));
+            if(Helpers::getNotificationStatusData('customer','customer_delivery_verification','mail_status')  && Helpers::get_mail_status('order_verification_mail_status_user') == 1 && config('mail.status')){
+
+                if ( config('order_delivery_verification') == 1  && $order->is_guest == 0) {
+                    Mail::to($order->customer->email)->send(new OrderVerificationMail($order->otp,$order->customer->f_name));
+                }
+
+                if ($order->is_guest == 1   && isset($address['contact_person_email'])) {
+                    Mail::to($address['contact_person_email'])->send(new OrderVerificationMail($order->otp,$order?->customer?->f_name));
+                }
             }
         } catch (\Exception $e) {
             info($e);
@@ -173,9 +177,9 @@ if (! function_exists('wallet_success')) {
         $wallet_transaction = CustomerLogic::create_wallet_transaction($data->payer_id, $data->payment_amount, 'add_fund',$data->payment_method);
         if($wallet_transaction)
         {
-            $mail_status = Helpers::get_mail_status('add_fund_mail_status_user');
             try{
-                if(config('mail.status') && $mail_status == '1') {
+                Helpers::add_fund_push_notification($data->payer_id);
+                if(config('mail.status') && Helpers::get_mail_status('add_fund_mail_status_user') == '1' &&  Helpers::getNotificationStatusData('customer','customer_add_fund_to_wallet','mail_status')) {
                     Mail::to($wallet_transaction->user->email)->send(new \App\Mail\AddFundToWallet($wallet_transaction));
                 }
             }catch(\Exception $ex)
@@ -235,7 +239,9 @@ if (!function_exists('config_settings')) {
                 $pending_bill= SubscriptionBillingAndRefundHistory::where(['store_id'=>$data->payer_id,
                 'transaction_type'=>'pending_bill', 'is_success' =>0])?->sum('amount')?? 0;
                 Helpers::subscription_plan_chosen(store_id:$data->payer_id,package_id:$data->attribute_id,payment_method:$data->payment_method,discount:0,pending_bill:$pending_bill,reference:$data->attribute,type: $type);
-
+                if($type !== 'new_join'){
+                    Toastr::success(  $type == 'renew' ?  translate('Subscription_Package_Renewed_Successfully.'): translate('Subscription_Package_Shifted_Successfully.')  );
+                }
 
             return true;
         }

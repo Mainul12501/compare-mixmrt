@@ -49,7 +49,7 @@
             <div class="col-sm-6 col-md-4">
                 <div class="resturant-card card--bg-2">
                     <h2 class="title">
-                        {{\App\CentralLogics\Helpers::format_currency($dm->wallet?$dm->wallet->collected_cash:$dm->collected_cash)}}
+                        {{\App\CentralLogics\Helpers::format_currency($dm->wallet?$dm->wallet->collected_cash:0.0)}}
                     </h2>
                     <h5 class="subtitle">
                         {{translate('messages.cash_in_hand')}}
@@ -94,151 +94,119 @@
                         <div class="d-flex align-items-center justify-content-center">
                             <img class="avatar avatar-xxl avatar-4by3 mr-4 img--120 onerror-image"
                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                 src="{{\App\CentralLogics\Helpers::get_image_helper($dm,'image', asset('storage/app/public/delivery-man').'/'.$dm['image'], asset('public/assets/admin/img/160x160/img1.jpg'), 'delivery-man/') }}"
+                                 src="{{ $dm['image_full_url'] }}"
                                  alt="Image Description">
-                        </div>
-                    </div>
-                    <div class="col-6 justify-content-center align-items-center">
-                        <div class="card-body  justify-content-center align-items-center">
-                            <div class="resturant--info-address  justify-content-center align-items-center">
-                                @if ($dm['agreement_document'])
-                                <div class="card p-5 mx-5">
-                                    <label class="__custom-upload-img">
-                                        <label class="form-label">
-                                            {{ translate('agreement_document') }}
-                                        </label>
-                                        <a  class="text-center d-flex flex-column" href="{{ route('vendor.delivery-man.download-document', ['fileName' => $dm['agreement_document']]) }}">
-                                        <div class="text-center">
-                                            <img class="img--110 onerror-image" id="license_view"
-                                                data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                src="{{\App\CentralLogics\Helpers::onerror_file_or_image_helper($dm['agreement_document'], asset('storage/app/public/delivery-man/').'/'.$dm['agreement_document'], asset('public/assets/admin/img/important-file.png'), 'delivery-man/') }}"
-                                                alt="Id card " />
+                                 <div class="d-block">
+                                    <div class="rating--review">
+                                        <h1 class="title">{{count($dm->rating)>0?number_format($dm->rating[0]->average, 1, '.', ' '):0}}<span class="out-of">/5</span></h1>
+                                        @if (count($dm->rating)>0)
+                                        @if ($dm->rating[0]->average == 5)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
                                         </div>
-                                        <span class="pt-2">{{ translate('Download') }}</span>
-
-                                        </a>
-
-
-                                    </label>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 justify-content-center align-items-center">
-                        <div class="card-body  justify-content-center align-items-center">
-                            <div class="resturant--info-address  justify-content-center align-items-center">
-                            <div class="d-block">
-                                <div class="rating--review">
-                                    <h1 class="title">{{count($dm->rating)>0?number_format($dm->rating[0]->average, 1, '.', ' '):0}}<span class="out-of">/5</span></h1>
-                                    @if (count($dm->rating)>0)
-                                    @if ($dm->rating[0]->average == 5)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 5 && $dm->rating[0]->average >= 4.5)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-half"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 4.5 && $dm->rating[0]->average >= 4)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 4 && $dm->rating[0]->average >= 3.5)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-half"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 3.5 && $dm->rating[0]->average >= 3)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 3 && $dm->rating[0]->average >= 2.5)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-half"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 2.5 && $dm->rating[0]->average > 2)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 2 && $dm->rating[0]->average >= 1.5)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-half"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 1.5 && $dm->rating[0]->average > 1)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average < 1 && $dm->rating[0]->average > 0)
-                                    <div class="rating">
-                                        <span><i class="tio-star-half"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average == 1)
-                                    <div class="rating">
-                                        <span><i class="tio-star"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
-                                    @elseif ($dm->rating[0]->average == 0)
-                                    <div class="rating">
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                        <span><i class="tio-star-outlined"></i></span>
-                                    </div>
+                                        @elseif ($dm->rating[0]->average < 5 && $dm->rating[0]->average >= 4.5)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-half"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 4.5 && $dm->rating[0]->average >= 4)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 4 && $dm->rating[0]->average >= 3.5)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-half"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 3.5 && $dm->rating[0]->average >= 3)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 3 && $dm->rating[0]->average >= 2.5)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-half"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 2.5 && $dm->rating[0]->average > 2)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 2 && $dm->rating[0]->average >= 1.5)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-half"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 1.5 && $dm->rating[0]->average > 1)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average < 1 && $dm->rating[0]->average > 0)
+                                        <div class="rating">
+                                            <span><i class="tio-star-half"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average == 1)
+                                        <div class="rating">
+                                            <span><i class="tio-star"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @elseif ($dm->rating[0]->average == 0)
+                                        <div class="rating">
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                            <span><i class="tio-star-outlined"></i></span>
+                                        </div>
+                                        @endif
                                     @endif
-                                @endif
-                                <div class="info">
+                                    <div class="info">
 
-                                    <span>{{$dm->reviews->count()}} {{translate('messages.reviews')}}</span>
+                                        <span>{{$dm->reviews->count()}} {{translate('messages.reviews')}}</span>
+                                    </div>
+                                    </div>
                                 </div>
-                                </div>
-                            </div>
-                            </div>
                         </div>
                     </div>
+
                     <div class="col-md-6">
                         <ul class="list-unstyled list-unstyled-py-2 mb-0 rating--review-right py-3">
 
@@ -365,7 +333,7 @@
                                         <div class="avatar avatar-circle">
                                             <img class="avatar-img onerror-image" width="75" height="75"
                                                  data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
-                                                 src="{{\App\CentralLogics\Helpers::get_image_helper($review->customer,'image', asset('storage/app/public/profile/').'/'.$review->customer->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'profile/') }}"
+                                                 src="{{ $review->customer->image_full_url }}"
                                                 alt="Image Description">
                                         </div>
                                         <div class="ml-3">
@@ -394,7 +362,7 @@
                             <td>
                                 @foreach(json_decode($review['attachment'],true) as $attachment)
                                 @php($attachment = is_array($attachment)?$attachment:['img'=>$attachment,'storage'=>'public'])
-                                    <img width="100" class="onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"  src="{{\App\CentralLogics\Helpers::onerror_image_helper($attachment['img'], asset('storage/app/public').'/'.$attachment['img'], asset('public/assets/admin/img/160x160/img2.jpg'), $attachment['img'].'/',$attachment['storage'] ?? 'public') }}"
+                                    <img width="100" class="onerror-image" data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"  src="{{\App\CentralLogics\Helpers::get_full_url($attachment['img'],$attachment['img'],$attachment['storage'] ?? 'public') }}"
                                     alt="image">
                                 @endforeach
                             </td>

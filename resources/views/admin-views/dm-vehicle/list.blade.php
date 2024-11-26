@@ -60,8 +60,6 @@
                                 <th >{{translate('messages.Total_Deliveryman')}}</th>
                                 <th >{{translate('messages.minimum_coverage_area')}} ({{ translate('messages.km') }}) </th>
                                 <th >{{translate('messages.Maximum_coverage_area')}} ({{ translate('messages.km') }})</th>
-                                <th >{{translate('messages.minimum_weight')}} ({{ translate('messages.kg') }}) </th>
-                                <th >{{translate('messages.Maximum_weight')}} ({{ translate('messages.kg') }})</th>
                                 <th >{{translate('messages.Extra_charges')}}  ({{ \App\CentralLogics\Helpers::currency_symbol() }})</th>
                                 <th>{{translate('messages.status')}}</th>
                                 <th class="text-center">{{translate('messages.action')}}</th>
@@ -87,16 +85,6 @@
                                     <td>
                                         <span class="bg-gradient-light text-dark">
                                             {{ $vehicle->maximum_coverage_area }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="bg-gradient-light text-dark">
-                                            {{ $vehicle->minimum_weight }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="bg-gradient-light text-dark">
-                                            {{ $vehicle->maximum_weight }}
                                         </span>
                                     </td>
                                     <td>

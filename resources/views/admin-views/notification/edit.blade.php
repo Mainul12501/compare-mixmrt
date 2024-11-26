@@ -71,7 +71,7 @@
                                 </label>
                                 <div class="text-center py-3 my-auto">
                                     <img class="img--vertical onerror-image" id="viewer"
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper($notification,'image', asset('storage/app/public/notification/').'/'.$notification['image'], asset('public/assets/admin/img/900x400/img1.jpg'), 'notification/') }}"
+                                    src="{{ $notification['image_full_url'] }}"
                                     data-onerror-image="{{asset('public/assets/admin/img/900x400/img1.jpg')}}" alt="image"/>
                                 </div>
                                 <div class="custom-file">
@@ -82,7 +82,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="btn--container justify-content-end">
+                    <div class="btn--container mt-4 justify-content-end">
                         <button type="reset" id="reset_btn" class="btn btn--reset">{{translate('messages.reset')}}</button>
                         <button type="submit" class="btn btn--primary">{{translate('messages.send_again')}}</button>
                     </div>

@@ -18,24 +18,10 @@
                     </span>
 
                 </div>
-
-                {{-- <div class="col-sm-auto">
-                    <a class="btn btn-icon btn-sm btn-soft-secondary rounded-circle mr-1"
-                       href="{{route('admin.users.customer.view',[$customer['id']-1])}}"
-                       data-toggle="tooltip" data-placement="top" title="{{ translate('Previous_customer') }}">
-                        <i class="tio-arrow-backward"></i>
-                    </a>
-                    <a class="btn btn-icon btn-sm btn-soft-secondary rounded-circle"
-                       href="{{route('admin.users.customer.view',[$customer['id']+1])}}" data-toggle="tooltip"
-                       data-placement="top" title="{{ translate('Next_customer') }}">
-                        <i class="tio-arrow-forward"></i>
-                    </a>
-                </div> --}}
             </div>
         </div>
         <!-- End Page Header -->
-
-        {{-- Create Coupon Card --}}
+        @if ($customer['f_name'])
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -51,6 +37,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="row mb-3 g-2">
             <div class="col-lg-6">
@@ -331,22 +318,22 @@
                         <div class="card-body">
                             <div class="media gap-3 flex-wrap">
                                 <div class="avatar avatar-circle avatar-70">
-                                    <img class="avatar-img onerror-image" width="70" height="70" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}" src="{{\App\CentralLogics\Helpers::get_image_helper($customer,'image', asset('storage/app/public/profile/').'/'.$customer->image, asset('public/assets/admin/img/160x160/img1.jpg'), 'profile/') }}"
+                                    <img class="avatar-img onerror-image" width="70" height="70" data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}" src="{{ $customer->image_full_url }}"
                                     alt="Image Description">
                                 </div>
                                 <div class="media-body">
                                     <div class="key-value-list d-flex flex-column gap-2 text-dark" style="--min-width: 60px">
                                         <div class="key-val-list-item d-flex gap-3">
                                             <div>{{ translate('name') }}</div>:
-                                            <div class="font-semibold">{{$customer['f_name'].' '.$customer['l_name']}}</div>
+                                            <div class="font-semibold">{{$customer['f_name']? $customer['f_name'].' '.$customer['l_name'] : translate('messages.Incomplete_Profile')}}</div>
                                         </div>
                                         <div class="key-val-list-item d-flex gap-3">
                                             <div>{{ translate('contact') }}</div>:
-                                            <a href="tel:{{ $customer['phone'] }}" class="text-dark font-semibold">{{$customer['phone']}}</a>
+                                            <a href="tel:{{ $customer['phone'] }}" class="text-dark font-semibold">{{$customer['phone'] ?? translate('messages.N/A')}}</a>
                                         </div>
                                         <div class="key-val-list-item d-flex gap-3">
                                             <div>{{ translate('email') }}</div>:
-                                            <a href="mailto:{{ $customer['email'] }}" class="text-dark font-semibold">{{$customer['email']}}</a>
+                                            <a href="mailto:{{ $customer['email'] }}" class="text-dark font-semibold">{{$customer['email'] ?? translate('messages.N/A')}}</a>
                                         </div>
                                         @foreach($customer->addresses as $address)
                                             <div class="key-val-list-item d-flex gap-3">

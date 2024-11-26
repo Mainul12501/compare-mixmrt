@@ -202,12 +202,7 @@
                             <td>
                                 <a class="media align-items-center" href="{{route('admin.item.view',[$item['id'],'module_id'=>$item['module_id']])}}">
                                     <img class="avatar avatar-lg mr-3 onerror-image"
-                                    src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                        $item,'image',
-                                        asset('storage/app/public/product').'/'.$item['image'] ?? '',
-                                        asset('public/assets/admin/img/160x160/img2.jpg'),
-                                        'product/'
-                                    ) }}"
+                                    src="{{ $item['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
 
 
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->name}} image">
@@ -232,7 +227,7 @@
                                 {{$item->module->module_type == 'food'? translate('N/A') : $item->stock}}
                             </td>
                             <td>
-                                {{$item->orders_count}}
+                                {{$item->orders_sum_quantity ?? 0}}
                             </td>
                             <td>
                                 {{ \App\CentralLogics\Helpers::format_currency($item->price) }}
@@ -241,10 +236,10 @@
                                 {{ \App\CentralLogics\Helpers::format_currency($item->orders_sum_price) }}
                             </td>
                             <td>
-                                {{ \App\CentralLogics\Helpers::format_currency($item->orders_sum_discount_on_item) }}
+                                {{ \App\CentralLogics\Helpers::format_currency($item->total_discount) }}
                             </td>
                             <td>
-                                {{ $item->orders_count>0? \App\CentralLogics\Helpers::format_currency(($item->orders_sum_price-$item->orders_sum_discount_on_item)/$item->orders_count):0 }}
+                                {{ $item->orders_count>0? \App\CentralLogics\Helpers::format_currency(($item->orders_sum_price-$item->total_discount)/($item->orders_sum_quantity ?? 0) ) :0 }}
                             </td>
                             <td>
                                 <div class="rating">

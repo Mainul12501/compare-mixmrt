@@ -199,10 +199,10 @@
 
         $(document).on('click', '.show-approve-view', function () {
             let id = $(this).data('id');
-            let url = "{{ route('admin.transactions.store.withdraw_status', ['id']) }}";
-            url = url.replace('id', id);
+            let url = "{{ route('admin.transactions.store.withdraw_status', ['data_id']) }}";
+            url = url.replace('data_id', id);
             let htmlContent = `
-            <form action="${url}" method="POST">
+            <form  class="withdraw_status_form" action="${url}" method="POST">
                     @csrf
                 <div class="mt-5">
                     <h5 class="font-semibold text-center mb-3">{{translate('approval_note')}} </h5>
@@ -213,7 +213,7 @@
                             <i class="tio-arrow-backward"></i>
                             {{translate('back')}}
                         </button>
-                        <button type="submit" class="btn btn-success min-w-100px">{{translate('complete')}}</button>
+                        <button type="submit" class="btn btn-success set_disable min-w-100px">{{translate('complete')}}</button>
                     </div>
                 </div>
               </form>`
@@ -222,10 +222,10 @@
 
         $(document).on('click', '.show-deny-view', function () {
             let id = $(this).data('id');
-            let url = "{{ route('admin.transactions.store.withdraw_status', ['id']) }}";
-            url = url.replace('id', id);
+            let url = "{{ route('admin.transactions.store.withdraw_status', ['data_id']) }}";
+            url = url.replace('data_id', id);
             let htmlContent = `
-            <form action="${url}" method="POST">
+            <form class="withdraw_status_form" action="${url}" method="POST">
                     @csrf
                 <div class="mt-5">
                     <h5 class="font-semibold text-center mb-3">{{translate('denial_note')}} </h5>
@@ -236,7 +236,7 @@
                             <i class="tio-arrow-backward"></i>
                             {{translate('back')}}
                         </button>
-                        <button type="submit" class="btn btn-success min-w-100px">{{translate('complete')}}</button>
+                        <button type="submit" class="btn btn-success set_disable min-w-100px">{{translate('complete')}}</button>
                     </div>
                 </div>
               </form>`
@@ -286,8 +286,9 @@
             })
         }
 
-
-
+$(document).on('submit', '.withdraw_status_form', function (event) {
+    $(this).find('button[type="submit"]').attr('disabled', true);
+});
 
     </script>
 @endpush

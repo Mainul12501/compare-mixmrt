@@ -10,7 +10,7 @@ use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Response;
+
 class DeliveryManController extends Controller
 {
     public function __construct(Request $request)
@@ -99,7 +99,6 @@ class DeliveryManController extends Controller
             'email' => 'required|unique:delivery_men',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
             'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
-//            'agreement_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff,pdf,doc,docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ]);
 
         if ($validator->fails()) {
@@ -132,14 +131,12 @@ class DeliveryManController extends Controller
         $dm->identity_type = $request->identity_type;
         $dm->store_id =  $request->vendor->stores[0]->id;
         $dm->identity_image = $identity_image;
-        // $dm->vehicle_id = $request->vehicle_id;
+        $dm->vehicle_id = $request->vehicle_id;
         $dm->image = $image_name;
         $dm->active = 0;
         $dm->earning = 0;
         $dm->type = 'restaurant_wise';
         $dm->password = bcrypt($request->password);
-//        $agreement_document_extension = $request->file('agreement_document')->extension();
-//        $dm->agreement_document = Helpers::upload('store/', $agreement_document_extension, $request->file('agreement_document'));
         $dm->save();
 
         return response()->json(['message' => translate('messages.deliveryman_added_successfully')], 200);
@@ -172,7 +169,7 @@ class DeliveryManController extends Controller
         {
             if($request->status == 0)
             {   $delivery_man->auth_token = null;
-                if(isset($delivery_man->fcm_token))
+                if(Helpers::getNotificationStatusData('deliveryman','deliveryman_account_block','push_notification_status') &&  isset($delivery_man->fcm_token))
                 {
                     $data = [
                         'title' => translate('messages.suspended'),
@@ -190,9 +187,25 @@ class DeliveryManController extends Controller
                         'updated_at'=>now()
                     ]);
                 }
+            }else{
+                if(Helpers::getNotificationStatusData('deliveryman','deliveryman_account_unblock','push_notification_status') &&   isset($delivery_man->fcm_token)){
+                    $data = [
+                        'title' => translate('messages.Account_activation'),
+                        'description' => translate('messages.your_account_has_been_activated'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type'=> 'unblock'
+                    ];
+                    Helpers::send_push_notif_to_device($delivery_man->fcm_token, $data);
 
+                    DB::table('user_notifications')->insert([
+                        'data'=> json_encode($data),
+                        'delivery_man_id'=>$delivery_man->id,
+                        'created_at'=>now(),
+                        'updated_at'=>now()
+                    ]);
+                }
             }
-
         }
         catch (\Exception $e) {
 
@@ -257,12 +270,7 @@ class DeliveryManController extends Controller
         $delivery_man->vehicle_id = $request->vehicle_id;
         $delivery_man->image = $image_name;
 
-
         $delivery_man->password = strlen($request->password)>1?bcrypt($request->password):$delivery_man['password'];
-//        if($request->agreement_document){
-//        $agreement_document_extension = $request->file('agreement_document')->extension();
-//        $delivery_man->agreement_document = Helpers::upload('store/', $agreement_document_extension, $request->file('agreement_document'));
-//        }
         $delivery_man->save();
 
         return response()->json(['message' => translate('messages.deliveryman_updated_successfully')], 200);
@@ -303,5 +311,4 @@ class DeliveryManController extends Controller
 
         return response()->json(['message' => translate('messages.deliveryman_deleted_successfully')], 200);
     }
-
 }

@@ -210,24 +210,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-4 p-3">
-                            <label class="__custom-upload-img">
-                                <label class="form-label">
-                                    {{ translate('agreement/contact document  ') }}
-                                </label>
-
-                                <div class="text-center">
-                                    <img class="img--110 onerror-image" id="agreement_document_view"
-                                        data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                        src="{{ asset('public/assets/admin/img/important-file-upload.png') }}"
-                                        alt="registration_document" />
-                                </div>
-
-                                <input type="file" name="agreement_document" id="agreement_document" required
-                                    class="custom-file-input"
-                                    accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -427,22 +409,6 @@
                     });
                 }
             });
-            })
-        </script>
-           <script>
-            $("#agreement_document").change(function() {
-            var fallbackImageUrl = $("#agreement_document_view").data("onerror-image");
-            $("#agreement_document_view").on("error", function() {
-                $(this).attr("src", fallbackImageUrl);
-            });
-            var file = this.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    $("#agreement_document_view").attr("src", e.target.result);
-                }
-                reader.readAsDataURL(file);
-            }
-              });
-            </script>
+        })
+    </script>
 @endpush

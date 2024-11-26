@@ -81,7 +81,7 @@
 
                                     <td class="text-center">
                                         <a class="media align-items-center" href="{{route('vendor.item.view',[$item['item_id']])}}">
-                                            <img class="avatar avatar-lg mr-3 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($item->item,'image', asset('storage/app/public/product/').'/'.$item->item['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                                            <img class="avatar avatar-lg mr-3 onerror-image" src="{{ $item->item['image_full_url'] }}"
                                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->item->name}} image">
                                             <div class="media-body">
                                                 <h5 class="text-hover-primary mb-0">{{Str::limit($item->item['name'],20,'...')}}</h5>

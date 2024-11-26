@@ -63,14 +63,14 @@
 
                         </div>
 
-                        @if (! (isset($payment_status) && $payment_status == 'fail'))
+                        {{-- @if (! (isset($payment_status) && $payment_status == 'fail'))
                         <div class="text-center py-2">
                             {{ translate('or') }}
                         </div>
                         <div class="text-center">
                             <a href="{{ route('home',['new_user'=> true]) }}" class="text-base font-bold">{{ translate('Continue to Home Page') }}</a>
                         </div>
-                        @endif
+                        @endif --}}
                     </div>
                 </div>
             </div>

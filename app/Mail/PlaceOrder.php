@@ -30,6 +30,9 @@ class PlaceOrder extends Mailable
     {
         $order_id = $this->order_id;
         $order=Order::where('id', $order_id)->first();
+
+        $url=route('order_invoice',['id' => base64_encode($order_id)]);
+
         $company_name = BusinessSetting::where('key', 'business_name')->first()->value;
         $data=EmailTemplate::where('type','user')->where('email_type', 'new_order')->first();
         $template=$data?$data->email_template:3;
@@ -40,6 +43,6 @@ class PlaceOrder extends Mailable
         $body = Helpers::text_variable_data_format( value:$data['body']??'',user_name:$user_name??'',store_name:$store_name??'',delivery_man_name:$delivery_man_name??'',order_id:$order_id??'');
         $footer_text = Helpers::text_variable_data_format( value:$data['footer_text']??'',user_name:$user_name??'',store_name:$store_name??'',delivery_man_name:$delivery_man_name??'',order_id:$order_id??'');
         $copyright_text = Helpers::text_variable_data_format( value:$data['copyright_text']??'',user_name:$user_name??'',store_name:$store_name??'',delivery_man_name:$delivery_man_name??'',order_id:$order_id??'');
-        return $this->subject(translate('Order_Placed'))->view('email-templates.new-email-format-'.$template, ['company_name'=>$company_name,'data'=>$data,'title'=>$title,'body'=>$body,'footer_text'=>$footer_text,'copyright_text'=>$copyright_text,'order'=>$order]);
+        return $this->subject(translate('Order_Placed'))->view('email-templates.new-email-format-'.$template, ['company_name'=>$company_name,'data'=>$data,'title'=>$title,'body'=>$body,'footer_text'=>$footer_text,'copyright_text'=>$copyright_text,'order'=>$order ,'url' => $url]);
     }
 }

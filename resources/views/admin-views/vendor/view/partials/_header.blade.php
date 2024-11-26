@@ -12,16 +12,9 @@
             <div>
                 @if(Request::is("admin/store/view/{$store->id}"))
                     @if($store->vendor->status)
-                    @if($store->store_type=="store")
                     <a href="{{route('admin.store.edit',[$store->id])}}" class="btn btn--primary float-right">
                         <i class="tio-edit"></i> {{translate('messages.edit_store')}}
                     </a>
-                    @else
-                    <a href="{{route('admin.company.edit',[$store->id])}}" class="btn btn--primary float-right">
-                        <i class="tio-edit"></i> {{translate('messages.edit_company')}}
-                    </a>
-                    @endif
-
                     @else
                         @if(!isset($store->vendor->status))
                         <a class="btn btn--danger text-capitalize font-weight-bold float-right request_alert"
@@ -52,7 +45,6 @@
                 </a>
             </span>
 
-
             <!-- Nav -->
             <ul class="nav nav-tabs page-header-tabs mb-2">
                 <li class="nav-item">
@@ -61,7 +53,6 @@
                 <li class="nav-item">
                     <a class="nav-link {{request('tab')=='order'?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
                 </li>
-                @if($store->store_type=="store")
                 <li class="nav-item">
                     <a class="nav-link {{request('tab')=='item'?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'item'])}}"  aria-disabled="true">{{translate('messages.items')}}</a>
                 </li>
@@ -71,11 +62,9 @@
                 <li class="nav-item">
                     <a class="nav-link {{request('tab')=='discount'?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('messages.discounts')}}</a>
                 </li>
-                @endif
                 <li class="nav-item">
                     <a class="nav-link {{request('tab')=='transaction'?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
                 </li>
-                @if($store->store_type=="store")
                 <li class="nav-item">
                     <a class="nav-link {{request('tab')=='settings'?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
                 </li>
@@ -91,7 +80,6 @@
                 <li class="nav-item">
                     <a class="nav-link  {{request('tab')=='business_plan' ?'active':''}}" href="{{route('admin.store.view', ['store'=>$store->id, 'tab'=> 'business_plan'])}}"  aria-disabled="true">{{translate('messages.business_plan')}}</a>
                 </li>
-                @endif
             </ul>
             <!-- End Nav -->
         </div>

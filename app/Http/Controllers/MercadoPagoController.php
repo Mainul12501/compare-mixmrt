@@ -3,21 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Validator;
-use App\Models\PaymentRequest;
 use App\Traits\Processor;
-use MercadoPago\SDK;
-use MercadoPago\Payment;
-use MercadoPago\Payer;
+use Illuminate\Http\Request;
+use App\Models\PaymentRequest;
+use Exception;
+use Illuminate\Support\Facades\Validator;
+use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\Exceptions\MPApiException;
+use MercadoPago\MercadoPagoConfig;
+use MercadoPago\Client\Common\RequestOptions;
 
 class MercadoPagoController extends Controller
 {
     use Processor;
+
     private PaymentRequest $paymentRequest;
     private $config;
     private $user;
+
     public function __construct(PaymentRequest $paymentRequest, User $user)
     {
         $config = $this->payment_config('mercadopago', 'payment_config');
@@ -29,14 +32,17 @@ class MercadoPagoController extends Controller
         $this->paymentRequest = $paymentRequest;
         $this->user = $user;
     }
+
     public function index(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'payment_id' => 'required|uuid'
         ]);
+
         if ($validator->fails()) {
             return response()->json($this->response_formatter(GATEWAYS_DEFAULT_400, null, $this->error_processor($validator)), 400);
         }
+
         $data = $this->paymentRequest::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
         if (!isset($data)) {
             return response()->json($this->response_formatter(GATEWAYS_DEFAULT_204), 200);
@@ -46,34 +52,44 @@ class MercadoPagoController extends Controller
     }
     public function make_payment(Request $request)
     {
-        SDK::setAccessToken($this->config->access_token);
-        $payment = new Payment();
-        $payment->transaction_amount = (float)$request['transactionAmount'];
-        $payment->token = $request['token'];
-        $payment->description = $request['description'];
-        $payment->installments = (int)$request['installments'];
-        $payment->payment_method_id = $request['paymentMethodId'];
-        $payment->issuer_id = (int)$request['issuer'];
+        MercadoPagoConfig::setAccessToken($this->config->access_token);
+        $client = new PaymentClient();
+        $data = [];
+        $data['transaction_amount'] = (float)$request['transactionAmount'];
+        $data['token'] = $request['token'];
+        $data['description'] = $request['description'];
+        $data['installments'] = (int)$request['installments'];
+        $data['payment_method_id'] = $request['paymentMethodId'];
+        $data['payer']['email'] = $request['payer']['email'];
 
-        $payer = new Payer();
-        $payer->email = $request['payer']['email'];
-        $payer->identification = array(
-            "type" => $request['payer']['identification']['type'],
-            "number" => $request['payer']['identification']['number']
-        );
-        $payment->payer = $payer;
-        $payment->save();
 
-        $response = array(
-            'status' => $payment->status,
-            'status_detail' => $payment->status_detail,
-            'id' => $payment->id
-        );
+        $request_options = new RequestOptions();
+            $unigueId=uniqid();
+            $request_options->setCustomHeaders([
+                "X-Idempotency-Key: {$unigueId}"
+            ]);
 
-        if($payment->error)
-        {
-            $response['error'] = $payment->error->message;
+        try {
+            $payment = $client->create($data, $request_options);
+            $response = array(
+                'status' => $payment->status,
+                'status_detail' => $payment->status_detail,
+                'id' => $payment->id
+            );
+
+        } catch (MPApiException $e) {
+            $response['error'] = $e->getApiResponse()->getContent();
+        } catch (Exception $e) {
+            $response['error'] =  $e->getMessage();
         }
+
+
+        if(data_get($response,'error.message',null)){
+
+            $response['error'] =  data_get($response,'error.message',null);
+            return response()->json($response);
+        }
+
 
         if ($payment->status == 'approved') {
             $paymentInfo = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
@@ -85,6 +101,7 @@ class MercadoPagoController extends Controller
 
         return response()->json($response);
     }
+
     public function get_test_user(Request $request)
     {
         $curl = curl_init();

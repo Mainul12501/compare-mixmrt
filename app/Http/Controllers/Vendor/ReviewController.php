@@ -59,10 +59,11 @@ class ReviewController extends Controller
 
         $review = Review::findOrFail($id);
         $review->reply = $request->reply;
+        $review->replied_at = now();
         $review->store_id = Helpers::get_store_id();
         $review->save();
 
         Toastr::success(translate('messages.review_reply_updated'));
-        return redirect()->route('vendor.reviews');
+        return to_route('vendor.reviews');
     }
 }

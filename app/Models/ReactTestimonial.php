@@ -17,36 +17,24 @@ class ReactTestimonial extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'reviewer_image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('reviewer_image',$value);
-                    }else{
-                        return Helpers::local_storage_link('reviewer_image',$value);
-                    }
+                    return Helpers::get_full_url('reviewer_image',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('reviewer_image',$value);
+        return Helpers::get_full_url('reviewer_image',$value,'public');
     }
     public function getCompanyImageFullUrlAttribute(){
         $value = $this->company_image;
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'company_image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('reviewer_company_image',$value);
-                    }else{
-                        return Helpers::local_storage_link('reviewer_company_image',$value);
-                    }
+                    return Helpers::get_full_url('reviewer_company_image',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('reviewer_company_image',$value);
+        return Helpers::get_full_url('reviewer_company_image',$value,'public');
     }
     public function storage()
     {

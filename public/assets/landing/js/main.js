@@ -58,5 +58,30 @@
                 input.attr("type", "password");
             }
         });
+        $('img.svg').each(function () {
+            let $img = $(this);
+            let imgURL = $img.attr('src');
+
+            // Fetch the SVG file
+            $.get(imgURL, function (data) {
+                // Extract the SVG content
+                let $svg = $(data).find('svg');
+
+                // Copy the image's ID and class to the SVG (optional)
+                if ($img.attr('id')) {
+                    $svg.attr('id', $img.attr('id'));
+                }
+                if ($img.attr('class')) {
+                    $svg.attr('class', $img.attr('class'));
+                }
+
+                // Remove invalid XML attributes
+                $svg.removeAttr('xmlns:a');
+
+                // Replace the image with the inline SVG
+                $img.replaceWith($svg);
+
+            }, 'xml');
+        });
     });
 })(jQuery);

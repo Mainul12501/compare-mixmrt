@@ -393,7 +393,7 @@
         <table class="">
             <tr>
                 <th class="fz-12 font-normal pb-3">
-                    {{translate('If_you_require_any_assistance_or_have_feedback_or_suggestions_about_our_site,_you')}} <br /> {{translate('can_email_us_at')}} <a href="mail::to({{ $company_email }})">{{ $company_email }}</a>
+                    {{translate('If_you_require_any_assistance_or_have_feedback_or_suggestions_about_our_site,_you')}} <br /> {{translate('can_email_us_at')}} <a href="mailto:({{ $company_email }})">{{ $company_email }}</a>
                 </th>
             </tr>
             <tr>

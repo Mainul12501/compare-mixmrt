@@ -155,36 +155,24 @@ class Module extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'icon') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('module',$value);
-                    }else{
-                        return Helpers::local_storage_link('module',$value);
-                    }
+                    return Helpers::get_full_url('module',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('module',$value);
+        return Helpers::get_full_url('module',$value,'public');
     }
     public function getThumbnailFullUrlAttribute(){
         $value = $this->thumbnail;
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'thumbnail') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('module',$value);
-                    }else{
-                        return Helpers::local_storage_link('module',$value);
-                    }
+                    return Helpers::get_full_url('module',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('module',$value);
+        return Helpers::get_full_url('module',$value,'public');
     }
 
     public function storage()

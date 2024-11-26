@@ -193,8 +193,8 @@ class ConversationController extends Controller
             $conversation->save();
             {
                 $data = [
-                    'title' =>translate('messages.message'),
-                    'description' =>translate('messages.message_description'),
+                    'title' =>translate('messages.message_from')." ".$sender->f_name,
+                    'description' => $message->message ?? translate('attachment'),
                     'order_id' => '',
                     'image' => '',
                     'message' => $message,

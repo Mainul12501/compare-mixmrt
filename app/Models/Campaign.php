@@ -77,18 +77,12 @@ class Campaign extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('campaign',$value);
-                    }else{
-                        return Helpers::local_storage_link('campaign',$value);
-                    }
+                    return Helpers::get_full_url('campaign',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('campaign',$value);
+        return Helpers::get_full_url('campaign',$value,'public');
     }
 
     public function scopeActive($query)

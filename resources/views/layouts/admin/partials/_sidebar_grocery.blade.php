@@ -6,10 +6,10 @@
                 @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
                 <a class="navbar-brand" href="{{ route('admin.dispatch.dashboard') }}" aria-label="Front">
                        <img class="navbar-brand-logo initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                     <img class="navbar-brand-logo-mini initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                 </a>
                 <!-- End Logo -->
@@ -347,6 +347,45 @@
                 @endif
                 <!-- End Notification -->
 
+            <!-- advertisement -->
+
+            @if (\App\CentralLogics\Helpers::module_permission_check('advertisement'))
+                <li
+                    class="navbar-vertical-aside-has-menu  @yield('advertisement')">
+                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
+                        title="{{ translate('messages.advertisement') }}">
+                        <i class="tio-tv-old nav-icon"></i>
+                        <span
+                            class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.advertisement') }}</span>
+                    </a>
+                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                        style="display: {{ Request::is('admin/advertisement*') ? 'block' : 'none' }}">
+
+                        <li class="nav-item @yield('advertisement_create')">
+                            <a class="nav-link " href="{{ route('admin.advertisement.create') }}"
+                                title="{{ translate('messages.New_Advertisement') }}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.New_Advertisement') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item @yield('advertisement_request')">
+                            <a class="nav-link " href="{{ route('admin.advertisement.requestList') }}"
+                                title="{{ translate('messages.Ad_Requests') }}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.Ad_Requests') }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item @yield('advertisement_list')">
+                            <a class="nav-link " href="{{ route('admin.advertisement.index') }}"
+                                title="{{ translate('messages.Ads_list') }}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.Ads_list') }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+            <!-- End advertisement -->
                 <!-- End marketing section -->
 
                     <li class="nav-item">
@@ -417,47 +456,15 @@
                     </a>
                 </li>
                 @endif
-                <!-- End Unit -->
 
-                <!-- AddOn -->
-                {{-- @if (\App\CentralLogics\Helpers::module_permission_check('addon'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/addon*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" title="{{ translate('messages.addons') }}">
-                        <i class="tio-add-circle-outlined nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.addons') }}</span>
-                    </a>
-                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ Request::is('admin/addon*') ? 'block' : 'none' }}">
-                        <li class="nav-item {{ Request::is('admin/addon/add-new') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('admin.addon.add-new') }}" title="{{ translate('messages.addon_list') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate">{{ translate('messages.list') }}</span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item {{ Request::is('admin/addon/bulk-import') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('admin.addon.bulk-import') }}" title="{{ translate('messages.bulk_import') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate text-capitalize">{{ translate('messages.bulk_import') }}</span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('admin/addon/bulk-export') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('admin.addon.bulk-export-index') }}" title="{{ translate('messages.bulk_export') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate text-capitalize">{{ translate('messages.bulk_export') }}</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                @endif --}}
-                <!-- End AddOn -->
                 <!-- Food -->
                 @if (\App\CentralLogics\Helpers::module_permission_check('item'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/item*') ? 'active' : '' }}">
+                <li class="navbar-vertical-aside-has-menu  @yield('low_stock_list') {{ Request::is('admin/item*') ? 'active' : '' }}">
                     <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" title="{{ translate('Product Setup') }}">
                         <i class="tio-premium-outlined nav-icon"></i>
                         <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate text-capitalize">{{ translate('Product Setup') }}</span>
                     </a>
-                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ Request::is('admin/item*') ? 'block' : 'none' }}">
+                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ Request::is('admin/item*') ||  Request::is('admin/report/stock-report*') ? 'block' : 'none' }}">
                         <li class="nav-item {{ Request::is('admin/item/add-new') || (Request::is('admin/item/edit/*') && strpos(request()->fullUrl(), 'product_gellary=1') !== false  )  ? 'active' : '' }}">
                             <a class="nav-link " href="{{ route('admin.item.add-new') }}" title="{{ translate('messages.add_new') }}">
                                 <span class="tio-circle nav-indicator-icon"></span>
@@ -468,6 +475,13 @@
                             <a class="nav-link " href="{{ route('admin.item.list') }}" title="{{ translate('messages.food_list') }}">
                                 <span class="tio-circle nav-indicator-icon"></span>
                                 <span class="text-truncate">{{ translate('messages.list') }}</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  @yield('low_stock_list')">
+                            <a class="nav-link " href="{{ route('admin.report.stock-report') }}" title="{{ translate('messages.Low_Stock_List') }}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{ translate('messages.Low_Stock_List') }}</span>
                             </a>
                         </li>
                         {{-- @if (\App\CentralLogics\Helpers::get_mail_status('product_gallery')) --}}
@@ -570,27 +584,7 @@
                     </a>
                 </li>
                 @endif
-                {{-- <li class="nav-item">
-                    <small class="nav-subtitle" title="{{ translate('messages.business_section') }}">{{ translate('messages.offline_payment') }}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                <!-- withdraw -->
-                @if (\App\CentralLogics\Helpers::module_permission_check('withdraw_list'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/store/offline_payment/list*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.store.offline_payment.store_offline_verification_list', ['all']) }}" title="{{ translate('messages.store_offline_verification_list') }}">
-                        <i class="tio-table nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.store_offline_payment') }}</span>
-                    </a>
-                </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/delivery_man/offline_payment/list*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.delivery_man.offline_payment.delivery_man_offline_verification_list', ['all']) }}" title="{{ translate('messages.delivery_man_offline_verification_list') }}">
-                        <i class="tio-table nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.delivery_man_offline_payment') }}</span>
-                    </a>
-                </li>
-                @endif
-                <!-- End Store --> --}}
+                <!-- End Store -->
 
                 <li class="nav-item py-5">
 
@@ -609,7 +603,7 @@
                                    <img class="avatar-img onerror-image"
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                    src="{{ auth('admin')->user()?->toArray()['image_full_url'] }}"
 
                                     alt="Image Description">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
@@ -632,7 +626,7 @@
                                         <img class="avatar-img onerror-image"
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                    src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                     alt="Image Description">
                                     </div>

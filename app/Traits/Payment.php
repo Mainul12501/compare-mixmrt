@@ -2,10 +2,10 @@
 
 namespace App\Traits;
 
-use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Foundation\Application;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use InvalidArgumentException;
-use Modules\Gateways\Entities\PaymentRequest;
+use App\Models\PaymentRequest;
 
 trait Payment
 {
@@ -73,7 +73,6 @@ trait Payment
             'phonepe' => 'payment/phonepe/pay',
             'cashfree' => 'payment/cashfree/pay',
             'instamojo' => 'payment/instamojo/pay',
-            'lenco' => 'payment/lenco/pay',
         ];
         if (array_key_exists($payment->payment_method, $routes)) {
             return url("{$routes[$payment->payment_method]}/?payment_id={$payment->id}");

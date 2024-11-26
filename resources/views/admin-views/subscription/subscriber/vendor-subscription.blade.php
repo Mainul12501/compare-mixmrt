@@ -64,12 +64,7 @@ active
                                         <a href="{{route('admin.store.view', $store->id)}}">
 
                                             <img class="onerror-image"
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $store,'logo',
-                                                asset('storage/app/public/store').'/'.$store->logo ?? '',
-                                                asset('public/assets/admin/img/100x100/1.png'),
-                                                'store/'
-                                            ) }}">
+                                            src="{{ $store->logo_full_url ?? asset('public/assets/admin/img/100x100/1.png') }}">
                                     </div>
                                         </a>
                                     <ul class="address-info list-unstyled list-unstyled-py-3 text-dark">
@@ -292,7 +287,7 @@ active
                 </div>
                 <div class="btn--container justify-content-end mt-3">
                     @if ( $store?->store_sub_update_application?->is_canceled == 0 && $store?->store_sub_update_application?->status == 1  )
-                        <button type="button"  data-url="{{route('admin.business-settings.subscriptionackage.cancelSubscription',$store?->id)}}" data-message="{{translate('If_you_cancel_the_subscription,_after_')}} {{  Carbon\Carbon::now()->subDays(1)->diffInDays($store?->store_sub_update_application?->expiry_date_parsed->format('Y-m-d'), false); }} {{ translate('days_the_vendor_will_no_longer_be_able_to_run_the_business_before_subscribe_a_new_plan.') }}"
+                        <button type="button"  data-url="{{route('admin.business-settings.subscriptionackage.cancelSubscription',$store?->id)}}" data-message="{{translate('If_you_cancel_the_subscription,_after_')}} {{  Carbon\Carbon::now()->diffInDays($store?->store_sub_update_application?->expiry_date_parsed->format('Y-m-d'), false); }} {{ translate('days_the_vendor_will_no_longer_be_able_to_run_the_business_before_subscribe_a_new_plan.') }}"
                         class="btn btn--danger text-white status_change_alert">{{ translate('Cancel Subscription') }}</button>
                     @endif
 
@@ -337,7 +332,12 @@ active
                                             @if ($store->store_business_model == 'commission')
                                             <button type="button" class="btn btn--secondary">{{ translate('Current_Plan') }}</button>
                                             @else
-                                            <button type="button" data-url="{{route('admin.business-settings.subscriptionackage.switchToCommission',$store->id)}}" data-message="{{translate('You_Want_To_Migrate_To_Commission')}}" class="btn btn--primary shift_to_commission">{{ translate('Shift in this plan') }}</button>
+
+                                            @php
+                                            $cash_backs= \App\CentralLogics\Helpers::calculateSubscriptionRefundAmount(store:$store ,return_data:true);
+                                            @endphp
+
+                                            <button type="button" data-url="{{route('admin.business-settings.subscriptionackage.switchToCommission',$store->id)}}" data-message="{{translate('You_Want_To_Migrate_To_Commission.')}} {{ data_get($cash_backs,'back_amount') > 0  ?  translate('You will get').' '. \App\CentralLogics\Helpers::format_currency(data_get($cash_backs,'back_amount')) .' '.translate('to_your_wallet_for_remaining') .' '.data_get($cash_backs,'days').' '.translate('messages.days_subscription_plan') : '' }}"  class="btn btn--primary shift_to_commission">{{ translate('Shift in this plan') }}</button>
                                             @endif
 
                                         </div>

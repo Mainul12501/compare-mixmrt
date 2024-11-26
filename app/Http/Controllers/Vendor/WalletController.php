@@ -25,8 +25,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Library\Payment as PaymentInfo;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\DisbursementHistoryExport;
-use App\Models\OfflinePaymentMethod;
-use App\Models\OfflinePayments;
 
 class WalletController extends Controller
 {
@@ -35,8 +33,7 @@ class WalletController extends Controller
         $data =  data_get($this->getWithdrawMethods() , 'data' , [] );
         $withdrawal_methods =  data_get($this->getWithdrawMethods() , 'withdrawal_methods' , [] );
         $withdraw_req = WithdrawRequest::with(['vendor','method'])->where('vendor_id', Helpers::get_vendor_id())->latest()->paginate(config('default_pagination'));
-        $offline_payments = OfflinePaymentMethod::where('status', 1)->latest()->paginate(config('default_pagination'));
-        return view('vendor-views.wallet.index', compact('withdraw_req','withdrawal_methods','data','offline_payments'));
+        return view('vendor-views.wallet.index', compact('withdraw_req','withdrawal_methods','data'));
     }
     public function w_request(Request $request)
     {
@@ -68,8 +65,7 @@ class WalletController extends Controller
             try
             {
                 $admin= Admin::where('role_id', 1)->first();
-                $mail_status = Helpers::get_mail_status('withdraw_request_mail_status_admin');
-                if(config('mail.status') && $mail_status == '1') {
+                if(config('mail.status') && Helpers::get_mail_status('withdraw_request_mail_status_admin') == '1' &&   Helpers::getNotificationStatusData('admin','withdraw_request','mail_status')) {
                     $wallet_transaction = WithdrawRequest::where('vendor_id',Helpers::get_vendor_id())->latest()->first();
                     Mail::to($admin['email'])->send(new \App\Mail\WithdrawRequestMail('pending',$wallet_transaction));
                 }
@@ -163,22 +159,13 @@ class WalletController extends Controller
         $validator = Validator::make($request->all(), [
             'store_id' => 'required',
             'payment_gateway' => 'required',
-            'payment_method' => 'required',
             'amount' => 'required|min:0.001',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        if($request->payment_method == "offline"){
-            $data = OfflinePaymentMethod::where('method_name',$request->payment_gateway)->where('status', 1)->first();
-            if(!$data){
-                Toastr::success('offline payment method not found.');
-                return redirect()->back();
-            }
-            $wallet = StoreWallet::where('vendor_id',Helpers::get_vendor_id())->first();
-            return view('vendor-views.wallet.offline-payment',compact('data','wallet'));
-        }
+
         $store =Store::findOrfail($request->store_id);
 
         $payer = new Payer(
@@ -190,7 +177,7 @@ class WalletController extends Controller
         $store_logo= BusinessSetting::where(['key' => 'logo'])->first();
         $additional_data = [
             'business_name' => BusinessSetting::where(['key'=>'business_name'])->first()?->value,
-            'business_logo' => \App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )
+            'business_logo' => \App\CentralLogics\Helpers::get_full_url('business',$store_logo?->value,$store_logo?->storage[0]?->value ?? 'public' )
         ];
         $payment_info = new PaymentInfo(
             success_hook: 'collect_cash_success',
@@ -320,130 +307,6 @@ class WalletController extends Controller
             return Excel::download(new DisbursementHistoryExport($data), 'Disbursementlist.xlsx');
         } else if ($request->type == 'csv') {
             return Excel::download(new DisbursementHistoryExport($data), 'Disbursementlist.csv');
-        }
-    }
-    public function offline_payment(Request $request)
-    {
-        $request->validate([
-            'store_id' => 'required',
-            'method_id' => 'required',
-            'amount' => 'required|min:0.001',
-        ]);
-
-        $offline_payment_info = [];
-        $store = Store::where('id',$request->store_id)->first();
-        $method = OfflinePaymentMethod::where(['id'=>$request->method_id,'status'=>1])->first();
-        try{
-            if(isset($method))
-            {
-                $fields = array_column($method->method_informations, 'customer_input');
-                $values = $request->all();
-
-                $offline_payment_info['method_id'] = $request->method_id;
-                $offline_payment_info['method_name'] = $method->method_name;
-                foreach ($fields as $field) {
-                    if(key_exists($field, $values)) {
-                        $offline_payment_info[$field] = $values[$field];
-                    }
-                }
-            }
-
-            $OfflinePayments= new OfflinePayments();
-
-            $OfflinePayments->payment_info =json_encode($offline_payment_info);
-            $OfflinePayments->method_fields = json_encode($method?->method_fields);
-            $OfflinePayments->store_id = $request->store_id;
-            $OfflinePayments->amount = $request->amount;
-            if($store->store_type == 'company'){
-                $OfflinePayments->type = 'company';
-            }else{
-                $OfflinePayments->type = 'store';
-            }
-            DB::beginTransaction();
-            $OfflinePayments->save();
-            DB::commit();
-
-            return redirect()->route('vendor.wallet.offline_payment_list');
-
-        } catch (\Exception $e) {
-            info($e->getMessage());
-            DB::rollBack();
-            return response()->json([ 'payment' => $e->getMessage()], 403);
-        }
-    }
-    public function offline_payment_list(Request $request){
-        $data =  data_get($this->getWithdrawMethods() , 'data' , [] );
-        $withdrawal_methods =  data_get($this->getWithdrawMethods() , 'withdrawal_methods' , [] );
-
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $account_transaction = OfflinePayments::where('store_id', Helpers::get_store_id())
-        ->when(isset($key), function ($query) use ($key) {
-            return $query->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    $q->orWhere('status', 'like', "%{$value}%");
-                }
-            });
-        })
-            ->where('type', Helpers::get_store_data()->store_type)
-            // ->whereIn('status',['pending','denied'])
-            // ->module(Config::get('module.current_module_id'))
-            ->latest()->paginate(config('default_pagination'));
-        return view('vendor-views.wallet.offline_payment_list', compact('account_transaction','withdrawal_methods','data'));
-    }
-    public function offline_payment_recheck(Request $request)
-    {
-        $request->validate([
-            'offline_payment_id' => 'required',
-        ]);
-        $offline_payment = OfflinePayments::where('id',$request->offline_payment_id)->first();
-        $method_id = json_decode($offline_payment->payment_info,true)['method_id'];
-        $data = OfflinePaymentMethod::where('id',$method_id)->where('status', 1)->first();
-        if(!$data){
-            Toastr::success('offline payment method not found.');
-            return redirect()->back();
-        }
-        $wallet = StoreWallet::where('vendor_id',Helpers::get_vendor_id())->first();
-        return view('vendor-views.wallet.recheck-offline-payment',compact('data','wallet','offline_payment'));
-    }
-    public function offline_payment_edit(Request $request,$id)
-    {
-        $request->validate([
-            'method_id' => 'required',
-        ]);
-
-        $offline_payment_info = [];
-        $method = OfflinePaymentMethod::where(['id'=>$request->method_id,'status'=>1])->first();
-        try{
-            if(isset($method))
-            {
-                $fields = array_column($method->method_informations, 'customer_input');
-                $values = $request->all();
-
-                $offline_payment_info['method_id'] = $request->method_id;
-                $offline_payment_info['method_name'] = $method->method_name;
-                foreach ($fields as $field) {
-                    if(key_exists($field, $values)) {
-                        $offline_payment_info[$field] = $values[$field];
-                    }
-                }
-            }
-
-            $OfflinePayments= OfflinePayments::where('id',$id)->first();
-
-            $OfflinePayments->payment_info =json_encode($offline_payment_info);
-            $OfflinePayments->method_fields = json_encode($method?->method_fields);
-            $OfflinePayments->status = 'pending';
-            $OfflinePayments->type = 'store';
-            DB::beginTransaction();
-            $OfflinePayments->save();
-            DB::commit();
-
-            return redirect()->route('vendor.wallet.offline_payment_list');
-
-        } catch (\Exception $e) {
-            info($e->getMessage());
-            DB::rollBack();
-            // return response()->json([ 'payment' => $e->getMessage()], 403);
         }
     }
 

@@ -59,12 +59,7 @@
                                     <label class="__upload-img aspect-235-375 m-auto d-block position-relative">
                                         <div class="img">
                                             <img class="onerror-image"
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $best_reviewed_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner') . '/' . $best_reviewed_section_banner?->value,
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                'promotional_banner/'
-                                            ) }}"
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $best_reviewed_section_banner?->value?? '', $best_reviewed_section_banner?->storage[0]?->value ?? 'public','upload_placeholder')}}"
 
                                             data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>
@@ -126,12 +121,7 @@
                                         <div class="img">
                                             <img class="onerror-image"
 
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $new_arrival_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner') . '/' . $new_arrival_section_banner?->value,
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                               'promotional_banner/'
-                                            ) }}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $new_arrival_section_banner?->value?? '', $new_arrival_section_banner?->storage[0]?->value ?? 'public','upload_placeholder')}}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>
                                         <div class="">
                                         <input type="file" name="image"  hidden>
@@ -190,12 +180,7 @@
                                     <label class="__upload-img aspect-5-1 m-auto d-block">
                                         <div class="img">
                                             <img class="onerror-image"
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $bottom_section_banner,'value',
-                                                asset('storage/app/public/promotional_banner') . '/' . $bottom_section_banner?->value,
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                               'promotional_banner/'
-                                            ) }}"
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $bottom_section_banner?->value?? '', $bottom_section_banner?->storage[0]?->value ?? 'public','upload_placeholder')}}"
                                         data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                         </div>
                                         <div class="position-relative">

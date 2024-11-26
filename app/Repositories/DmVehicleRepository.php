@@ -97,8 +97,8 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
 
     public function getExistFirst(array $params, string $id = null): ?Model
     {
-        $startingCoverageArea = $params['minimum_weight'];
-        $maximumCoverageArea = $params['maximum_weight'];
+        $startingCoverageArea = $params['starting_coverage_area'];
+        $maximumCoverageArea = $params['maximum_coverage_area'];
 
         return $this->vehicle->where('id' ,'!=', $id)
             ->when(isset($id), function($query) use($id){
@@ -106,11 +106,11 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
             })
             ->where(function ($query) use ($startingCoverageArea,$maximumCoverageArea ){
                 $query->where(function ($query) use ($startingCoverageArea) {
-                    $query->where('minimum_weight', '<=', $startingCoverageArea)->where('maximum_weight', '>=', $startingCoverageArea);
+                    $query->where('starting_coverage_area', '<=', $startingCoverageArea)->where('maximum_coverage_area', '>=', $startingCoverageArea);
                 })->orWhere(function ($query) use ($maximumCoverageArea) {
-                    $query->where('minimum_weight', '<=', $maximumCoverageArea)->where('maximum_weight', '>=', $maximumCoverageArea);
+                    $query->where('starting_coverage_area', '<=', $maximumCoverageArea)->where('maximum_coverage_area', '>=', $maximumCoverageArea);
                 })->orWhere(function ($query) use ($startingCoverageArea, $maximumCoverageArea) {
-                    $query->where('minimum_weight', '>=', $startingCoverageArea)->where('maximum_weight', '<=', $maximumCoverageArea);
+                    $query->where('starting_coverage_area', '>=', $startingCoverageArea)->where('maximum_coverage_area', '<=', $maximumCoverageArea);
                 });
             })
             ->first();

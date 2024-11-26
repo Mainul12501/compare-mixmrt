@@ -6,10 +6,10 @@
                 @php($store_logo = \App\Models\BusinessSetting::where(['key' => 'logo'])->first())
                 <a class="navbar-brand" href="{{ route('admin.dispatch.dashboard') }}" aria-label="Front">
                        <img class="navbar-brand-logo initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                     <img class="navbar-brand-logo-mini initial--36 onerror-image onerror-image" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper($store_logo,'value', asset('storage/app/public/business/').'/' . $store_logo->value, asset('public/assets/admin/img/160x160/img2.jpg') ,'business/' )}}"
+                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $store_logo?->value?? '', $store_logo?->storage[0]?->value ?? 'public','favicon')}}"
                     alt="Logo">
                 </a>
                 <!-- End Logo -->
@@ -294,46 +294,6 @@
                     @endif
                     <!--End Product Section -->
 
-                      <!-- Comapny section start -->
-                <li class="nav-item">
-                    <small class="nav-subtitle" title="{{ translate('messages.store_section') }}">{{ translate('messages.Courier_Company_management') }}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                @if (\App\CentralLogics\Helpers::module_permission_check('store'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/store/pending-requests') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.company.pending-requests') }}" title="{{ translate('messages.pending_requests') }}">
-                        <span class="tio-calendar-note nav-icon"></span>
-                        <span class="text-truncate position-relative overflow-visible">
-                            {{ translate('messages.new_courier_companies') }}
-                            @php($new_str = \App\Models\Store::whereHas('vendor', function($query){
-                                return $query->where('status', null);
-                            })->where('store_type','company')->get())
-                            @if (count($new_str)>0)
-
-                            <span class="btn-status btn-status-danger border-0 size-8px"></span>
-                            @endif
-                        </span>
-                    </a>
-                </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/company/add') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.company.add') }}" title="{{ translate('messages.add_scourier_company') }}">
-                        <span class="tio-add-circle nav-icon"></span>
-                        <span class="text-truncate">
-                            {{ translate('messages.add_courier_company') }}
-                        </span>
-                    </a>
-                </li>
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/company/list') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.company.list') }}" title="{{ translate('messages.stores_list') }}">
-                        <span class="tio-layout nav-icon"></span>
-                        <span class="text-truncate">{{ translate('messages.courier_company') }}
-                            {{ translate('list') }}</span>
-                    </a>
-                </li>
-                @endif
-                <!-- End conpany section -->
-
 
                 <li class="__sidebar-hs-unfold px-2" id="tourb-9">
                     <div class="hs-unfold w-100">
@@ -347,7 +307,7 @@
                                    <img class="avatar-img onerror-image"
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                    src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                     alt="Image Description">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
@@ -370,7 +330,7 @@
                                         <img class="avatar-img onerror-image"
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img1.jpg')}}"
 
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper(auth('admin')->user(),'image', asset('storage/app/public/admin/').'/'.auth('admin')->user()->image, asset('public/assets/admin/img/160x160/img1.jpg') ,'admin/')}}"
+                                    src="{{auth('admin')->user()?->toArray()['image_full_url']}}"
 
                                     alt="Image Description">
                                     </div>

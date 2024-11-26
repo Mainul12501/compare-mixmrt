@@ -108,6 +108,7 @@ class BusinessSettingsController extends Controller
         $conf->halal_tag_status = $request->halal_tag_status ?? 0;
         $conf->extra_packaging_status = $request->extra_packaging_status ?? 0;
         $conf->extra_packaging_amount = $request->extra_packaging_amount;
+        $conf->minimum_stock_for_warning = $request->minimum_stock_for_warning ?? 0;
         $conf->save();
 
         foreach ($data as $key=>$i) {

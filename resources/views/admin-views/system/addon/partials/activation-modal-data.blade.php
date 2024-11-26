@@ -11,12 +11,7 @@
         @php($logo=\App\Models\BusinessSetting::where('key','logo')->first())
         <img
             width="200"
-            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                $logo ,'value',
-                asset('storage/app/public/restaurant').'/'.$logo->value ?? '',
-                asset('public/assets/admin/img/img1.jpg'),
-                'restaurant/'
-            ) }}"
+            src="{{\App\CentralLogics\Helpers::get_full_url('business', $logo?->value?? '', $logo?->storage[0]?->value ?? 'public','upload_image')}}"
 
             alt="image"
             class="dark-support onerror-image"  data-onerror-image="{{ asset('public/assets/admin/img/img1.jpg') }}" />

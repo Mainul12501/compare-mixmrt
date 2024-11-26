@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -17,10 +16,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class LanguageController extends Controller
 {
-
     public function index()
-    {
-        $language = BusinessSetting::where('key', 'system_language')->exists();
+    {       $language = BusinessSetting::where('key', 'system_language')->exists();
         if(!$language){
             Helpers::insert_business_settings_key('system_language','[{"id":1,"direction":"ltr","code":"en","status":1,"default":true}]');
         }
@@ -29,16 +26,10 @@ class LanguageController extends Controller
 
     public function store(Request $request)
     {
-        // $request->validate([
-        //     'name' => 'required',
-        // ], [
-        //     'name.required' => 'Language is required!',
-        // ]);
-
         $language = BusinessSetting::where('key', 'system_language')->first();
         $lang_array = [];
         $codes = [];
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] != $request['code']) {
                 if (!array_key_exists('default', $data)) {
                     $default = array('default' => ($data['code'] == 'en') ? true : false);
@@ -65,12 +56,11 @@ class LanguageController extends Controller
             'status' => 0,
             'default' => false,
         ];
-
-        BusinessSetting::updateOrInsert(['key' => 'system_language'], [
+        Helpers::businessUpdateOrInsert(['key' => 'system_language'], [
             'value' => $lang_array
         ]);
 
-        DB::table('business_settings')->updateOrInsert(['key' => 'language'], [
+        Helpers::businessUpdateOrInsert(['key' => 'language'], [
             'value' => json_encode($codes),
         ]);
 
@@ -82,11 +72,14 @@ class LanguageController extends Controller
     {
         $language = BusinessSetting::where('key', 'system_language')->first();
         $lang_array = [];
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
+
             if ($data['code'] == $request['code']) {
+                if( array_key_exists('default', $data) && $data['default'] == true ){
+                    return response()->json(['error' => 403]);
+                }
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => $data['status'] == 1 ? 0 : 1,
@@ -96,7 +89,6 @@ class LanguageController extends Controller
             } else {
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => $data['status'],
@@ -108,19 +100,26 @@ class LanguageController extends Controller
         $businessSetting = BusinessSetting::where('key', 'system_language')->update([
             'value' => $lang_array
         ]);
-
         return $businessSetting;
     }
 
     public function update_default_status(Request $request)
     {
         $language = BusinessSetting::where('key', 'system_language')->first();
+        // dd($language);
+
+
         $lang_array = [];
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $request['code']) {
+
+               if($data['default'] == true){
+                Toastr::warning(translate('messages.You_can_not_change_the_default_status_of_this_language'));
+                return back();
+               }
+
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => 1,
@@ -130,7 +129,6 @@ class LanguageController extends Controller
             } else {
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => $data['status'],
@@ -146,7 +144,7 @@ class LanguageController extends Controller
         $direction = BusinessSetting::where('key', 'site_direction')->first();
         $direction = $direction->value ?? 'ltr';
         $language = BusinessSetting::where('key', 'system_language')->first();
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $request['code']) {
                 $direction = isset($data['direction']) ? $data['direction'] : 'ltr';
             }
@@ -155,26 +153,18 @@ class LanguageController extends Controller
         Helpers::language_load();
         session()->put('local', $request['code']);
         session()->put('site_direction', $direction);
-
         Toastr::success('Default Language Changed!');
         return back();
     }
 
     public function update(Request $request)
     {
-        // $request->validate([
-        //     'name' => 'required',
-        // ], [
-        //     'name.required' => 'Language is required!',
-        // ]);
-
         $language = BusinessSetting::where('key', 'system_language')->first();
         $lang_array = [];
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $request['code']) {
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $request['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => $data['status'],
@@ -184,7 +174,6 @@ class LanguageController extends Controller
             } else {
                 $lang = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => $data['status'],
@@ -217,7 +206,6 @@ class LanguageController extends Controller
         $full_data = include(base_path('resources/lang/' . $lang . '/messages.php'));
         $full_data = array_filter($full_data, fn($value) => !is_null($value) && $value !== '');
 
-        // If a search term is provided, filter the array based on the search term
         if (!empty($searchTerm)) {
             $full_data = array_filter($full_data, function ($value, $key) use ($searchTerm) {
                 return (stripos($value, $searchTerm) !== false) || (stripos(ucfirst(str_replace('_', ' ', Helpers::remove_invalid_charcaters($key))), $searchTerm) !== false);
@@ -227,14 +215,6 @@ class LanguageController extends Controller
 
         ksort($full_data);
         $full_data = $this->convertArrayToCollection($lang,$full_data,config('default_pagination'));
-
-        // english folder data
-        // $en_data = include(base_path('resources/lang/en/messages.php'));
-        // $en_data = array_filter($en_data, fn($value) => !is_null($value) && $value !== '');
-        // ksort($en_data);
-        // $en_data = $this->convertArrayToCollection('en',$en_data,config('default_pagination'));
-
-        // dd($en_data);
 
         return view('admin-views.business-settings.language.translate', compact('lang', 'full_data'));
     }
@@ -262,14 +242,14 @@ class LanguageController extends Controller
     public function auto_translate(Request $request, $lang): \Illuminate\Http\JsonResponse
     {
         $lang_code = Helpers::getLanguageCode($lang);
+
         $full_data = include(base_path('resources/lang/' . $lang . '/messages.php'));
         $data_filtered = [];
-
         foreach ($full_data as $key => $data) {
             $data_filtered[$key] = $data;
         }
         $translated=  str_replace('_', ' ', Helpers::remove_invalid_charcaters($request['key']));
-        $translated = Helpers::auto_translator($translated, 'en', $lang_code);
+        $translated = Helpers::auto_translator($translated, 'en', $lang);
         $data_filtered[$request['key']] = $translated;
         $str = "<?php return " . var_export($data_filtered, true) . ";";
         file_put_contents(base_path('resources/lang/' . $lang . '/messages.php'), $str);
@@ -278,24 +258,115 @@ class LanguageController extends Controller
             'translated_data' => $translated
         ]);
     }
+    public function auto_translate_all(Request $request, $lang): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $translating_count= $request?->translating_count <= 0 ? 1: $request->translating_count ;
+            $lang_code = Helpers::getLanguageCode($lang);
+
+            if($lang === 'en'){
+                return response()->json([
+                    'message' => translate('All_datas_are_translated') , 'data' => 'success'
+                ]);
+            }
+
+            $data_filtered = [];
+            $data_filtered_2 = [];
+            $new_messages_path = base_path('resources/lang/' . $lang . '/new-messages.php');
+            $count=0;
+            $start_time = now();
+            $items_processed = 20;
+            if(!file_exists($new_messages_path)){
+                $str = "<?php return " . var_export($data_filtered, true) . ";";
+                file_put_contents(base_path('resources/lang/' . $lang . '/new-messages.php'), $str);
+            }
+
+            $translated_data = include(base_path('resources/lang/' . $lang . '/new-messages.php'));
+            $full_data = include(base_path('resources/lang/' . $lang . '/messages.php'));
+            $translated_data_count= count($translated_data);
+
+            if($translated_data_count > 0){
+                foreach ($translated_data as $key_1 => $data_1) {
+                    if($count > $items_processed){
+                        break;
+                    }
+                    $translated=  str_replace('_', ' ', Helpers::remove_invalid_charcaters($key_1));
+                    if(strlen($translated) > 0){
+                        $translated = Helpers::auto_translator($translated, 'en', $lang);
+                    }
+                    $data_filtered_2[$key_1] = $translated;
+                    unset($translated_data[$key_1]);
+                    $count++;
+                }
+
+
+                $str = "<?php return " . var_export($translated_data, true) . ";";
+                file_put_contents(base_path('resources/lang/' . $lang . '/new-messages.php'), $str);
+                $merged_data = array_replace($full_data, $data_filtered_2);
+
+                $str = "<?php\n\nreturn " . var_export($merged_data, true) . ";\n";
+                file_put_contents(base_path('resources/lang/' . $lang . '/messages.php'), $str);
+                $renmaining_translated_data_count= count($translated_data);
+                $percentage =  $renmaining_translated_data_count > 0 && $translating_count > 0 ?  100 - ( ($renmaining_translated_data_count/$translating_count)* 100) : 0;
+
+
+                $percentage= $percentage > 0 ? $percentage : 1;
+
+                $end_time =now();
+                $time_taken = $start_time->diffInSeconds($end_time);
+                $rate_per_second = $time_taken > 0 ? $items_processed / $time_taken : 0.01;
+                $total_time_needed = $renmaining_translated_data_count > 0 ? $renmaining_translated_data_count / $rate_per_second : 1;
+
+                $hours = floor($total_time_needed / 3600);
+                $minutes = floor( 2 + (($total_time_needed % 3600) / 60));
+                $seconds = $total_time_needed % 60;
+
+
+                return response()->json([
+                    'message' =>  translate('translating') , 'data' => 'translating', 'total' => $translated_data_count, 'percentage'=> round($percentage,1), 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds,
+                    'status' =>  $renmaining_translated_data_count > 0 ? 'pending' : 'done'
+                ]);
+
+            } else{
+
+                    foreach ($full_data as $key => $data) {
+                        if (preg_match('/^[\x20-\x7E\x{2019}]+$/u', $data)) {
+                            $data_filtered[$key] = $data;
+                            $str = "<?php return " . var_export($data_filtered, true) . ";";
+                            file_put_contents(base_path('resources/lang/' . $lang . '/new-messages.php'), $str);
+                            }
+                    }
+                    return response()->json([
+                        'message' =>  translate('data_prepared') , 'data' => 'data_prepared' , 'total' => count($data_filtered)
+                    ]);
+
+            }
+            return response()->json([
+                'message' => translate('All_datas_are_translated') , 'data' => 'success'
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'message' => $exception->getMessage() , 'data' => 'error'
+            ]);
+        }
+    }
 
     public function delete($lang)
     {
         $language = BusinessSetting::where('key', 'system_language')->first();
 
         $del_default = false;
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $lang && array_key_exists('default', $data) && $data['default'] == true) {
                 $del_default = true;
             }
         }
 
         $lang_array = [];
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] != $lang) {
                 $lang_data = [
                     'id' => $data['id'],
-
                     'direction' => $data['direction'] ?? 'ltr',
                     'code' => $data['code'],
                     'status' => ($del_default == true && $data['code'] == 'en') ? 1 : $data['status'],
@@ -326,7 +397,7 @@ class LanguageController extends Controller
 
         $languages = array();
         $language = BusinessSetting::where('key', 'language')->first();
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data != $lang) {
                 array_push($languages, $data);
             }
@@ -336,7 +407,7 @@ class LanguageController extends Controller
         }
         array_unshift($languages, 'en');
 
-        DB::table('business_settings')->updateOrInsert(['key' => 'language'], [
+        Helpers::businessUpdateOrInsert(['key' => 'language'], [
             'value' => json_encode($languages),
         ]);
 
@@ -349,7 +420,7 @@ class LanguageController extends Controller
         $direction = BusinessSetting::where('key', 'site_direction')->first();
         $direction = $direction->value ?? 'ltr';
         $language = BusinessSetting::where('key', 'system_language')->first();
-        foreach (json_decode($language['value'], true) as $key => $data) {
+        foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $local) {
                 $direction = isset($data['direction']) ? $data['direction'] : 'ltr';
             }
@@ -358,9 +429,6 @@ class LanguageController extends Controller
         Helpers::language_load();
         session()->put('local', $local);
         session()->put('site_direction', $direction);
-        // DB::table('business_settings')->updateOrInsert(['key' => 'site_direction'], [
-        //     'value' => $direction
-        // ]);
         return redirect()->back();
     }
 }

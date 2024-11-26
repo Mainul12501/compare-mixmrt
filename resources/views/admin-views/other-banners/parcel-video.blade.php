@@ -144,12 +144,7 @@
                                         <div class="img">
                                             <img class="onerror-image"
 
-                                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                $banner_image,'value',
-                                                asset('storage/app/public/promotional_banner').'/'.$banner_image?->value ?? '',
-                                                asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                'promotional_banner/'
-                                            ) }}"
+                                            src="{{\App\CentralLogics\Helpers::get_full_url('promotional_banner', $banner_image?->value?? '', $banner_image?->storage[0]?->value ?? 'public','upload_placeholder')}}"
                                             data-onerror-image="{{ asset('/public/assets/admin/img/upload-placeholder.png') }}" alt="">
                                         </div>
 

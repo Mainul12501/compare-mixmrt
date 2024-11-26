@@ -50,36 +50,36 @@
                         <div class="card-body">
                             <div class="py-2">
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-sm-6 col-lg-4">
-                                        <div class="form-group mb-0">
-                                            <label
-                                                class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control">
-                                                <span class="pr-2">{{ translate('Customer Verification') }}
-                                                    <span class="input-label-secondary" data-toggle="tooltip"
-                                                        data-placement="right"
-                                                        data-original-title="{{ translate('messages.If_you_activate_this_feature,_customers_need_to_verify_their_account_information_via_OTP_during_the_signup_process.') }}">
-                                                        <img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
-                                                            alt="{{ translate('messages.show_hide_food_menu') }}">
-                                                    </span>
-                                                </span>
-                                                <input type="checkbox" data-id="customer_verification_status"
-                                                    data-type="toggle"
-                                                    data-image-on="{{ asset('/public/assets/admin/img/modal/customer-verification-on.png') }}"
-                                                    data-image-off="{{ asset('/public/assets/admin/img/modal/customer-verification-off.png') }}"
-                                                    data-title-on="{{ translate('messages.Want_to_enable') }} <strong>{{ translate('messages.Customer_Verification?') }}</strong>"
-                                                    data-title-off="{{ translate('messages.Want_to_disable') }} <strong>{{ translate('messages.Customer_Verification?') }}</strong>"
-                                                    data-text-on="<p>{{ translate('messages.If_you_enable_this,_Customers_have_to_verify_their_account_via_OTP.') }}</p>"
-                                                    data-text-off="<p>{{ translate('messages.If_you_disable_this,_Customers_don’t_need_to_verify_their_account_via_OTP.') }}</p>"
-                                                    class="status toggle-switch-input dynamic-checkbox-toggle"
-                                                    name="customer_verification_status" id="customer_verification_status"
-                                                    value="1"
-                                                    {{ isset($data['customer_verification']) && $data['customer_verification'] == 1 ? 'checked' : '' }}>
-                                                <span class="toggle-switch-label text">
-                                                    <span class="toggle-switch-indicator"></span>
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </div>
+{{--                                    <div class="col-sm-6 col-lg-4">--}}
+{{--                                        <div class="form-group mb-0">--}}
+{{--                                            <label--}}
+{{--                                                class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control">--}}
+{{--                                                <span class="pr-2">{{ translate('Customer Verification') }}--}}
+{{--                                                    <span class="input-label-secondary" data-toggle="tooltip"--}}
+{{--                                                        data-placement="right"--}}
+{{--                                                        data-original-title="{{ translate('messages.If_you_activate_this_feature,_customers_need_to_verify_their_account_information_via_OTP_during_the_signup_process.') }}">--}}
+{{--                                                        <img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"--}}
+{{--                                                            alt="{{ translate('messages.show_hide_food_menu') }}">--}}
+{{--                                                    </span>--}}
+{{--                                                </span>--}}
+{{--                                                <input type="checkbox" data-id="customer_verification_status"--}}
+{{--                                                    data-type="toggle"--}}
+{{--                                                    data-image-on="{{ asset('/public/assets/admin/img/modal/customer-verification-on.png') }}"--}}
+{{--                                                    data-image-off="{{ asset('/public/assets/admin/img/modal/customer-verification-off.png') }}"--}}
+{{--                                                    data-title-on="{{ translate('messages.Want_to_enable') }} <strong>{{ translate('messages.Customer_Verification?') }}</strong>"--}}
+{{--                                                    data-title-off="{{ translate('messages.Want_to_disable') }} <strong>{{ translate('messages.Customer_Verification?') }}</strong>"--}}
+{{--                                                    data-text-on="<p>{{ translate('messages.If_you_enable_this,_Customers_have_to_verify_their_account_via_OTP.') }}</p>"--}}
+{{--                                                    data-text-off="<p>{{ translate('messages.If_you_disable_this,_Customers_don’t_need_to_verify_their_account_via_OTP.') }}</p>"--}}
+{{--                                                    class="status toggle-switch-input dynamic-checkbox-toggle"--}}
+{{--                                                    name="customer_verification_status" id="customer_verification_status"--}}
+{{--                                                    value="1"--}}
+{{--                                                    {{ isset($data['customer_verification']) && $data['customer_verification'] == 1 ? 'checked' : '' }}>--}}
+{{--                                                <span class="toggle-switch-label text">--}}
+{{--                                                    <span class="toggle-switch-indicator"></span>--}}
+{{--                                                </span>--}}
+{{--                                            </label>--}}
+{{--                                        </div>--}}
+{{--                                    </div>--}}
 
 
                                     <div class="col-sm-6 col-lg-4">

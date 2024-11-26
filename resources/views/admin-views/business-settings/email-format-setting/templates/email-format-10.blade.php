@@ -8,11 +8,7 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
             <td class="main-table-td">
                 <img class="mail-img-1 onerror-image" data-onerror-image="{{ asset('/public/assets/admin/img/blank1.png') }}"
 
-                src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                    $data,'icon', asset('storage/app/public/email_template').'/'.data_get($data,'icon',null) ,
-                    asset('/public/assets/admin/img/blank1.png'),
-                    'email_template/'
-                ) }}"
+                src="{{ $data['icon_full_url'] ?? asset('/public/assets/admin/img/blank3.png') }}"
 
                 id="iconViewer" alt="">
 
@@ -20,12 +16,7 @@ $company_name = App\Models\BusinessSetting::where('key', 'business_name')->first
                 <div class="mb-1" id="mail-body">{!! $data['body']?? translate('Hi_Sabrina,') !!}</div>
                 <img class="mb-2 mail-img-3 onerror-image" id="bannerViewer" data-onerror-image="{{ asset('/public/assets/admin/img/blank2.png') }}"
 
-                src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                    $data,'image' ,
-                    asset('storage/app/public/email_template').'/'.data_get($data,'image',null) ,
-                    asset('/public/assets/admin/img/blank2.png'),
-                    'email_template/'
-                ) }}"
+                src="{{ $data['image_full_url'] ?? asset('/public/assets/admin/img/blank2.png') }}"
 
                 alt="iamge">
 

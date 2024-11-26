@@ -14,7 +14,7 @@ $countryCode= strtolower($country?$country->value:'auto');
     <!-- Favicon -->
     @php($logo=\App\Models\BusinessSetting::where(['key'=>'icon'])->first())
     <link rel="shortcut icon" href="">
-    <link rel="icon" type="image/x-icon" href="{{\App\CentralLogics\Helpers::get_image_helper($logo,'value', asset('storage/app/public/business/').'/' . $logo?->value, asset('public/assets/admin/img/160x160/img1.jpg') ,'business/' )}}">
+    <link rel="icon" type="image/x-icon" href="{{\App\CentralLogics\Helpers::get_full_url('business', $logo?->value?? '', $logo?->storage[0]?->value ?? 'public','favicon')}}">
     <!-- Font -->
     <link href="{{asset('public/assets/admin/css/fonts.css')}}" rel="stylesheet">
     <!-- CSS Implementing Plugins -->
@@ -194,6 +194,49 @@ $countryCode= strtolower($country?$country->value:'auto');
     </div>
 
 
+
+    <div class="modal fade" id="new-dynamic-submit-model">
+        <div class="modal-dialog modal-dialog-centered status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img id="image-src" class="mb-20">
+                                <h5 class="modal-title" id="toggle-title"></h5>
+                            </div>
+                            <div class="text-center" id="toggle-message">
+                                <h3 id="modal-title"></h3>
+                                <div id="modal-text"></div>
+                            </div>
+
+                            </div>
+                            <div class="mb-4 d-none" id="note-data">
+                                <textarea class="form-control" placeholder="{{ translate('your_note_here') }}" id="get-text-note" cols="5" ></textarea>
+                            </div>
+                        <div class="btn--container justify-content-center">
+                            <div id="hide-buttons">
+                                <div class="d-flex justify-content-center flex-wrap gap-3">
+                                    <button data-dismiss="modal" id="cancel6_btn_text" class="btn btn--cancel min-w-120" >{{translate("Not_Now")}}</button>
+                                    <button type="button" id="new-dynamic-ok-button" class="btn btn-primary confirm-model min-w-120">{{translate('Yes')}}</button>
+                                </div>
+                            </div>
+
+                            <button data-dismiss="modal"  type="button" id="new-dynamic-ok-button-show" class="btn btn--primary  d-none min-w-120">{{translate('Okay')}}</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 <!-- ========== END MAIN CONTENT ========== -->
 
 <!-- ========== END SECONDARY CONTENTS ========== -->
@@ -203,6 +246,7 @@ $countryCode= strtolower($country?$country->value:'auto');
 
 @stack('script')
 <!-- JS Front -->
+
 <script src="{{asset('public/assets/admin')}}/js/vendor.min.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/sweet_alert.js"></script>
@@ -238,16 +282,6 @@ $countryCode= strtolower($country?$country->value:'auto');
 <audio id="myAudio">
     <source src="{{asset('public/assets/admin/sound/notification.mp3')}}" type="audio/mpeg">
 </audio>
-<script>
-    var audio = document.getElementById("myAudio");
-function playAudio() {
-    audio.play();
-}
-
-function pauseAudio() {
-    audio.pause();
-}
-</script>
 <script>
     var audio = document.getElementById("myAudio");
     function playAudio() {
@@ -732,6 +766,36 @@ $(document).on('keyup', 'input[type="tel"]', function () {
         $(this).val(keepNumbersAndPlus(input));
         });
 
+
+  //external configuration
+    $("#generateSystemSelfToken").on("click", function () {
+        generateRandomToken(64);
+    });
+
+    document.getElementById('copyButton').addEventListener('click', function() {
+        const input = document.getElementById('systemSelfToken');
+
+        // Select the input field text
+        input.select();
+        input.setSelectionRange(0, 99999); // For mobile devices
+
+        // Copy the text inside the input field to the clipboard
+        navigator.clipboard.writeText(input.value).then(function() {
+            toastr.success('Text copied to clipboard: ' + input.value);
+        }).catch(function(error) {
+            toastr.error('Failed to copy text: ', error);
+        });
+    });
+
+    function generateRandomToken(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let token = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            token += characters.charAt(randomIndex);
+        }
+        $('#systemSelfToken').val(token)
+    }
 
 </script>
 

@@ -19,6 +19,10 @@
                 href="{{ route('admin.business-settings.react-landing-page-settings', 'earn-money') }}">{{translate('messages.earn_money')}}</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ Request::is('admin/business-settings/pages/react-landing-page-settings/available-zone') ? 'active' : '' }}"
+                href="{{ route('admin.business-settings.react-landing-page-settings', 'available-zone') }}">{{translate('messages.available_zone')}}</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ Request::is('admin/business-settings/pages/react-landing-page-settings/promotion-banner') ? 'active' : '' }}"
                 href="{{ route('admin.business-settings.react-landing-page-settings', 'promotion-banner') }}">{{translate('Promotional Banners')}}</a>
             </li>

@@ -248,7 +248,7 @@ class StoreDisbursementController extends Controller
     }
     public function generate_disbursement()
     {
-        $stores = Store::where('store_type','store')->get();
+        $stores = Store::all();
         $disbursement_details = [];
         $total_amount = 0;
 

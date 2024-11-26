@@ -54,9 +54,8 @@ class ParcelCategoryController extends Controller
             'image'=>'required|image',
             'description'=>'required|array',
             'description.0'=>'required',
-            'parcel_per_km_shipping_charge'=>'required_with:parcel_minimum_shipping_charge,parcel_per_kg_charge',
-            'parcel_minimum_shipping_charge'=>'required_with:parcel_per_km_shipping_charge,parcel_per_kg_charge',
-            'parcel_per_kg_charge'=>'required_with:parcel_per_km_shipping_charge,parcel_minimum_shipping_charge',
+            'parcel_per_km_shipping_charge'=>'required_with:parcel_minimum_shipping_charge',
+            'parcel_minimum_shipping_charge'=>'required_with:parcel_per_km_shipping_charge',
             'name.0' => 'required',
             'description.0' => 'required',               
         ],[
@@ -71,7 +70,6 @@ class ParcelCategoryController extends Controller
         $parcel_category->image = Helpers::upload('parcel_category/', 'png', $request->file('image'));
         $parcel_category->parcel_per_km_shipping_charge = $request->parcel_per_km_shipping_charge;
         $parcel_category->parcel_minimum_shipping_charge = $request->parcel_minimum_shipping_charge;
-        $parcel_category->parcel_per_kg_charge = $request->parcel_per_kg_charge;
         $parcel_category->save();
         $data = [];
         $default_lang = str_replace('_', '-', app()->getLocale());
@@ -163,15 +161,15 @@ class ParcelCategoryController extends Controller
             'name.0'=>'unique:parcel_categories,name,'.$id,
             'name.*'=>'max:191',
             'description'=>'required|array',
-            'parcel_per_km_shipping_charge'=>'required_with:parcel_minimum_shipping_charge,parcel_per_kg_charge',
-            'parcel_minimum_shipping_charge'=>'required_with:parcel_per_km_shipping_charge,parcel_per_kg_charge',
-            'parcel_per_kg_charge'=>'required_with:parcel_per_km_shipping_charge,parcel_minimum_shipping_charge',
+            'parcel_per_km_shipping_charge'=>'required_with:parcel_minimum_shipping_charge',
+            'parcel_minimum_shipping_charge'=>'required_with:parcel_per_km_shipping_charge',
             'name.0' => 'required',
             'description.0' => 'required',               
         ],[
             'name.0.required'=>translate('default_name_is_required'),
             'description.0.required'=>translate('default_description_is_required'), 
         ]);
+
         $parcel_category = ParcelCategory::findOrFail($id);
         // $parcel_category->module_id = $request->module_id;
         $parcel_category->name = $request->name[array_search('default', $request->lang)];
@@ -179,7 +177,6 @@ class ParcelCategoryController extends Controller
         $parcel_category->image = Helpers::update('parcel_category/', $parcel_category->image, 'png', $request->file('image'));
         $parcel_category->parcel_per_km_shipping_charge = $request->parcel_per_km_shipping_charge;
         $parcel_category->parcel_minimum_shipping_charge = $request->parcel_minimum_shipping_charge;
-        $parcel_category->parcel_per_kg_charge = $request->parcel_per_kg_charge;
         $parcel_category->save();
 
         $default_lang = str_replace('_', '-', app()->getLocale());

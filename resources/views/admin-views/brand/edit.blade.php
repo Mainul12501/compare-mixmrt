@@ -83,7 +83,7 @@
                                 </label>
                                 <label class="text-center my-auto position-relative d-inline-block">
                                     <img class="img--176 border" id="viewer"
-                                         src="{{\App\CentralLogics\Helpers::get_image_helper($brand,'image', asset('storage/app/public/brand/').'/'.$brand['image'], asset('public/assets/admin/img/upload-img.png'), 'brand/') }}"
+                                         src="{{ $brand['image_full_url'] }}"
                                          data-onerror-image="{{asset('public/assets/admin/img/upload-img.png')}}"
                                          alt=""/>
                                     <div class="icon-file-group">

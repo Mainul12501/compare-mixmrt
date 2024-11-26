@@ -15,7 +15,7 @@
             <div class="row align-items-center py-2">
                 <div class="col-sm mb-2 mb-sm-0">
                     <div class="d-flex align-items-center">
-                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/parcel.svg')}}" src="{{\App\CentralLogics\Helpers::get_image_helper($mod,'icon', asset('storage/app/public/module/').'/'.$mod->icon, asset('public/assets/admin/img/parcel.svg'), 'module/') }}"
+                        <img class="onerror-image" data-onerror-image="{{asset('/public/assets/admin/img/parcel.svg')}}" src="{{$mod->icon_full_url }}"
                         width="38" alt="img">
                         <div class="w-0 flex-grow pl-2">
                             <h1 class="page-header-title mb-0">{{translate($mod->module_name)}} {{translate('messages.Dashboard')}}.</h1>
@@ -312,48 +312,48 @@
         chart.render();
 
 
-    options = {
-          series: [{
-          name: '{{ translate('Gross Sale') }}',
-          data: [{{data_get($total_sell, 1, '0')}},{{data_get($total_sell, 2, '0')}},{{data_get($total_sell, 3, '0')}},{{data_get($total_sell, 4, '0')}},{{data_get($total_sell, 5, '0')}},{{data_get($total_sell, 6, '0')}},{{data_get($total_sell, 7, '0')}},{{data_get($total_sell, 8, '0')}},{{data_get($total_sell, 9, '0')}},{{data_get($total_sell, 10, '0')}},{{data_get($total_sell, 11, '0')}},{{data_get($total_sell, 12, '0')}}]
-        },{
-          name: '{{ translate('Admin Comission') }}',
-          data: [{{data_get($commission,1,'0')}},{{data_get($commission,2,'0')}},{{data_get($commission,3,'0')}},{{data_get($commission,4,'0')}},{{data_get($commission,5,'0')}},{{data_get($commission,6,'0')}},{{data_get($commission,7,'0')}},{{data_get($commission,8,'0')}},{{data_get($commission,9,'0')}},{{data_get($commission,10,'0')}},{{data_get($commission,11,'0')}},{{data_get($commission,12,'0')}}]
-        },{
-          name: '{{ translate('Delivery Comission') }}',
-          data: [{{data_get($delivery_commission,1,'0')}},{{data_get($delivery_commission,2,'0')}},{{data_get($delivery_commission,3,'0')}},{{data_get($delivery_commission,4,'0')}},{{data_get($delivery_commission,5,'0')}},{{data_get($delivery_commission,6,'0')}},{{data_get($delivery_commission,7,'0')}},{{data_get($delivery_commission,8,'0')}},{{data_get($delivery_commission,9,'0')}},{{data_get($delivery_commission,10,'0')}},{{data_get($delivery_commission,11,'0')}},{{data_get($delivery_commission,12,'0')}}],
-        }],
-          chart: {
-          height: 350,
-          type: 'area',
-          toolbar: {
-            show:false
-        },
+        options = {
+            series: [{
+                name: '{{ translate('Gross Sale') }}',
+                data: [{{ implode(",",$total_sell) }}]
+            },{
+                name: '{{ translate('Admin Comission') }}',
+                data: [{{ implode(",",$commission) }}]
+            },{
+                name: '{{ translate('Delivery Comission') }}',
+                data: [{{ implode(",",$delivery_commission) }}]
+            }],
+            chart: {
+                height: 350,
+                type: 'area',
+                toolbar: {
+                    show:false
+                },
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
             colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        dataLabels: {
-          enabled: false,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        stroke: {
-          curve: 'smooth',
-          width: 2,
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        fill: {
-            type: 'gradient',
-            colors: ['#76ffcd','#ff6d6d', '#005555'],
-        },
-        xaxis: {
-        //   type: 'datetime',
-          categories: ["{{ translate('Jan') }}", "{{ translate('Feb') }}", "{{ translate('Mar') }}", "{{ translate('Apr') }}", "{{ translate('May') }}", "{{ translate('Jun') }}", "{{ translate('Jul') }}", "{{ translate('Aug') }}", "{{ translate('Sep') }}", "{{ translate('Oct') }}", "{{ translate('Nov') }}", "{{ translate('Dec') }}" ]
-        },
-        tooltip: {
-          x: {
-            format: 'dd/MM/yy HH:mm'
-          },
-        },
+            dataLabels: {
+                enabled: false,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 2,
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            fill: {
+                type: 'gradient',
+                colors: ['#76ffcd','#ff6d6d', '#005555'],
+            },
+            xaxis: {
+                //   type: 'datetime',
+                categories: [{!! implode(",",$label) !!}]
+            },
+            tooltip: {
+                x: {
+                    format: 'dd/MM/yy HH:mm'
+                },
+            },
         };
 
         chart = new ApexCharts(document.querySelector("#grow-sale-chart"), options);

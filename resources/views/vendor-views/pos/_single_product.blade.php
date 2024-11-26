@@ -2,7 +2,7 @@
      data-id="{{$product->id}}">
     <div class="card-header inline_product clickable p-0 initial--31">
         <div class="d-flex align-items-center justify-content-center d-block h-100 w-100 ">
-            <img src="{{\App\CentralLogics\Helpers::get_image_helper($product,'image', asset('storage/app/public/product/').'/'.$product['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+            <img src="{{ $product['image_full_url'] }}"
                  data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                 class="w-100 h-100 object-cover onerror-image" alt="image">
         </div>

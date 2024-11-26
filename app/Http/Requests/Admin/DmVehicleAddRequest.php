@@ -47,7 +47,6 @@ class DmVehicleAddRequest extends FormRequest
             'extra_charges' => 'required||numeric|between:0,999999999999.99',
             'starting_coverage_area' => 'required||numeric|between:0,999999999999.99',
             'maximum_coverage_area' => 'required||numeric|between:.01,999999999999.99|gt:starting_coverage_area',
-            'maximum_weight' => 'required||numeric|between:.01,999999999999.99|gt:minimum_weight',
             'type.0' => 'required',
         ];
     }

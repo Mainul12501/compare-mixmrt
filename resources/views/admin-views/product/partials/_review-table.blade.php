@@ -6,12 +6,7 @@
             <a class="media align-items-center" href="{{route('admin.item.view',[$review->item['id']])}}">
                 <img class="avatar avatar-lg mr-3 onerror-image"
               
-                src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                    $review->item,'image',
-                    asset('storage/app/public/product').'/'.$review->item['image'] ?? '',
-                    asset('public/assets/admin/img/160x160/img2.jpg'),
-                    'product/'
-                ) }}"
+                src="{{ $review->item['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
 
                 data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$review->item->name}} image">
                 <div class="media-body">

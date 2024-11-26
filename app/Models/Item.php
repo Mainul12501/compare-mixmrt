@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-use App\CentralLogics\Helpers;
 use App\Scopes\ZoneScope;
 use App\Scopes\StoreScope;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Traits\ReportFilter;
+use App\CentralLogics\Helpers;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Item extends Model
 {
-    use HasFactory;
+    use HasFactory , ReportFilter;
     protected $guarded = ['id'];
     protected $casts = [
         'tax' => 'float',
@@ -42,7 +43,6 @@ class Item extends Model
         'rating_count'=>'integer',
         'unit_id'=>'integer',
         'is_halal'=>'integer',
-        'weight' => 'float',
     ];
 
     protected $appends = ['unit_type','image_full_url','images_full_url'];
@@ -176,35 +176,36 @@ class Item extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('product',$value);
-                    }else{
-                        return Helpers::local_storage_link('product',$value);
-                    }
+                    return Helpers::get_full_url('product',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('product',$value);
+        return Helpers::get_full_url('product',$value,'public');
     }
     public function getImagesFullUrlAttribute(){
         $images = [];
-        $value = is_array($this->images)?$this->images:json_decode($this->images,true);
+        $value = is_array($this->images)
+            ? $this->images
+            : ($this->images && is_string($this->images) && $this->isValidJson($this->images)
+                ? json_decode($this->images, true)
+                : []);
         if ($value){
             foreach ($value as $item){
                 $item = is_array($item)?$item:(is_object($item) && get_class($item) == 'stdClass' ? json_decode(json_encode($item), true):['img' => $item, 'storage' => 'public']);
-                if($item['storage']=='s3'){
-                    $images[] = Helpers::s3_storage_link('product',$item['img']);
-                }else{
-                    $images[] = Helpers::local_storage_link('product',$item['img']);
-                }
+                $images[] = Helpers::get_full_url('product',$item['img'],$item['storage']);
             }
         }
 
         return $images;
     }
+
+    private function isValidJson($string)
+    {
+        json_decode($string);
+        return (json_last_error() === JSON_ERROR_NONE);
+    }
+
 
     public function store()
     {
@@ -263,9 +264,28 @@ class Item extends Model
         return $query;
     }
 
+    public function scopeAvailable($query,$time)
+    {
+        $query->where(function($q)use($time){
+            $q->where('available_time_starts','<=',$time)->where('available_time_ends','>=',$time);
+        });
+    }
+
     public function tags()
     {
         return $this->belongsToMany(Tag::class);
+    }
+    public function allergies()
+    {
+        return $this->belongsToMany(Allergy::class);
+    }
+    public function generic()
+    {
+        return $this->belongsToMany(GenericName::class,'item_generic_names');
+    }
+    public function nutritions()
+    {
+        return $this->belongsToMany(Nutrition::class);
     }
     public function storage()
     {

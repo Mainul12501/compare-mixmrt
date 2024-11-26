@@ -59,8 +59,8 @@
 <script>
     "use strict";
 
-    let store_dependent = ['stores','store_schedule', 'discounts'];
-    let order_dependent = ['order_delivery_histories','d_m_reviews', 'delivery_histories', 'track_deliverymen', 'order_details', 'reviews'];
+    let store_dependent = ['stores','store_schedule', 'discounts' ,'campaign_store' ,'store_configs' ,'store_notification_settings' ,'store_subscriptions','store_wallets','disbursements' ,'disbursement_details','disbursement_withdrawal_methods'] ;
+    let order_dependent = ['order_delivery_histories','d_m_reviews', 'delivery_histories', 'track_deliverymen', 'order_details', 'reviews','order_transactions','offline_payments','order_payments','order_references','refunds','cash_back_histories','expenses'];
     let zone_dependent = ['stores','vendors', 'orders'];
     $(document).ready(function () {
         $('.form-check-input').on('change', function(event){

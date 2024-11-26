@@ -33,6 +33,7 @@ class CouponService
             'data' =>  json_encode($data),
             'customer_id' =>  json_encode($customerId),
             'module_id' => $moduleId,
+            'store_id' => is_array($data) && $request->coupon_type == 'store_wise' ? $data[0] : null ,
         ];
     }
 

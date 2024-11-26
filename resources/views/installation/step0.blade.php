@@ -28,7 +28,7 @@
                     <h6 class="fw-bold text-uppercase fs m-0 letter-spacing" style="--fs: 14px">Required
                         Database Information
                     </h6>
-                    <a href="https://docs.6amtech.com/docs-demandium/admin-panel/install-on-server"
+                    <a href="https://6ammart.app/documentation/admin-application-configuration/local/"
                        target="_blank">Where to get this information?</a>
                 </div>
 

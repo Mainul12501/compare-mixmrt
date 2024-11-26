@@ -48,8 +48,26 @@ class SubscriptionController extends Controller
         ]);
 
         try {
-            $store=Store::where('id',Helpers::get_store_id())->select(['id','name','email'])->first();
-            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1') {
+            $store=Store::where('id',Helpers::get_store_id())->first();
+
+            if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                $data = [
+                    'title' => translate('subscription_canceled'),
+                    'description' => translate('Your_subscription_has_been_canceled'),
+                    'order_id' => '',
+                    'image' => '',
+                    'type' => 'subscription',
+                    'order_status' => '',
+                ];
+                Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                DB::table('user_notifications')->insert([
+                    'data' => json_encode($data),
+                    'vendor_id' => $store?->vendor_id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_cancel','mail_status' ,$store?->id)) {
                 Mail::to($store->email)->send(new SubscriptionCancel($store->name));
             }
         } catch (\Exception $ex) {
@@ -61,11 +79,18 @@ class SubscriptionController extends Controller
     }
     public function switchToCommission($id){
 
+        $store=  Store::where('id',$id)->with('store_sub')->first();
+
+        $store_subscription=  $store->store_sub;
+        if($store->store_business_model == 'subscription'  && $store_subscription?->is_canceled === 0 && $store_subscription?->is_trial === 0){
+            Helpers::calculateSubscriptionRefundAmount(store:$store);
+        }
+
+        $store->store_business_model = 'commission';
+        $store->save();
+
         StoreSubscription::where(['store_id' => Helpers::get_store_id()])->update([
             'status' => 0,
-        ]);
-        Store::where('id',Helpers::get_store_id())->update([
-            'store_business_model' => 'commission',
         ]);
         return response()->json(200);
 
@@ -135,7 +160,7 @@ class SubscriptionController extends Controller
             }
         }
 
-        $plan_data != false ?  Toastr::success( translate('Successfully_Subscribed.')) : Toastr::error( translate('Something_went_wrong!.'));
+        $plan_data != false ?  Toastr::success(  $request?->type == 'renew' ?  translate('Subscription_Package_Renewed_Successfully.'): translate('Subscription_Package_Shifted_Successfully.')  ) : Toastr::error( translate('Something_went_wrong!.'));
         return to_route('vendor.subscriptionackage.subscriberDetail',$store->id);
 
     }

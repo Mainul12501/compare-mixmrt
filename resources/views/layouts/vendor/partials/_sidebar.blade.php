@@ -8,10 +8,10 @@
                 @php($store_data=\App\CentralLogics\Helpers::get_store_data())
                 <a class="navbar-brand" href="{{route('vendor.dashboard')}}" aria-label="Front">
                     <img class="navbar-brand-logo initial--36  onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"
-                         src="{{\App\CentralLogics\Helpers::get_image_helper($store_data,'logo', asset('storage/app/public/store/').'/'.$store_data->logo, asset('public/assets/admin/img/160x160/img2.jpg'), 'store/') }}"
+                         src="{{ $store_data->logo_full_url }}"
  alt="Logo">
                     <img class="navbar-brand-logo-mini initial--36 onerror-image"  data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"
-                         src="{{\App\CentralLogics\Helpers::get_image_helper($store_data,'logo', asset('storage/app/public/store/').'/'.$store_data->logo, asset('public/assets/admin/img/160x160/img2.jpg'), 'store/') }}"
+                         src="{{ $store_data->logo_full_url }}"
  alt="Logo">
                 </a>
                 <!-- End Logo -->
@@ -36,390 +36,6 @@
             </div>
 
             <!-- Content -->
-        @if (\App\CentralLogics\Helpers::get_store_data()->store_type == 'company' && \App\CentralLogics\Helpers::get_store_data()->self_parcel_delivery == 1)
-        <div class="navbar-vertical-content text-capitalize bg--005555" id="navbar-vertical-content">
-            <form class="sidebar--search-form">
-                <div class="search--form-group">
-                    <button type="button" class="btn"><i class="tio-search"></i></button>
-                    <input type="text" class="form-control form--control" placeholder="{{ translate('messages.Search Menu...') }}" id="search-sidebar-menu">
-                </div>
-            </form>
-            <ul class="navbar-nav navbar-nav-lg nav-tabs">
-                <!-- Dashboards -->
-                <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel')?'active':''}}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link"
-                        href="{{route('vendor.dashboard')}}" title="{{translate('messages.dashboard')}}">
-                        <i class="tio-home-vs-1-outlined nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                            {{translate('messages.dashboard')}}
-                        </span>
-                    </a>
-                </li>
-                <!-- End Dashboards -->
-
-                {{-- parcel order --}}
-                @if(\App\CentralLogics\Helpers::employee_module_permission_check('order'))
-                <li class="nav-item">
-                    <small class="nav-subtitle" title="{{translate('messages.order_section')}}">{{translate('messages.order_section')}}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                <!-- Order -->
-                <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/order*')?'active':''}}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
-                        title="{{translate('messages.orders')}}">
-                        <i class="tio-shopping-cart nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                            {{translate('messages.orders')}}
-                        </span>
-                    </a>
-                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('store-panel/order*')?'block':'none'}}">
-                        <li class="nav-item {{Request::is('store-panel/order/list/all')?'active':''}}">
-                            <a class="nav-link" href="{{route('vendor.order.list',['all'])}}" title="{{translate('messages.all_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.all')}}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{config('order_confirmation_model') == 'store' ? \App\Models\Order::whereNotIn('order_status', ['failed', 'canceled', 'refund_requested', 'refunded','pending'])->where(function ($query) {
-                                            return $query->whereNull('parcel_company_id')->whereIn('order_status', ['confirmed', 'accepted'])->whereHas('store', function ($q) {
-                                                    $q->where('self_delivery_system', 0);
-                                                });
-                                        })  ->where(function($query){
-                           $query->whereNull('parcel_company_id')->whereNull('delivery_man_id');
-                       })->orWhere(function($query){
-                           $query->where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id());
-                       })->Not_take_away()->NotDigitalOrder()->where('zone_id', \App\CentralLogics\Helpers::get_store_data()->zone_id)->count()  :
-                                        \App\Models\Order::whereNotIn('order_status', ['failed', 'canceled', 'refund_requested', 'refunded'])->where(function ($query) {
-                                                return $query->whereNull('parcel_company_id')->whereIn('order_status', ['confirmed', 'accepted', 'pending'])->whereHas('store', function ($q) {
-                                                        $q->where('self_delivery_system', 0);
-                                                    });
-                                            })  ->where(function($query){
-                           $query->whereNull('parcel_company_id')->whereNull('delivery_man_id');
-                       })->orWhere(function($query){
-                           $query->where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id());
-                       })->Not_take_away()->NotDigitalOrder()->where('zone_id', \App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/pending')?'active':''}}">
-                            <a class="nav-link " href="{{route('vendor.order.list',['pending'])}}" title="{{translate('messages.pending_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.pending')}}
-                                        <span class="badge badge-soft-success badge-pill ml-1">
-                                        @if(config('order_confirmation_model') != 'store')
-                                        {{\App\Models\Order:: Pending()
-                                            ->whereHas('store',function($q){
-                                                $q->where('self_delivery_system',0);
-                                            })->OrderScheduledIn(30)
-                                             ->Not_take_away()
-                                              ->where('zone_id',\App\CentralLogics\Helpers::get_store_data()?->zone_id)->NotDigitalOrder()->count()}}
-                                        @else
-                                        {{\App\Models\Order::where(['order_status'=>'pending']) ->where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())->OrderScheduledIn(30)->NotDigitalOrder()
-                                        ->Not_take_away()
-                                        ->where('zone_id',\App\CentralLogics\Helpers::get_store_data()?->zone_id)->count()}}
-                                        @endif
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item {{Request::is('store-panel/order/list/confirmed')?'active':''}}">
-                            <a class="nav-link " href="{{route('vendor.order.list',['confirmed'])}}" title="{{translate('messages.confirmed_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.confirmed')}}
-                                        <span class="badge badge-soft-success badge-pill ml-1">
-                                        {{ \App\Models\Order::whereNotNull('confirmed')->whereNull('parcel_company_id')->whereIn('order_status', ['confirmed', 'accepted'])->whereHas('store', function ($q) {
-                                                        $q->where('self_delivery_system', 0);
-                                                    })->orWhere(function ($query) {
-                                                        return $query->whereNotNull('confirmed')->whereIn('order_status', ['confirmed', 'accepted'])->whereNotNull('parcel_company_id')->where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id());
-                                                    })->Not_take_away()->NotDigitalOrder()->where('zone_id', \App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item {{Request::is('store-panel/order/list/cooking')?'active':''}}">
-                            <a class="nav-link" href="{{route('vendor.order.list',['cooking'])}}" title="{{translate('messages.processing_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    @if($store_data->module->module_type == 'food')
-                                    {{translate('messages.cooking')}}
-                                    @else
-                                    {{translate('messages.processing')}}
-                                    @endif
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{\App\Models\Order::where(['order_status'=>'processing', 'parcel_company_id'=>\App\CentralLogics\Helpers::get_store_id()])->NotDigitalOrder()->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/ready_for_delivery')?'active':''}}">
-                            <a class="nav-link" href="{{route('vendor.order.list',['ready_for_delivery'])}}" title="{{translate('messages.ready_for_delivery')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.ready_for_delivery')}}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{\App\Models\Order::where(['order_status'=>'handover', 'parcel_company_id'=>\App\CentralLogics\Helpers::get_store_id()])->NotDigitalOrder()->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/item_on_the_way')?'active':''}}">
-                            <a class="nav-link" href="{{route('vendor.order.list',['item_on_the_way'])}}" title="{{translate('messages.items_on_the_way')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.item_on_the_way')}}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{\App\Models\Order::where(['order_status'=>'picked_up', 'parcel_company_id'=>\App\CentralLogics\Helpers::get_store_id()])->NotDigitalOrder()->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/delivered')?'active':''}}">
-                            <a class="nav-link " href="{{route('vendor.order.list',['delivered'])}}" title="{{translate('messages.delivered_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.delivered')}}
-                                        <span class="badge badge-soft-success badge-pill ml-1">
-                                        {{\App\Models\Order::where(['order_status'=>'delivered','parcel_company_id'=>\App\CentralLogics\Helpers::get_store_id()])->NotDigitalOrder()->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/refunded')?'active':''}}">
-                            <a class="nav-link " href="{{route('vendor.order.list',['refunded'])}}" title="{{translate('messages.refunded_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.refunded')}}
-                                        <span class="badge badge-soft-danger bg-light badge-pill ml-1">
-                                        {{\App\Models\Order::Refunded()->where(['parcel_company_id'=>\App\CentralLogics\Helpers::get_store_id()])->NotDigitalOrder()->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{Request::is('store-panel/order/list/scheduled')?'active':''}}">
-                            <a class="nav-link" href="{{route('vendor.order.list',['scheduled'])}}" title="{{translate('messages.scheduled_orders')}}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{translate('messages.scheduled')}}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{\App\Models\Order::where('store_id',\App\CentralLogics\Helpers::get_store_id())->StoreOrder()->Scheduled()->where(function($q){
-                                            if(config('order_confirmation_model') == 'store' || \App\CentralLogics\Helpers::get_store_data()->self_delivery_system)
-                                            {
-                                                $q->whereNotIn('order_status',['failed','canceled', 'refund_requested', 'refunded']);
-                                            }
-                                            else
-                                            {
-                                                $q->whereNotIn('order_status',['pending','failed','canceled', 'refund_requested', 'refunded'])->orWhere(function($query){
-                                                    $query->where('order_status','pending')->where('order_type', 'take_away');
-                                                });
-                                            }
-
-                                        })->count()}}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <!-- End Order -->
-                @endif
-                {{-- @if(\App\CentralLogics\Helpers::employee_module_permission_check('parcel'))
-                <li class="nav-item">
-                    <small class="nav-subtitle">{{ translate('messages.Parcel_section') }}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('store-panel/parcel/*') ? 'active' : '' }}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" title="{{ translate('messages.Parcel') }}">
-                        <i class="tio-bike nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                            {{ translate('messages.Parcel') }}
-                        </span>
-                    </a>
-                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display:{{ (Request::is('store-panel/parcel/orders/*') || Request::is('store-panel/parcel/details/*')) ? 'block' : 'none' }}">
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/all') ? 'active' : '' }}">
-                            <a class="nav-link" href="{{ route('vendor.parcel.orders', ['all']) }}" title="{{ translate('messages.all_orders') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.all') }}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{ \App\Models\Order::where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())
-                                          ->orWhere(function($query){
-                                            return $query->where('order_status','pending');
-                                        })
-                                        ->orWhere(function($query){
-                                            return $query->where('order_status','confirmed')->whereNull('parcel_company_id');
-                                        })  ->orWhere(function($query){
-                                            return $query->where('order_status','confirmed')->whereNotNull('parcel_company_id')->where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id());
-                                        })->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/pending') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('vendor.parcel.orders', ['pending']) }}" title="{{ translate('messages.pending_orders') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.pending') }}
-                                    <span class="badge badge-soft-info badge-pill ml-1">
-                                        {{ \App\Models\Order::Pending()->OrderScheduledIn(30)->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/processing') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('vendor.parcel.orders', ['processing']) }}" title="{{ translate('messages.processing_orders') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.processing') }}
-                                    <span class="badge badge-soft-warning badge-pill ml-1">
-                                        {{ \App\Models\Order::where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())->Preparing()->OrderScheduledIn(30)->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/item_on_the_way') ? 'active' : '' }}">
-                            <a class="nav-link text-capitalize" href="{{ route('vendor.parcel.orders', ['item_on_the_way']) }}" title="{{ translate('messages.order_on_the_way') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.order_on_the_way') }}
-                                    <span class="badge badge-soft-warning badge-pill ml-1">
-                                        {{ \App\Models\Order::where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())->ItemOnTheWay()->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/delivered') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('vendor.parcel.orders', ['delivered']) }}" title="{{ translate('messages.delivered_orders') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.delivered') }}
-                                    <span class="badge badge-soft-success badge-pill ml-1">
-                                        {{ \App\Models\Order::where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())->Delivered()->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                        <li class="nav-item {{ Request::is('store-panel/parcel/orders/canceled') ? 'active' : '' }}">
-                            <a class="nav-link " href="{{ route('vendor.parcel.orders', ['canceled']) }}" title="{{ translate('messages.canceled_orders') }}">
-                                <span class="tio-circle nav-indicator-icon"></span>
-                                <span class="text-truncate sidebar--badge-container">
-                                    {{ translate('messages.canceled') }}
-                                    <span class="badge badge-soft-warning bg-light badge-pill ml-1">
-                                        {{ \App\Models\Order::where('parcel_company_id',\App\CentralLogics\Helpers::get_store_id())->Canceled()->ParcelOrder()->where('zone_id',\App\CentralLogics\Helpers::get_store_data()->zone_id)->count() }}
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-
-                    </ul>
-                </li>
-                @endif --}}
-
-
-            <!-- End Coupon -->
-
-                <!-- Business Section-->
-                <li class="nav-item">
-                    <small class="nav-subtitle"
-                            title="{{translate('messages.business_section')}}">{{translate('messages.business_section')}}</small>
-                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                </li>
-
-                @if(\App\CentralLogics\Helpers::employee_module_permission_check('my_shop'))
-                <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/store/*')?'active':''}}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link"
-                        href="{{route('vendor.shop.view')}}"
-                        title="{{translate('messages.my_shop')}}">
-                        <i class="tio-home nav-icon"></i>
-                        <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                            {{translate('messages.my_shop')}}
-                        </span>
-                    </a>
-                </li>
-                @endif
-
-
-                @if(\App\CentralLogics\Helpers::employee_module_permission_check('wallet'))
-                <!-- StoreWallet -->
-                <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/wallet')?'active':''}}">
-                    <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{route('vendor.wallet.index')}}" title="{{translate('messages.my_wallet')}}"
-                    >
-                        <i class="tio-table nav-icon"></i>
-                        <span
-                            class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('messages.my_wallet')}}</span>
-                    </a>
-                </li>
-
-                @endif
-                @if(\App\CentralLogics\Helpers::employee_module_permission_check('parcel'))
-                <li class="navbar-vertical-aside-has-menu {{ Request::is('store-panel/report/parcel-report') ? 'active' : '' }}">
-                    <a class="nav-link " href="{{ route('vendor.report.parcel-report') }}" title="{{ translate('messages.parcel_report') }}">
-                        <span class="tio-money nav-icon"></span>
-                        <span class="text-truncate">{{ translate('messages.parcel_report') }}</span>
-                    </a>
-                </li>
-                @endif
-                        <li class="nav-item">
-                            <small class="nav-subtitle"
-                                   title="{{translate('messages.deliveryman_section')}}">{{translate('messages.deliveryman_section')}}</small>
-                            <small class="tio-more-horizontal nav-subtitle-replacer"></small>
-                        </li>
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/delivery-man/add')?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link"
-                               href="{{route('vendor.delivery-man.add')}}"
-                               title="{{translate('messages.add_delivery_man')}}"
-                            >
-                                <i class="tio-running nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{translate('messages.add_delivery_man')}}
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/delivery-man/list')?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link"
-                               href="{{route('vendor.delivery-man.list')}}"
-                               title="{{translate('messages.deliveryman')}}"
-                            >
-                                <i class="tio-filter-list nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{translate('messages.deliverymen_list')}}
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="navbar-vertical-aside-has-menu {{ Request::is('store-panel/delivery-man/account-transaction*') ? 'active' : '' }}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('vendor.delivery-man.account-transaction.index') }}" title="{{ translate('messages.collect_cash') }}">
-                                <i class="tio-money nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.collect_cash') }}</span>
-                            </a>
-                        </li>
-
-
-                        {{--<li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/delivery-man/reviews/list')?'active':''}}">
-                            <a class="js-navbar-vertical-aside-menu-link nav-link"
-                               href="{{route('vendor.delivery-man.reviews.list')}}" title="{{translate('messages.reviews')}}"
-                            >
-                                <i class="tio-star-outlined nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{translate('messages.reviews')}}
-                                </span>
-                            </a>
-                        </li>--}}
-
-                <li class="nav-item py-5">
-
-                </li>
-            </ul>
-        </div>
-
-        @else
-
             <div class="navbar-vertical-content text-capitalize bg--005555" id="navbar-vertical-content">
                 <form class="sidebar--search-form">
                     <div class="search--form-group">
@@ -675,9 +291,9 @@
                             @if ($store_data->module->module_type != 'food')
 
                             <li class="nav-item {{Request::is('store-panel/item/stock-limit-list')?'active':''}}">
-                                <a class="nav-link " href="{{route('vendor.item.stock-limit-list')}}" title="{{translate('messages.stock_limit_list')}}">
+                                <a class="nav-link " href="{{route('vendor.item.stock-limit-list')}}" title="{{translate('messages.Low_stock_list')}}">
                                     <span class="tio-circle nav-indicator-icon"></span>
-                                    <span class="text-truncate">{{translate('messages.stock_limit_list')}}</span>
+                                    <span class="text-truncate">{{translate('messages.Low_stock_list')}}</span>
                                 </a>
                             </li>
                             @endif
@@ -826,6 +442,57 @@
                 @endif
                 <!-- End Coupon -->
 
+
+                @if (\App\CentralLogics\Helpers::employee_module_permission_check('advertisement'))
+
+                <li class="nav-item">
+                    <small
+                        class="nav-subtitle">{{translate('Advertisement Management')}}</small>
+                    <small class="tio-more-horizontal nav-subtitle-replacer"></small>
+                </li>
+
+                <li class="navbar-vertical-aside-has-menu @yield('advertisement_create')">
+                <a class="js-navbar-vertical-aside-menu-link nav-link"
+                    href="{{ route('vendor.advertisement.create') }}"
+                    title="{{ translate('messages.New_Advertisement') }}">
+                    <i class="tio-tv-old nav-icon"></i>
+                    <span
+                        class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{ translate('messages.New_Advertisement') }}</span>
+                </a>
+                </li>
+
+
+                <li class="navbar-vertical-aside-has-menu @yield('advertisement')">
+                    <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                        href="javascript:" title="{{translate('messages.Advertisement_List')}}"
+                    >
+                        <i class="tio-format-bullets nav-icon"></i>
+                        <span
+                            class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('messages.Advertisement_List')}}</span>
+                    </a>
+                    <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                    style="display: {{ !Request::is('store-panel/advertisement/create*') && Request::is('store-panel/advertisement*')?'block':'none'}}">
+                        <li class="nav-item @yield('advertisement_pending_list')">
+                            <a class="nav-link " href="{{route('vendor.advertisement.index',['type'=> 'pending'])}}"
+                                title="{{translate('messages.Pending')}}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{translate('messages.Pending')}}</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item @yield('advertisement_list')">
+                            <a class="nav-link " href="{{route('vendor.advertisement.index')}}"
+                                title="{{translate('messages.Ad_List')}}">
+                                <span class="tio-circle nav-indicator-icon"></span>
+                                <span class="text-truncate">{{translate('messages.Ad_List')}}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                @endif
+
+
                     <!-- Business Section-->
                     <li class="nav-item">
                         <small class="nav-subtitle"
@@ -843,6 +510,15 @@
                         </a>
                     </li>
                     @endif
+
+                    <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/business-settings/notification-setup')?'active':''}}">
+                        <a class="nav-link " href="{{route('vendor.business-settings.notification-setup')}}" title="{{translate('messages.notification_setup')}}"
+                        >
+                            <span class="tio-notifications nav-icon"></span>
+                            <span
+                                class="text-truncate">{{translate('messages.notification_setup')}}</span>
+                        </a>
+                    </li>
 
                     @if(\App\CentralLogics\Helpers::employee_module_permission_check('my_shop'))
                     <li class="navbar-vertical-aside-has-menu {{Request::is('store-panel/store/*')?'active':''}}">
@@ -938,14 +614,6 @@
                             <span class="text-truncate">{{ translate('messages.disbursement_report') }}</span>
                         </a>
                     </li>
-                    @if(\App\CentralLogics\Helpers::employee_module_permission_check('parcel'))
-                    <li class="navbar-vertical-aside-has-menu {{ Request::is('vendor/report/parcel-report') ? 'active' : '' }}">
-                        <a class="nav-link " href="{{ route('vendor.report.parcel-report') }}" title="{{ translate('messages.parcel_report') }}">
-                            <span class="tio-money nav-icon"></span>
-                            <span class="text-truncate">{{ translate('messages.parcel_report') }}</span>
-                        </a>
-                    </li>
-                    @endif
                     @endif
 
                     <!-- Employee-->
@@ -992,12 +660,20 @@
                     @endif
                     <!-- End Employee -->
 
-                    <li class="nav-item py-5">
-
+                         <li class="nav-item px-20 pb-5">
+                        <div class="promo-card">
+                            <div class="position-relative">
+                                <img src="{{asset('public/assets/admin/img/promo-2.png')}}" class="mw-100" alt="">
+                                <h4 class="mb-2 mt-3">{{ translate('Want_to_get_highlighted?') }}</h4>
+                                <p class="mb-4">
+                                    {{ translate('Create_ads_to_get_highlighted_on_the_app_and_web_browser') }}
+                                </p>
+                                <a href="{{ route('vendor.advertisement.create') }}" class="btn btn--primary">{{ translate('Create_Ads') }}</a>
+                            </div>
+                        </div>
                     </li>
                 </ul>
             </div>
-        @endif
             <!-- End Content -->
         </div>
     </aside>

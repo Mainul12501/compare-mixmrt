@@ -51,13 +51,6 @@ class VendorLoginController extends Controller
                     }
 
 
-                if($vendor->stores[0]->store_type=="company"){
-                    $errors = [];
-                    array_push($errors, ['code' => 'auth-001', 'message' => 'Unauthorized.']);
-                    return response()->json([
-                        'errors' => $errors
-                    ], 401);
-                }
                 $vendor->auth_token = $token;
                 $vendor->save();
                 return response()->json(['token' => $token, 'zone_wise_topic'=> $vendor->stores[0]->zone->store_wise_topic], 200);
@@ -73,15 +66,6 @@ class VendorLoginController extends Controller
             if (auth('vendor_employee')->attempt($data)) {
                 $token = $this->genarate_token($request['email']);
                 $vendor = VendorEmployee::where(['email' => $request['email']])->first();
-                // if($vendor->store->status == 0)
-                // {
-                //     return response()->json([
-                //         'errors' => [
-                //             ['code' => 'auth-002', 'message' => translate('messages.Your_account_is_suspended')]
-                //         ]
-                //     ], 403);
-                // }
-
                 $storeSubscriptionCheck=  $this->storeSubscriptionCheck($vendor?->store,$vendor,$token);
                 if(data_get($storeSubscriptionCheck,'type') != null){
                     return response()->json(data_get($storeSubscriptionCheck,'data'), data_get($storeSubscriptionCheck,'code'));
@@ -130,8 +114,6 @@ class VendorLoginController extends Controller
         $validator = Validator::make($request->all(), [
             'f_name' => 'required|max:100',
             'l_name' => 'nullable|max:100',
-            // 'name' => 'required|max:191',
-            // 'address' => 'required|max:1000',
             'latitude' => 'required',
             'longitude' => 'required',
             'email' => 'required|unique:vendors',
@@ -143,14 +125,7 @@ class VendorLoginController extends Controller
             'zone_id' => 'required',
             'module_id' => 'required',
             'logo' => 'required',
-            'tax' => 'required',
-            'tax_id'=>'required|unique:stores,tax_id',
-            'register_no'=>'required',
-//            'tax_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff,pdf,doc,docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'tax_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff',
-            'registration_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff',
-//            'agreement_document'=>'required|file|max:5120|mimes:jpg,png,jpeg,gif,bmp,tif,tiff',
-
+            'tax' => 'required'
         ],[
             'password.required' => translate('The password is required'),
             'password.min_length' => translate('The password must be at least :min characters long'),
@@ -206,18 +181,6 @@ class VendorLoginController extends Controller
         $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
         $store->module_id = $request->module_id;
         $store->status = 0;
-        $store->tax_id =  $request->tax_id;
-        $store->register_no = $request->register_no;
-        // $license_extension = $request->file('license')->extension();
-        // $store->license = Helpers::upload('store/', $license_extension, $request->file('license'));
-        $tax_document_extension = $request->file('tax_document')->extension();
-        $store->tax_document = Helpers::upload('store/', $tax_document_extension, $request->file('tax_document'));
-
-        $registration_document_extension = $request->file('registration_document')->extension();
-        $store->registration_document = Helpers::upload('store/', $registration_document_extension, $request->file('registration_document'));
-
-//        $agreement_document_extension = $request->file('agreement_document')->extension();
-//        $store->agreement_document = Helpers::upload('store/', $agreement_document_extension, $request->file('agreement_document'));
         $store->store_business_model = 'none';
         $store->save();
         $store->module->increment('stores_count');
@@ -232,19 +195,55 @@ class VendorLoginController extends Controller
         }
         Translation::insert($data);
 
+
         try{
             $admin= Admin::where('role_id', 1)->first();
             $mail_status = Helpers::get_mail_status('registration_mail_status_store');
-            if(config('mail.status') && $mail_status == '1'){
-                Mail::to($request['email'])->send(new \App\Mail\VendorSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name,'store'));
+            if(config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('store','store_registration','mail_status')){
+                Mail::to($request['email'])->send(new \App\Mail\VendorSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
             $mail_status = Helpers::get_mail_status('store_registration_mail_status_admin');
-            if(config('mail.status') && $mail_status == '1'){
+            if(config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status')){
                 Mail::to($admin['email'])->send(new \App\Mail\StoreRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
         }catch(\Exception $ex){
             info($ex->getMessage());
         }
+
+
+        if (Helpers::subscription_check()) {
+                if ($request->business_plan == 'subscription' && $request->package_id != null ) {
+                    $store->package_id = $request->package_id;
+                    $store->save();
+
+                    return response()->json([
+                        'store_id'=> $store->id,
+                        'package_id'=> $store->package_id,
+                        'type'=> 'subscription',
+                        'message'=>translate('messages.application_placed_successfully')],200);
+                }
+                elseif($request->business_plan == 'commission' ){
+                    $store->store_business_model = 'commission';
+                    $store->save();
+                    return response()->json([
+                        'store_id'=> $store->id,
+                        'type'=> 'commission',
+                        'message'=>translate('messages.application_placed_successfully')],200);
+                }
+                else{
+                    return response()->json([
+                        'store_id'=> $store->id,
+                        'type'=> 'business_model_fail',
+                        'message'=>translate('messages.application_placed_successfully')],200);
+                }
+            } else{
+                $store->store_business_model = 'commission';
+                $store->save();
+                return response()->json([
+                    'store_id'=> $store->id,
+                    'type'=> 'commission',
+                    'message'=>translate('messages.application_placed_successfully')],200);
+            }
 
         return response()->json([
             'store_id'=> $store->id,
@@ -256,64 +255,56 @@ class VendorLoginController extends Controller
 
 
     private function storeSubscriptionCheck($store, $vendor,$token){
-
-
-        if($store?->store_business_model == 'subscription' && $store->store_sub_trans && $store->store_sub_trans->transaction_status == 0){
-            return [ 'type' => 'pending_payment',
-                        'code' => 200,
-                        'data'=> ['pending_payment' => ['id' =>$store->store_sub_trans->id ]
-                        ]
-                ];
-        }
-
-        if( $store?->store_business_model == 'none')
-        {
-            return [ 'type' => 'subscribed',
-            'code' => 200,
-            'data'=> [
-                'subscribed' => ['store_id' => $store?->id, 'type' => 'new_join']
-                ]
-            ];
-        }
-
-
-        if($store->status == 0 && $vendor->status == 0)
-        {
-
-            return [ 'type' => 'errors',
-            'code' => 403,
-            'data'=> [
-                'errors' => [
-                    ['code' => 'auth-002', 'message' => translate('messages.Your_registration_is_not_approved_yet._You_can_login_once_admin_approved_the_request')]
+        if ($store?->store_business_model == 'none') {
+            $vendor->auth_token = $token;
+            $vendor?->save();
+            return [
+                'type' => 'subscribed',
+                'code' => 200,
+                'data' => [
+                    'subscribed' => [
+                        'store_id' => $store?->id,
+                        'token' => $token,
+                        'package_id' => $store?->package_id,
+                        'zone_wise_topic' => $store?->zone?->store_wise_topic,
+                        'type' => 'new_join'
                     ]
                 ]
             ];
+        }
 
-
-
-        } elseif($store->status == 0 && $vendor->status == 1){
-
-            return [ 'type' => 'errors',
-            'code' => 403,
-            'data'=> [
-                'errors' => [
-                    ['code' => 'auth-002', 'message' => translate('messages.Your_account_is_suspended')]
+        if ($store->status == 0 && $vendor->status == 0) {
+            return [
+                'type' => 'errors',
+                'code' => 403,
+                'data' => [
+                    'errors' => [
+                        ['code' => 'auth-002', 'message' => translate('messages.Your_registration_is_not_approved_yet._You_can_login_once_admin_approved_the_request')]
                     ]
                 ]
             ];
-
+        } elseif ($store->status == 0 && $vendor->status == 1 && in_array($store?->store_business_model ,['subscription' ,'commission']) ) {
+            return [
+                'type' => 'errors',
+                'code' => 403,
+                'data' => [
+                    'errors' => [
+                        ['code' => 'auth-002', 'message' => translate('messages.Your_account_is_suspended')]
+                    ]
+                ]
+            ];
         }
 
-
-        if ( $store?->store_business_model == 'subscription' ) {
+        if ($store?->store_business_model == 'subscription') {
             $store_sub = $store?->store_sub;
             if (isset($store_sub)) {
-                if ($store_sub?->mobile_app == 0 ) {
-                    return [ 'type' => 'errors',
-                    'code' => 401,
-                    'data'=> [
-                        'errors' => [
-                            ['code' => 'no_mobile_app', 'message' => translate('messages.Your Subscription Plan is not Active for Mobile App')]
+                if ($store_sub?->mobile_app == 0) {
+                    return [
+                        'type' => 'errors',
+                        'code' => 401,
+                        'data' => [
+                            'errors' => [
+                                ['code' => 'no_mobile_app', 'message' => translate('messages.Your Subscription Plan is not Active for Mobile App')]
                             ]
                         ]
                     ];
@@ -321,49 +312,27 @@ class VendorLoginController extends Controller
             }
         }
 
+        if ($store?->store_business_model == 'unsubscribed' && isset($store?->store_sub_update_application)) {
+            return null;
+        }
 
-        if( $store?->store_business_model == 'unsubscribed' && isset($store?->store_sub_update_application)){
+        if ($store?->store_business_model == 'unsubscribed' && !isset($store?->store_sub_update_application)) {
             $vendor->auth_token = $token;
             $vendor?->save();
-                    if($store?->store_sub_update_application?->max_product== 'unlimited' ){
-                        $max_product_uploads= -1;
-                    }
-                    else{
-                        $max_product_uploads= $store?->store_sub_update_application?->max_product - $store?->foods()?->count();
-                        if($max_product_uploads > 0){
-                            $max_product_uploads ?? 0;
-                        }elseif($max_product_uploads < 0) {
-                            $max_product_uploads = 0;
-                        }
-                    }
-
-                $data['subscription_other_data'] =  [
-                    'total_bill'=>  (float) SubscriptionTransaction::where('store_id', $store->id)->where('package_id', $store?->store_sub_update_application?->package?->id)->sum('paid_amount'),
-                    'max_product_uploads' => (int) $max_product_uploads,
-                    ];
-
-            return response()->json(['token' => $token, 'zone_wise_topic'=> $store?->zone?->store_wise_topic,
-            'subscription' => $store?->store_sub_update_application,
-            'subscription_other_data' => $data['subscription_other_data'],
-            'balance' =>(float)($vendor?->wallet?->balance ?? 0),
-            'store_id' =>(int) $store?->id,
-            'package' => $store?->store_sub_update_application?->package
-            ], 205);
-        }
-
-        if($store?->store_business_model == 'unsubscribed' && !isset($store?->store_sub_update_application)){
-
-            return [ 'type' => 'subscribed',
-            'code' => 200,
-            'data'=> [
-                'subscribed' => [
-                    'store_id' => $store?->id, 'type' => 'new_join']
+            return [
+                'type' => 'subscribed',
+                'code' => 200,
+                'data' => [
+                    'subscribed' => [
+                        'store_id' => $store?->id,
+                        'token' => $token,
+                        'zone_wise_topic' => $store?->zone?->store_wise_topic,
+                        'type' => 'new_join'
+                    ]
                 ]
             ];
-
         }
- return null ;
+        return null ;
     }
-
 
 }

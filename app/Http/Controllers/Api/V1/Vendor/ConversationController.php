@@ -140,8 +140,8 @@ class ConversationController extends Controller
                 $conversation->save();
 
                 $data = [
-                    'title' =>'Message',
-                    'description' =>'You have received new message',
+                    'title' =>translate('messages.message_from')." ".$sender->f_name,
+                    'description' => $message->message ?? translate('attachment'),
                     'order_id' => '',
                     'image' => '',
                     'type'=> 'message',

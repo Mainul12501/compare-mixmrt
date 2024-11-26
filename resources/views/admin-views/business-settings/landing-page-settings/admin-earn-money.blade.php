@@ -156,7 +156,7 @@
                                 <input type="hidden" name="lang[]" value="default">
                             @endif
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>
@@ -180,12 +180,7 @@
                                 <label class="upload-img-3 m-0 d-block">
                                     <div class="position-relative">
                                     <div class="img">
-                                        <img  src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $earning_seller_image,'value',
-                                            asset('storage/app/public/earning').'/'.$earning_seller_image['value'] ?? '',
-                                            asset('/public/assets/admin/img/upload-4.png'),
-                                            'earning/'
-                                        ) }}"
+                                        <img  src="{{\App\CentralLogics\Helpers::get_full_url('earning', $earning_seller_image?->value?? '', $earning_seller_image?->storage[0]?->value ?? 'public','upload_image_4')}}"
 
 
                                         data-onerror-image="{{asset('/public/assets/admin/img/upload-4.png')}}"
@@ -233,7 +228,7 @@
                                                 </span>
                                             </label>
                                         </div>
-                                        <input id="playstore_url" type="text" placeholder="{{translate('Ex: https://play.google.com/store/apps')}}" class="form-control h--45px" name="playstore_url" value="{{ $seller_app_links['playstore_url'] ?? ''}}">
+                                        <input id="playstore_url" type="url" placeholder="{{translate('Ex: https://play.google.com/store/apps')}}" class="form-control h--45px" name="playstore_url" value="{{ $seller_app_links['playstore_url'] ?? ''}}">
                                     </div>
                                 </div>
                             </div>
@@ -270,13 +265,13 @@
                                                 </span>
                                             </label>
                                         </div>
-                                        <input type="text" id="apple_store_url" placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}" class="form-control h--45px" name="apple_store_url" value="{{ $seller_app_links['apple_store_url'] ?? ''}}">
+                                        <input type="url" id="apple_store_url" placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}" class="form-control h--45px" name="apple_store_url" value="{{ $seller_app_links['apple_store_url'] ?? ''}}">
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>
@@ -310,12 +305,7 @@
                                     <div class="position-relative">
                                     <div class="img">
 
-                                        <img src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $earning_delivery_image,'value',
-                                            asset('storage/app/public/earning/').'/'.$earning_delivery_image['value'],
-                                            asset('/public/assets/admin/img/upload-4.png'),
-                                            'earning/'
-                                        ) }}"
+                                        <img src="{{\App\CentralLogics\Helpers::get_full_url('earning', $earning_delivery_image?->value?? '', $earning_delivery_image?->storage[0]?->value ?? 'public','upload_image_4')}}"
 
                                         data-onerror-image="{{asset('/public/assets/admin/img/upload-4.png')}}" class="vertical-img mw-100 vertical onerror-image" alt="">
                                     </div>
@@ -364,7 +354,7 @@
                                                 </span>
                                             </label>
                                         </div>
-                                        <input id="playstore_url_dm" type="text" placeholder="{{translate('Ex: https://play.google.com/store/apps')}}" class="form-control h--45px" name="playstore_url" value="{{ $dm_app_links['playstore_url'] ?? ''}}">
+                                        <input id="playstore_url_dm" type="url" placeholder="{{translate('Ex: https://play.google.com/store/apps')}}" class="form-control h--45px" name="playstore_url" value="{{ $dm_app_links['playstore_url'] ?? ''}}">
                                     </div>
                                 </div>
                             </div>
@@ -402,13 +392,13 @@
                                                 </span>
                                             </label>
                                         </div>
-                                        <input id="apple_store_url_dm" type="text" placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}" class="form-control h--45px" name="apple_store_url" value="{{ $dm_app_links['apple_store_url']?? ''}}">
+                                        <input id="apple_store_url_dm" type="url" placeholder="{{translate('Ex: https://www.apple.com/app-store/')}}" class="form-control h--45px" name="apple_store_url" value="{{ $dm_app_links['apple_store_url']?? ''}}">
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>

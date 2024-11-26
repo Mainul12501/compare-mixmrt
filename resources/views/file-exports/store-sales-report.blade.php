@@ -76,13 +76,13 @@
                 @endif
             </td>
             <td>
-                {{ $item->orders->sum('quantity') }}
+                {{ $item->orders_sum_quantity ?? 0 }}
             </td>
             <td>
-                {{ $item->orders->sum('price') }}
+                {{\App\CentralLogics\Helpers::format_currency($item->orders_sum_price) }}
             </td>
             <td>
-                {{ $item->orders->sum('discount_on_item') }}
+                {{ \App\CentralLogics\Helpers::format_currency($item->total_discount) }}
             </td>
             </tr>
         @endforeach

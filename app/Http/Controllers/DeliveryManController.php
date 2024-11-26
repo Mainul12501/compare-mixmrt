@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Response;
+
 class DeliveryManController extends Controller
 {
 
@@ -49,12 +48,14 @@ class DeliveryManController extends Controller
                 'g-recaptcha-response' => [
                     function ($attribute, $value, $fail) {
                         $secret_key = Helpers::get_business_settings('recaptcha')['secret_key'];
-                        $response = $value;
-                        $url = 'https://www.google.com/recaptcha/api/siteverify?secret=' . $secret_key . '&response=' . $response;
-                        $response = Http::get($url);
-                        $response = $response->json();
-                        if (!isset($response['success']) || !$response['success']) {
-                            $fail(trans('messages.ReCAPTCHA Failed'));
+                        $gResponse = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                            'secret' => $secret_key,
+                            'response' => $value,
+                            'remoteip' => \request()->ip(),
+                        ]);
+
+                        if (!$gResponse->successful()) {
+                            $fail(translate('ReCaptcha Failed'));
                         }
                     },
                 ],
@@ -68,14 +69,13 @@ class DeliveryManController extends Controller
         $request->validate([
             'f_name' => 'required|max:100',
             'l_name' => 'nullable|max:100',
-            'identity_number' => 'required|max:30|unique:delivery_men', //mainul
+            'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
             'zone_id' => 'required',
             'vehicle_id' => 'required',
             'earning' => 'required',
             'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
-//            'agreement_document'=>'file|max:5120|mimes:jpg,png,jpeg', // mainul
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
             'zone_id.required' => translate('messages.select_a_zone'),
@@ -115,10 +115,6 @@ class DeliveryManController extends Controller
         $dm->earning = $request->earning;
         $dm->password = bcrypt($request->password);
         $dm->application_status= 'pending';
-
-//        $agreement_document_extension = $request->file('agreement_document')->extension();
-//        $dm->agreement_document = Helpers::upload('delivery-man/', $agreement_document_extension, $request->file('agreement_document'));
-
         $dm->save();
 
 
@@ -126,12 +122,11 @@ class DeliveryManController extends Controller
 
         try{
             $admin= Admin::where('role_id', 1)->first();
-            $mail_status = Helpers::get_mail_status('registration_mail_status_dm');
-            if(config('mail.status') && $mail_status == '1'){
+
+            if(config('mail.status') &&  Helpers::get_mail_status('registration_mail_status_dm') == '1' && Helpers::getNotificationStatusData('deliveryman','deliveryman_registration','mail_status')  ){
                 Mail::to($request->email)->send(new \App\Mail\DmSelfRegistration('pending', $dm->f_name.' '.$dm->l_name));
             }
-            $mail_status = Helpers::get_mail_status('dm_registration_mail_status_admin');
-            if(config('mail.status') && $mail_status == '1'){
+            if(config('mail.status') && Helpers::get_mail_status('dm_registration_mail_status_admin') == '1' && Helpers::getNotificationStatusData('admin','deliveryman_self_registration','mail_status')) {
                 Mail::to($admin['email'])->send(new \App\Mail\DmRegistration('pending', $dm->f_name.' '.$dm->l_name));
             }
         }catch(\Exception $ex){
@@ -139,13 +134,5 @@ class DeliveryManController extends Controller
         }
         Toastr::success(translate('messages.application_placed_successfully'));
         return back();
-    }
-    public function download_dm_agereement(){
-        $dm_agreement = \App\Models\BusinessSetting::where('key', 'dm_agreement')->first();
-            $fileName=$dm_agreement->value;
-        $path = '/agereement/';
-        if (Storage::disk('public')->exists($path . $fileName)) {
-            return Response::download(storage_path('app/public/agereement/' . $fileName));
-        }
     }
 }

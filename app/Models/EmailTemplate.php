@@ -12,7 +12,46 @@ use Illuminate\Support\Facades\DB;
 class EmailTemplate extends Model
 {
     use HasFactory;
+    protected $appends = ['image_full_url','logo_full_url','icon_full_url'];
 
+    public function getImageFullUrlAttribute(){
+        $value = $this->image;
+        if (count($this->storage) > 0) {
+            foreach ($this->storage as $storage) {
+                if ($storage['key'] == 'image') {
+                    return Helpers::get_full_url('email_template',$value,$storage['value']);
+                }
+            }
+        }
+
+        return Helpers::get_full_url('email_template',$value,'public');
+    }
+
+    public function getLogoFullUrlAttribute(){
+        $value = $this->logo;
+        if (count($this->storage) > 0) {
+            foreach ($this->storage as $storage) {
+                if ($storage['key'] == 'logo') {
+                    return Helpers::get_full_url('email_template',$value,$storage['value']);
+                }
+            }
+        }
+
+        return Helpers::get_full_url('email_template',$value,'public');
+    }
+
+    public function getIconFullUrlAttribute(){
+        $value = $this->icon;
+        if (count($this->storage) > 0) {
+            foreach ($this->storage as $storage) {
+                if ($storage['key'] == 'icon') {
+                    return Helpers::get_full_url('email_template',$value,$storage['value']);
+                }
+            }
+        }
+
+        return Helpers::get_full_url('email_template',$value,'public');
+    }
     public function translations()
     {
         return $this->morphMany(Translation::class, 'translationable');

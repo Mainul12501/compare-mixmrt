@@ -41,9 +41,9 @@ class CustomerWalletController extends Controller
 
         if($wallet_transaction)
         {
-            $mail_status = Helpers::get_mail_status('add_fund_mail_status_user');
             try{
-                if(config('mail.status') && $mail_status == '1') {
+                Helpers::add_fund_push_notification($request->customer_id);
+                if(config('mail.status') && Helpers::get_mail_status('add_fund_mail_status_user') == '1' &&  Helpers::getNotificationStatusData('customer','customer_add_fund_to_wallet','mail_status') ) {
                     Mail::to($wallet_transaction->user->email)->send(new \App\Mail\AddFundToWallet($wallet_transaction));
                 }
             }catch(\Exception $ex)

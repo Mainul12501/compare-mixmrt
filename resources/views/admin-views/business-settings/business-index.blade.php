@@ -390,7 +390,7 @@
                                             <label class="text-center position-relative">
                                                 <img class="img--vertical onerror-image image--border" id="viewer"
                                                     data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                                    src="{{ \App\CentralLogics\Helpers::get_image_helper($logo,'value', asset('storage/app/public/business/').'/'.$logo->value??'', asset('public/assets/admin/img/upload-img.png'),'business/') }}"
+                                                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $logo?->value?? '', $logo?->storage[0]?->value ?? 'public','upload_image')}}"
                                                     alt="logo image" />
                                                 <div class="icon-file-group">
                                                     <div class="icon-file">
@@ -411,7 +411,7 @@
                                             <label class="text-center position-relative">
                                                 <img class="img--133 onerror-image image--border" id="iconViewer"
                                                     data-onerror-image="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                                    src="{{ \App\CentralLogics\Helpers::get_image_helper($icon,'value', asset('storage/app/public/business/').'/'.$icon->value??'', asset('public/assets/admin/img/upload-img.png') , 'business/')}}"
+                                                    src="{{\App\CentralLogics\Helpers::get_full_url('business', $icon?->value?? '', $icon?->storage[0]?->value ?? 'public','upload_image')}}"
                                                     alt="Fav icon" />
                                                 <div class="icon-file-group">
                                                     <div class="icon-file">
@@ -717,7 +717,7 @@
                                     <div class="form-group mb-0">
                                         <label class="form-label"
                                             for="currency">{{ translate('Currency Symbol') }}</label>
-                                        <select name="currency" class="form-control js-select2-custom">
+                                        <select id="change_currency" name="currency" class="form-control js-select2-custom">
                                             @foreach (\App\Models\Currency::orderBy('currency_code')->get() as $currency)<option value="{{ $currency['currency_code'] }}"
                                                     {{ $currency_code ? ($currency_code->value == $currency['currency_code'] ? 'selected' : '') : '' }}>
                                                     {{ $currency['currency_code'] }} ({{ $currency['currency_symbol'] }})
@@ -816,22 +816,6 @@
                                             min="0" max="100" required>
                                     </div>
                                 </div>
-                                {{-- <div class="col-sm-6 col-lg-4">
-                                    @php($admin_commission_parcel = \App\Models\BusinessSetting::where('key', 'admin_commission_parcel')->first())
-                                    <div class="form-group mb-0">
-                                        <label class="form-label text-capitalize"
-                                            for="admin_commission_parcel">
-                                            {{ translate('messages.Default_Parcel_Commission_Rate_On_Order') }} (%)
-                                            <span class="form-label-secondary" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('messages.Set_up_‘Default_Parcel_Commission_Rate’_on_every_Order._Admin_can_also_set_store-wise_different_commission_rates_from_respective_store_settings.') }}">
-                                                <img src="{{asset('public/assets/admin/img/info-circle.svg')}}" alt="">
-                                            </span>
-                                        </label>
-                                        <input type="number" name="admin_commission_parcel" class="form-control"
-                                            id="admin_commission_parcel" placeholder="{{ translate('messages.Ex:_10') }}"
-                                            value="{{ $admin_commission_parcel ? $admin_commission_parcel->value : 0 }}"
-                                            min="0" max="100" required>
-                                    </div>
-                                </div> --}}
                                 <div class="col-sm-6 col-lg-4">
                                     @php($delivery_charge_comission = \App\Models\BusinessSetting::where('key', 'delivery_charge_comission')->first())
                                     <div class="form-group mb-0">
@@ -1082,6 +1066,51 @@
                                         </label>
                                     </div>
                                 </div>
+
+
+
+
+
+
+                                <div class="col-sm-6 col-lg-4">
+                                    @php($country_picker_status = \App\Models\BusinessSetting::where('key', 'country_picker_status')->first())
+                                    @php($country_picker_status = $country_picker_status ? $country_picker_status->value : 0)
+                                    <div class="form-group mb-0">
+                                        <label
+                                            class="toggle-switch h--45px toggle-switch-sm d-flex justify-content-between border rounded px-3 py-0 form-control">
+                                            <span class="pr-1 d-flex align-items-center switch--label">
+                                                <span class="line--limit-1">
+                                                    {{translate('messages.country_picker') }}
+                                                </span>
+                                                <span class="form-label-secondary text-danger d-flex"
+                                                    data-toggle="tooltip" data-placement="right"
+                                                    data-original-title="{{ translate('messages.If_you_enable_this_option,_in_all_phone_no_field_will_show_a_country_picker_list.')}}"><img
+                                                        src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
+                                                        alt="{{ translate('messages.customer_varification_toggle') }}">
+                                                </span>
+                                            </span>
+                                            <input type="checkbox"
+                                            data-id="country_picker_status"
+                                            data-type="toggle"
+                                            data-image-on="{{ asset('/public/assets/admin/img/modal/mail-success.png') }}"
+                                            data-image-off="{{ asset('/public/assets/admin/img/modal/mail-warning.png') }}"
+                                            data-title-on="<strong>{{ translate('messages.Want_to_enable_country_picker?') }}</strong>"
+                                            data-title-off="<strong>{{ translate('messages.Want_to_disable_country_picker?') }}</strong>"
+                                            data-text-on="<p>{{ translate('messages.If_you_enable_this,_user_can_select_country_from_country_picker') }}</p>"
+                                            data-text-off="<p>{{ translate('messages.If_you_disable_this,_user_can_not_select_country_from_country_picker,_default_country_will_be_selected') }}</p>"
+                                            class="status toggle-switch-input dynamic-checkbox-toggle"
+                                            value="1"
+                                                name="country_picker_status" id="country_picker_status"
+                                                {{ $country_picker_status == 1 ? 'checked' : '' }}>
+                                            <span class="toggle-switch-label text">
+                                                <span class="toggle-switch-indicator"></span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+
+
 
                             </div>
                             <div class="__bg-F8F9FC-card p-0 mt-4">
@@ -1375,9 +1404,92 @@
         </form>
     </div>
 
+
+
+    <div class="modal fade" id="currency-warning-modal">
+        <div class="modal-dialog modal-dialog-centered status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img width="80" src="{{  asset('public/assets/admin/img/modal/currency.png') }}" class="mb-20">
+                                <h5 class="modal-title"></h5>
+                            </div>
+                            <div class="text-center" >
+                                <h3 > {{ translate('Are_you_sure_to_change_the_currency_?') }}</h3>
+                                <div > <p>{{ translate('If_you_enable_this_currency,_you_must_active_at_least_one_digital_payment_method_that_supports_this_currency._Otherwise_customers_cannot_pay_via_digital_payments_from_the_app_and_websites._And_Also_restaurants_cannot_pay_you_digitally') }}</h3></p></div>
+                            </div>
+
+                            <div class="text-center mb-4" >
+                                <a class="text--underline" href="{{ route('admin.business-settings.third-party.payment-method') }}"> {{ translate('Go_to_payment_method_settings.') }}</a>
+                            </div>
+                            </div>
+
+                        <div class="btn--container justify-content-center">
+                            <button data-dismiss="modal" id="confirm-currency-change" class="btn btn--cancel min-w-120" >{{translate("Cancel")}}</button>
+                            <button data-dismiss="modal"   type="button"  class="btn btn--primary min-w-120">{{translate('OK')}}</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('script_2')
+
+<script>
+      "use strict";
+      $(document).ready(function() {
+    let selectedCurrency = "{{ $currency_code ? $currency_code->value : 'USD' }}";
+    let currencyConfirmed = false;
+    let updatingCurrency = false;
+
+    $("#change_currency").change(function() {
+        if (!updatingCurrency) check_currency($(this).val());
+    });
+
+    $("#confirm-currency-change").click(function() {
+        currencyConfirmed = true;
+        update_currency(selectedCurrency);
+        $('#currency-warning-modal').modal('hide');
+    });
+
+    function check_currency(currency) {
+        $.ajax({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            url: "{{route('admin.system_currency')}}",
+            method: 'GET',
+            data: { currency: currency },
+            success: function(response) {
+                if (response.data) {
+                    $('#currency-warning-modal').modal('show');
+                } else {
+                    update_currency(currency);
+                }
+            }
+        });
+    }
+
+    function update_currency(currency) {
+        if (currencyConfirmed) {
+            updatingCurrency = true;
+            $("#change_currency").val(currency).trigger('change');
+            updatingCurrency = false;
+            currencyConfirmed = false;
+        }
+    }
+});
+</script>
+
     <script
         src="https://maps.googleapis.com/maps/api/js?key={{ \App\Models\BusinessSetting::where('key', 'map_api_key')->first()->value }}&libraries=places&v=3.45.8">
     </script>

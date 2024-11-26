@@ -8,7 +8,6 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\Processor;
 use App\Models\PaymentRequest;
-use Firebase\JWT\JWT;
 
 class Paytabs
 {
@@ -143,38 +142,6 @@ class PaytabsController extends Controller
 
     public function callback(Request $request)
     {
-        info($request->all());
-        dd($request->all());
-        $payload = array(
-            "pubKey" => "53f8a39359bd4ffc8adda701a2b3542f",
-            'exp' => time() + (60 * 60)
-        );
-        $secret_key = "1771b42081d2473ba0c794dcd80e0dc5";
-        $token = JWT::encode($payload, $secret_key,'HS256');
-       $url = "https://live.broadpay.io/gateway/api/v1/transaction/query?reference=eyJ0aWQiOjMwNTcxODgsImVudiI6InAifQ&merchantReference=8d77-4899-994d-af8df0b14f";
-       $curl = curl_init();
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => array(
-            'token: '.$token
-        ),
-        ));
-    
-        $response = curl_exec($curl);
-    
-        curl_close($curl);
-        $result =  json_decode($response,true);
-        dd($result);
-
-
-        
         $plugin = new Paytabs();
         $response_data = $_POST;
         $transRef = filter_input(INPUT_POST, 'tranRef');

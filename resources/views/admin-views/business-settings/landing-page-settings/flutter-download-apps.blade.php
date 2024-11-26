@@ -164,12 +164,7 @@
                                     <div class="img">
                                         <img
 
-                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $download_user_app_image,'value',
-                                            asset('storage/app/public/download_user_app_image').'/'.$download_user_app_image['value'] ?? '',
-                                            asset('/public/assets/admin/img/upload-4.png'),
-                                            'download_user_app_image/'
-                                        ) }}" data-onerror-image="{{asset('/public/assets/admin/img/upload-4.png')}}" alt="" class="vertical-img mw-100 vertical onerror-image">
+                                        src="{{\App\CentralLogics\Helpers::get_full_url('download_user_app_image', $download_user_app_image?->value?? '', $download_user_app_image?->storage[0]?->value ?? 'public','upload_image_4')}}" data-onerror-image="{{asset('/public/assets/admin/img/upload-4.png')}}" alt="" class="vertical-img mw-100 vertical onerror-image">
                                     </div>
                                       <input type="file"  name="image" hidden>
                                       @if (isset($download_user_app_image['value']))
@@ -264,7 +259,7 @@
                             </div>
                         </div>
                         <div class="btn--container justify-content-end mt-3">
-                            <button type="reset" class="btn btn--reset">{{translate('Reset')}}</button>
+                            <button type="reset" class="btn btn--reset mb-2">{{translate('Reset')}}</button>
                             <button type="submit"   class="btn btn--primary mb-2">{{translate('Save')}}</button>
                         </div>
                     </div>

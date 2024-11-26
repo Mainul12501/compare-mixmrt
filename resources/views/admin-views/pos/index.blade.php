@@ -57,8 +57,8 @@
                                     <div class="col-sm-12 col-12">
                                         <form id="search-form" class="search-form">
                                             <!-- Search -->
-                                            <div class="input-group input--group input-group--merge">
-                                                <input id="datatableSearch" type="search" value="{{$keyword??''}}" name="search" class="form-control h--45px" placeholder="{{translate('messages.Search_by_product_name')}}" aria-label="{{translate('messages.search_here')}}" disabled>
+                                            <div class="position-relative">
+                                                <input id="datatableSearch" type="search" value="{{$keyword??''}}" name="search" class="form-control h--45px pl-5" placeholder="{{translate('messages.Search_by_product_name')}}" aria-label="{{translate('messages.search_here')}}" disabled>
                                                 <img width="16" height="16" src="{{asset('public/assets/admin/img/icons/search-icon.png')}}" alt="" class="search-icon">
 
                                                 @if($keyword)
@@ -108,11 +108,17 @@
                                 </span>
                             </h5>
                         </div>
+                        <?php
+                        $customer= session('customer') ?? null;
+                        ?>
                         <div class="card-body p-0">
                             <div class="d-flex flex-wrap p-3 add--customer-btn">
                                 <select id="customer" name="customer_id"
                                     data-placeholder="{{ translate('messages.select_customer') }}"
                                     class="js-data-example-ajax form-control">
+                                    @if (isset($customer))
+                                    <option selected value="{{ $customer->id }}">{{ $customer->f_name.' '.$customer->l_name }} ({{ $customer->phone }})</option>
+                                    @endif
                                 </select>
                                 <button class="btn btn--primary rounded font-regular" id="add_new_customer"
                                     type="button" data-toggle="modal" data-target="#add-customer"
@@ -120,6 +126,44 @@
                                     {{ translate('Add new customer') }}
                                 </button>
                             </div>
+
+
+
+
+
+
+                            <div id="customer_data" class="{{ isset($customer) ? '': 'd-none' }} ">
+                                <!-- Card -->
+                                <div class="p-2">
+                                    <div class="p-2 rounded bg--secondary">
+                                        <div class="media align-items-center customer--information-single" href="javascript:">
+                                            <div class="avatar avatar-circle">
+                                                <img class="avatar-img onerror-image" id=customer_image src="{{ isset($customer) ? $customer->image_full_url : '' }}"
+                                                    alt="Image Description">
+                                            </div>
+                                            <div class="media-body">
+                                                <ul class="list-unstyled m-0">
+                                                    <li class="pb-1">
+                                                    <h4> <span id="customer_name" class="text--primary">{{ isset($customer) ? $customer->f_name . ' ' . $customer->l_name : '' }}</span>, <small id="customer_phone">{{ isset($customer) ? $customer->phone : '' }}</small></h4>
+                                                    </li>
+                                                    <li>
+                                                    {{ translate('messages.Wallet') }} : <strong class="text-dark" id="customer_wallet" >{{ isset($customer) ?  \App\CentralLogics\Helpers::format_currency($customer->wallet_balance) : '' }}</strong>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- End Card -->
+                            </div>
+
+
+
+
+
+
+
+
                             <div class="pos--delivery-options">
                                 <div class="d-flex justify-content-between mb-2">
                                     <h5 class="card-title d-flex align-items-center gap-2">
@@ -430,13 +474,14 @@
                                         let distanceMile = distancMeter/1000;
                                         let distancMileResult = Math.round((distanceMile + Number.EPSILON) * 100) / 100;
                                         document.getElementById('distance').value = distancMileResult;
+                                        document.getElementById('address').value =response.destinationAddresses[1];
                                         <?php
                                         $module_wise_delivery_charge = $store->zone->modules()->where('modules.id', $store->module_id)->first();
                                         if($store->sub_self_delivery ){
                                                 $per_km_shipping_charge = $store?->per_km_shipping_charge ?? 0;
                                                 $minimum_shipping_charge = $store?->minimum_shipping_charge ?? 0;
                                                 $maximum_shipping_charge = $store?->maximum_shipping_charge?? 0;
-                                        
+
                                                 $self_delivery_status = 1;
                                         } else{
                                                 $self_delivery_status = 0;
@@ -852,7 +897,7 @@
         $.post('<?php echo e(route('admin.pos.cart_items')); ?>?store_id={{request()?->store_id}}', {_token: '<?php echo e(csrf_token()); ?>'}, function (data) {
             $('#cart').empty().html(data);
         });
-        $.post('<?php echo e(route('admin.pos.single_items')); ?>?store_id={{request()?->store_id}}&&category_id={{request()?->category_id}}&&keyword={{request()?->keyword}}', {_token: '<?php echo e(csrf_token()); ?>'}, function (data) {
+        $.post('<?php echo e(route('admin.pos.single_items')); ?>' + window.location.search, {_token: '<?php echo e(csrf_token()); ?>'}, function(data) {
             $('#single-list').empty().html(data);
         });
     }
@@ -969,5 +1014,34 @@
     nurl.searchParams.delete('keyword');
     location.href = nurl;
 });
+
+        $( "#customer" ).change(function() {
+            if($(this).val())
+            {
+                $('#customer_id').val($(this).val());
+                $.get({
+                url: '{{ route('admin.pos.getUserData') }}',
+                dataType: 'json',
+                data: {
+                    customer_id: $(this).val()
+                },
+                beforeSend: function () {
+                    $('#loading').show();
+                },
+                success: function (data) {
+                    $('#customer_name').text(data.customer_name );
+                    $('#customer_phone').text(data.customer_phone );
+                    $('#customer_wallet').text(data.customer_wallet );
+                    $('#customer_image').attr('src', data.customer_image);
+                    $('#customer_data').removeClass('d-none');
+                },
+                complete: function () {
+                    $('#loading').hide();
+                },
+            });
+            }
+        });
+
+
 </script>
 @endpush

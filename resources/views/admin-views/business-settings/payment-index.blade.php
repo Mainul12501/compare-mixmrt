@@ -9,6 +9,12 @@
 @section('content')
     <div class="content container-fluid">
         <!-- Page Header -->
+        @php
+        $currency= \App\Models\BusinessSetting::where('key','currency')->first()?->value?? 'USD';
+        $checkCurrency = \App\CentralLogics\Helpers::checkCurrency($currency);
+        $currency_symbol =\App\CentralLogics\Helpers::currency_symbol();
+
+    @endphp
 
         <div class="page-header">
             <h1 class="page-header-title">
@@ -152,10 +158,37 @@
                 </div>
             </div>
         @endif
+
+        @if($digital_payment && $digital_payment['status'] ==1 && $checkCurrency !== true )
+        <br>
+        <div>
+            <div class="card">
+                <div class="bg--3 px-5 pb-2 card-body d-flex flex-wrap justify-content-around">
+                    <p class="w-50 fs-15 text-danger flex-grow-1 ">
+                        <i class="tio-info-outined"></i>
+                    {{ translate($checkCurrency).' '. translate('Does_not_support_your_current') }}   {{ $currency }}({{$currency_symbol  }}) {{ translate('Currency,_thus_users_cannot_use_this_digital_payment_options_as_payment_in_the_websites_and_apps.') }}</p>
+
+                </div>
+            </div>
+        </div>
+        @elseif ($digital_payment && $digital_payment['status'] ==1 && $data_values->where('is_active',1  )->count()  == 0)
+        <br>
+        <div>
+            <div class="card">
+                <div class="bg--3 px-5 pb-2 card-body d-flex flex-wrap justify-content-around">
+                    <p class="w-50 fs-15 text-danger flex-grow-1 ">
+                        <i class="tio-info-outined"></i>
+                    {{ translate('Currently,_there_is_no_digital_payment_method_is_set_up_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}),{{ translate('_thus_users_cannot_view_digital_payment_options_in_their_websites_and_apps_._You_must_activate_at_least_one_digital_payment_method_that_supports_') }}   {{ $currency }}({{$currency_symbol  }}) {{ translate('_otherwise,_all_users_will_be_unable_to_pay_via_digital_payments.') }}</p>
+
+                </div>
+            </div>
+        </div>
+
+        @endif
         @php($is_published = $published_status == 1 ? 'inactive' : '')
         <!-- Tab Content -->
         <div class="row digital_payment_methods  {{ $is_published }} mt-3 g-3">
-            @foreach($data_values as $payment_key => $payment)
+            @foreach($data_values->sortByDesc('is_active') as $payment_key => $payment)
                 <div class="col-md-6 mb-4">
                     <div class="card">
                         <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.third-party.payment-method-update'):'javascript:'}}" method="POST"
@@ -165,12 +198,12 @@
                                 <h5>
                                     <span class="text-uppercase">{{str_replace('_',' ',$payment->key_name)}}</span>
                                 </h5>
-                                <label class="switch--custom-label toggle-switch toggle-switch-sm d-inline-flex">
+                                <label  id="span_on_{{ $payment->key_name }}" class="switch--custom-label toggle-switch toggle-switch-sm d-inline-flex">
                                     <span
                                         class="mr-2 switch--custom-label-text text-primary on text-uppercase">{{ translate('on') }}</span>
                                     <span class="mr-2 switch--custom-label-text off text-uppercase">{{ translate('off') }}</span>
-                                    <input type="checkbox" name="status" value="1"
-                                           class="toggle-switch-input" {{$payment['is_active']==1?'checked':''}}>
+                                    <input id="add_check_{{ $payment->key_name }}"  type="checkbox" name="status" value="1" data-gateway="{{ $payment->key_name }}" data-status="{{ $payment['is_active'] }}"
+                                           class="toggle-switch-input  {{ \App\CentralLogics\Helpers::checkCurrency($payment->key_name , 'payment_gateway') === true && $payment['is_active']  ? 'open-warning-modal' : ''}} " {{$payment['is_active']==1?'checked':''}}>
                                     <span class="toggle-switch-label text">
                                             <span class="toggle-switch-indicator"></span>
                                         </span>
@@ -184,12 +217,7 @@
                                           data-onerror-image="{{asset('/public/assets/admin/img/payment/placeholder.png')}}"
 
                                           @if ($additional_data != null)
-                                              src="{{ \App\CentralLogics\Helpers::onerror_image_helper(
-                                        $additional_data?->gateway_image,
-                                        asset('storage/app/public/payment_modules/gateway_image').'/'.$additional_data?->gateway_image,
-                                        asset('/public/assets/admin/img/payment/placeholder.png'),
-                                        'payment_modules/gateway_image/',$additional_data?->storage??'public'
-                                    ) }}"
+                                              src="{{ \App\CentralLogics\Helpers::get_full_url('payment_modules/gateway_image',$additional_data?->gateway_image,$additional_data?->storage ?? 'public') }}"
 
                                           @else
                                               src="{{asset('/public/assets/admin/img/payment/placeholder.png')}}"
@@ -264,7 +292,41 @@
     </div>
 
 
+    <div class="modal fade" id="payment-gateway-warning-modal">
+        <div class="modal-dialog modal-dialog-centered status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img width="80" src="{{  asset('public/assets/admin/img/modal/gateway.png') }}" class="mb-20">
+                                <h5 class="modal-title"></h5>
+                            </div>
+                            <div class="text-center" >
+                                <h3 > {{ translate('Are_you_sure,_want_to_turn_Off')}} <span id="gateway_name"></span> {{ translate('_as_the_Digital_Payment_method?') }}</h3>
+                                <div > <p>{{ translate('You_must_active_at_least_one_digital_payment_method_that_support')}} {{ $currency }} {{ translate('._Otherwise_customers_cannot_pay_via_digital_payments_from_the_app_and_websites._And_Also_restaurants_cannot_pay_you_digitally.') }}</h3></p></div>
+                            </div>
 
+                            <div class="text-center mb-4" >
+                                <a class="text--underline" href="{{ route('admin.business-settings.business-setup') }}"> {{ translate('View_Currency_Settings.') }}</a>
+                            </div>
+                            </div>
+
+                        <div class="btn--container justify-content-center">
+                            <button data-dismiss="modal"  class="btn btn--cancel min-w-120" >{{translate("Cancel")}}</button>
+                            <button data-dismiss="modal"  id="confirm-currency-change" type="button"  class="btn btn--primary min-w-120">{{translate('OK')}}</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 @endsection
@@ -274,16 +336,54 @@
     <script>
         "use strict";
 
-        $(".logo").change(function() {
-            let viewer = $(this).data('id');
-            if (this.files && this.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#' + viewer + '-image-preview').attr('src', e.target.result);
+
+        $(document).on('click', '.open-warning-modal', function(event) {
+
+            const elements = document.querySelectorAll('.open-warning-modal');
+            const count = elements.length;
+
+            if(elements.length === 1){
+
+                let gateway = $(this).data('gateway');
+                if ($(this).is(':checked') === false) {
+                    event.preventDefault();
+                    $('#payment-gateway-warning-modal').modal('show');
+                    var formated_text=  gateway.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                    $('#gateway_name').attr('data-gateway_key', gateway).html(formated_text);
+                    $(this).data('originalEvent', event);
                 }
-                reader.readAsDataURL(this.files[0]);
             }
+
+
         });
+
+    $(document).on('click', '#confirm-currency-change', function() {
+    var gatewayName =   $('#gateway_name').data('gateway_key');
+    if (gatewayName) {
+    $('#span_on_' + gatewayName).removeClass('checked');
+    }
+
+    var originalEvent = $('.open-warning-modal[data-gateway="' + gatewayName + '"]').data('originalEvent');
+    if (originalEvent) {
+    var newEvent = $.Event(originalEvent);
+    $(originalEvent.target).trigger(newEvent);
+    }
+
+    $('#payment-gateway-warning-modal').modal('hide');
+    });
+
+    $(".logo").change(function() {
+    let viewer = $(this).data('id');
+    if (this.files && this.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            $('#' + viewer + '-image-preview').attr('src', e.target.result);
+        }
+        reader.readAsDataURL(this.files[0]);
+    }
+    });
+
+
         @if(!isset($digital_payment) || $digital_payment['status']==0)
         $('.digital_payment_methods').hide();
         @endif

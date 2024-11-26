@@ -3,9 +3,6 @@
     <?php
 
     $disbursement_type = \App\Models\BusinessSetting::where('key' , 'disbursement_type')->first()->value ?? 'manual';
-    if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company'){
-        $disbursement_type = 'manual';
-    }
     $min_amount_to_pay_store = \App\Models\BusinessSetting::where('key' , 'min_amount_to_pay_store')->first()->value ?? 0;
 
     $wallet_earning =  round($wallet->total_earning - ($wallet->total_withdrawn + $wallet->pending_withdraw) , 8);
@@ -213,7 +210,7 @@
                 </button>
             </div>
 
-            <form action="{{route('vendor.wallet.withdraw-request')}}" method="post">
+            <form id="withdraw_form" action="{{route('vendor.wallet.withdraw-request')}}" method="post">
                 <div class="modal-body">
                     @csrf
                     <div class="">
@@ -235,7 +232,7 @@
                 </div>
                 <div class="modal-footer pt-0 border-0">
                     <button type="button" class="btn btn--reset" data-dismiss="modal">{{translate('messages.cancel')}}</button>
-                    <button type="submit" id="submit_button" class="btn btn--primary">{{translate('messages.Submit')}}</button>
+                    <button type="submit"  id="set_disable" id="submit_button" class="btn btn--primary">{{translate('messages.Submit')}}</button>
                 </div>
             </form>
         </div>
@@ -282,9 +279,6 @@
 
                     <li class="nav-item">
                         <a class="nav-link  {{Request::is('store-panel/wallet/disbursement-list') ?'active':''}}" href="{{route('vendor.wallet.getDisbursementList')}}"  aria-disabled="true">{{translate('messages.Next_Payouts')}}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link  {{Request::is('store-panel/wallet/offline-payment-list') ?'active':''}}" href="{{route('vendor.wallet.offline_payment_list')}}"  aria-disabled="true">{{translate('messages.offline_payment')}}</a>
                     </li>
                 </ul>
 

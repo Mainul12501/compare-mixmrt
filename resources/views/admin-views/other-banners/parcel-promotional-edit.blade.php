@@ -42,12 +42,7 @@
                                                 <div class="img">
                                                     <img class="onerror-image"
 
-                                                        src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                        $banner,'value',
-                                                        asset('storage/app/public/promotional_banner').'/'.$banner->value ?? '',
-                                                        asset('/public/assets/admin/img/upload-placeholder.png'),
-                                                        'promotional_banner/'
-                                                    ) }}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
+                                                        src="{{ $banner->value_full_url ?? asset('/public/assets/admin/img/upload-placeholder.png')}}" data-onerror-image="{{asset('/public/assets/admin/img/upload-placeholder.png')}}" alt="">
                                                 </div>
                                                     <input type="file" name="image"  hidden>
                                             </label>

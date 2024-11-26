@@ -47,18 +47,12 @@ class AdminFeature extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-                 
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('admin_feature',$value);
-                    }else{
-                        return Helpers::local_storage_link('admin_feature',$value);
-                    }
+                    return Helpers::get_full_url('admin_feature',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('admin_feature',$value);
+        return Helpers::get_full_url('admin_feature',$value,'public');
     }
 
     public function storage()

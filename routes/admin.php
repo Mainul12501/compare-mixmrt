@@ -1,17 +1,16 @@
 <?php
 
-use App\Http\Controllers\Admin\DeliveryMan\DeliveryManController;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Vendor\WalletMethodController;
 
 
 Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
-    Route::get('accept/{id}', [WalletMethodController::class, 'accept'])->name('accept-dis-wid-met');
-    Route::delete('delete-row/{id}', [WalletMethodController::class, 'delete'])->name('delete-dis-wid-met');
-
     Route::group(['middleware' => ['admin', 'current-module']], function () {
+//        Route::get('/test', function () {
+//            return view('admin-views.login-setup.login_page');
+//        });
+
+        Route::get('drivemond-panel', 'DriveMondController@drivemondExternalLogin')->name('drivemond-panel');
         Route::get('get-all-stores', 'VendorController@get_all_stores')->name('get_all_stores');
         Route::get('lang/{locale}', 'LanguageController@lang')->name('lang');
         Route::get('settings', 'SystemController@settings')->name('settings');
@@ -19,6 +18,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
         Route::post('settings-password', 'SystemController@settings_password_update')->name('settings-password');
         Route::get('/get-store-data', 'SystemController@store_data')->name('get-store-data');
         Route::post('remove_image', 'BusinessSettingsController@remove_image')->name('remove_image');
+        Route::get('system-currency', 'SystemController@system_currency')->name('system_currency');
         //dashboard
         Route::get('/', 'DashboardController@dashboard')->name('dashboard');
 
@@ -88,6 +88,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
             //Mainul
             Route::get('get-variations', 'ItemController@get_variations')->name('get-variations');
+            Route::get('get-stock', 'ItemController@get_stock')->name('get_stock');
             Route::post('stock-update', 'ItemController@stock_update')->name('stock-update');
 
             //Import and export
@@ -159,17 +160,13 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
 
 
-        Route::get('download-document/{fileName}', 'VendorController@download_document')->name('download-document');
-        Route::group(['prefix' => 'delivery-man', 'as' => 'delivery-man.'], function () {
-            Route::get('download-document-dm/{fileName}', [DeliveryManController::class,'download_document'])->name('download-document-dm');
-        });
+
         Route::group(['prefix' => 'store', 'as' => 'store.'], function () {
             Route::get('get-stores-data/{store}', 'VendorController@get_store_data')->name('get-stores-data');
             Route::get('store-filter/{id}', 'VendorController@store_filter')->name('store-filter');
             Route::get('get-account-data/{store}', 'VendorController@get_account_data')->name('store-filter');
             Route::get('get-stores', 'VendorController@get_stores')->name('get-stores');
             Route::get('get-addons', 'VendorController@get_addons')->name('get_addons');
-
             Route::group(['middleware' => ['module:store']], function () {
                 Route::get('update-application/{id}/{status}', 'VendorController@update_application')->name('application');
                 Route::get('add', 'VendorController@index')->name('add');
@@ -186,7 +183,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get('view/{store}/{tab?}/{sub_tab?}', 'VendorController@view')->name('view');
                 Route::get('list', 'VendorController@list')->name('list');
                 Route::get('pending-requests', 'VendorController@pending_requests')->name('pending-requests');
-                Route::get('pending-method-requests', 'VendorController@pending_method_requests')->name('pending-method-requests');
                 Route::get('deny-requests', 'VendorController@deny_requests')->name('deny-requests');
                 Route::post('search', 'VendorController@search')->name('search');
                 Route::get('export', 'VendorController@export')->name('export');
@@ -233,86 +229,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('message/list', 'VendorController@conversation_list')->name('message-list');
         });
 
-        Route::group(['prefix' => 'company', 'as' => 'company.'], function () {
-            Route::get('get-stores-data/{store}', 'CompanyController@get_store_data')->name('get-stores-data');
-            Route::get('store-filter/{id}', 'CompanyController@store_filter')->name('store-filter');
-            Route::get('get-account-data/{store}', 'CompanyController@get_account_data')->name('store-filter');
-            Route::get('get-stores', 'CompanyController@get_stores')->name('get-stores');
-            Route::get('get-addons', 'CompanyController@get_addons')->name('get_addons');
-
-            Route::group(['middleware' => ['module:store']], function () {
-                Route::get('update-application/{id}/{status}', 'CompanyController@update_application')->name('application');
-                Route::get('add', 'CompanyController@index')->name('add');
-                Route::post('store', 'CompanyController@store')->name('store');
-                Route::get('edit/{id}', 'CompanyController@edit')->name('edit');
-                Route::post('update/{store}', 'CompanyController@update')->name('update');
-                Route::post('discount/{store}', 'CompanyController@discountSetup')->name('discount');
-                Route::post('update-settings/{store}', 'CompanyController@updateStoreSettings')->name('update-settings');
-                Route::post('update-meta-data/{store}', 'CompanyController@updateStoreMetaData')->name('update-meta-data');
-                Route::delete('delete/{store}', 'CompanyController@destroy')->name('delete');
-                Route::delete('clear-discount/{store}', 'CompanyController@cleardiscount')->name('clear-discount');
-                // Route::get('view/{store}', 'CompanyController@view')->name('view_tab');
-                Route::get('disbursement-export/{id}/{type}', 'CompanyController@disbursement_export')->name('disbursement-export');
-                Route::get('view/{store}/{tab?}/{sub_tab?}', 'CompanyController@view')->name('view');
-                Route::get('list', 'CompanyController@list')->name('list');
-                Route::get('pending-requests', 'CompanyController@pending_requests')->name('pending-requests');
-                Route::get('deny-requests', 'CompanyController@deny_requests')->name('deny-requests');
-                Route::get('pending-method-requests', 'CompanyController@pending_method_requests')->name('pending-method-requests');
-                Route::post('search', 'CompanyController@search')->name('search');
-                Route::get('export', 'CompanyController@export')->name('export');
-                Route::get('store-wise-reviwe-export', 'CompanyController@store_wise_reviwe_export')->name('store_wise_reviwe_export');
-                Route::get('export/cash/{type}/{store_id}', 'CompanyController@cash_export')->name('cash_export');
-                Route::get('export/order/{type}/{store_id}', 'CompanyController@order_export')->name('order_export');
-                Route::get('export/withdraw/{type}/{store_id}', 'CompanyController@withdraw_trans_export')->name('withdraw_trans_export');
-                Route::get('status/{store}/{status}', 'CompanyController@status')->name('status');
-                Route::get('featured/{store}/{status}', 'CompanyController@featured')->name('featured');
-                Route::get('toggle-settings-status/{store}/{status}/{menu}', 'CompanyController@store_status')->name('toggle-settings');
-                Route::post('status-filter', 'CompanyController@status_filter')->name('status-filter');
-
-
-
-                Route::get('recommended-store', 'CompanyController@recommended_store')->name('recommended_store');
-                Route::get('recommended-store-add', 'CompanyController@recommended_store_add')->name('recommended_store_add');
-                Route::get('recommended-store-status/{id}/{status}', 'CompanyController@recommended_store_status')->name('recommended_store_status');
-                Route::delete('recommended-store-remove/{id}', 'CompanyController@recommended_store_remove')->name('recommended_store_remove');
-                Route::get('shuffle-recommended-store/{status}', 'CompanyController@shuffle_recommended_store')->name('shuffle_recommended_store');
-
-                Route::get('selected-stores', 'CompanyController@selected_stores')->name('selected_stores');
-
-
-                //Import and export
-                Route::get('bulk-import', 'CompanyController@bulk_import_index')->name('bulk-import');
-                Route::post('bulk-import', 'CompanyController@bulk_import_data');
-                Route::get('bulk-export', 'CompanyController@bulk_export_index')->name('bulk-export-index');
-                Route::post('bulk-export', 'CompanyController@bulk_export_data')->name('bulk-export');
-                //Store shcedule
-                Route::post('add-schedule', 'CompanyController@add_schedule')->name('add-schedule');
-                Route::get('remove-schedule/{store_schedule}', 'CompanyController@remove_schedule')->name('remove-schedule');
-            });
-
-            Route::group(['middleware' => ['module:withdraw_list']], function () {
-                Route::post('withdraw-status/{id}', 'VendorController@withdrawStatus')->name('withdraw_status');
-                Route::get('withdraw_list', 'VendorController@withdraw')->name('withdraw_list');
-                Route::post('withdraw_search', 'VendorController@withdraw_search')->name('withdraw_search');
-                Route::get('withdraw_export', 'VendorController@withdraw_export')->name('withdraw_export');
-                Route::get('withdraw-view/{withdraw_id}/{seller_id}', 'VendorController@withdraw_view')->name('withdraw_view');
-            });
-
-            // message
-            Route::get('message/{conversation_id}/{user_id}', 'VendorController@conversation_view')->name('message-view');
-            Route::get('message/list', 'VendorController@conversation_list')->name('message-list');
-        });
-
-        Route::group(['prefix' => 'company', 'as' => 'company.'], function () {
-            Route::get('add', 'VendorController@company_index')->name('add');
-            Route::post('store', 'VendorController@company_store')->name('store');
-            Route::get('edit/{id}', 'VendorController@company_edit')->name('edit');
-            Route::post('update/{store}', 'VendorController@company_update')->name('update');
-            Route::get('list', 'VendorController@company_list')->name('list');
-            Route::get('export', 'VendorController@company_export')->name('export');
-             Route::delete('delete/{store}', 'VendorController@company_destroy')->name('delete');
-        });
-
 
         Route::get('addon/system-addons', function (){
             return to_route('admin.system-addon.index');
@@ -354,23 +270,8 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('export-orders/{file_type}/{status}/{type}', 'OrderController@export_orders')->name('export');
 
             Route::get('offline/payment/list/{status}', 'OrderController@offline_verification_list')->name('offline_verification_list');
-            Route::get('third-party-company', 'OrderController@third_party_company')->name('third-party-company');
 
         });
-        // Route::group(['prefix' => 'store', 'as' => 'store.','middleware' => ['module:withdraw_list']], function () {
-        //     Route::group(['prefix' => 'offline_payment', 'as' => 'offline_payment.'], function () {
-        //         Route::get('list/{status}', 'OfflinePaymentMethodController@store_offline_verification_list')->name('store_offline_verification_list');
-        //         Route::get('verifications', 'OfflinePaymentMethodController@offline_payment_verification')->name('verifications');
-
-        //     });
-        // });
-        // Route::group(['prefix' => 'delivery_man', 'as' => 'delivery_man.','middleware' => ['module:withdraw_list']], function () {
-        //     Route::group(['prefix' => 'offline_payment', 'as' => 'offline_payment.'], function () {
-        //         Route::get('list/{status}', 'OfflinePaymentMethodController@delivery_man_offline_verification_list')->name('delivery_man_offline_verification_list');
-        //         Route::get('verifications', 'OfflinePaymentMethodController@delivery_man_offline_payment_verification')->name('verifications');
-
-        //     });
-        // });
         // Refund
         Route::group(['prefix' => 'refund', 'as' => 'refund.', 'middleware' => ['module:order']], function () {
             Route::get('settings', 'OrderController@refund_settings')->name('refund_settings');
@@ -386,9 +287,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
 
         Route::group(['prefix' => 'business-settings', 'as' => 'business-settings.', 'middleware' => ['module:settings', 'actch']], function () {
-            Route::get('download-delivery-man-agreement', 'BusinessSettingsController@download_dm_agereement')->name('download-delivery-man-agreement');
-            Route::get('download-store-agreement', 'BusinessSettingsController@download_store_agereement')->name('download-store-agreement');
-            Route::get('download-courier-company-agreement', 'BusinessSettingsController@download_courier_company_agereement')->name('download-courier-company-agreement');
             Route::get('business-setup/{tab?}', 'BusinessSettingsController@business_index')->name('business-setup');
             Route::get('react-setup', 'BusinessSettingsController@react_setup')->name('react-setup');
             Route::post('react-update', 'BusinessSettingsController@react_update')->name('react-update');
@@ -400,6 +298,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('update-websocket', 'BusinessSettingsController@update_websocket')->name('update-websocket');
             Route::post('update-store', 'BusinessSettingsController@update_store')->name('update-store');
             Route::post('update-order', 'BusinessSettingsController@update_order')->name('update-order');
+            Route::post('update-priority', 'BusinessSettingsController@update_priority')->name('update-priority');
             Route::get('app-settings', 'BusinessSettingsController@app_settings')->name('app-settings');
             Route::POST('app-settings', 'BusinessSettingsController@update_app_settings')->name('app-settings');
             Route::get('pages/admin-landing-page-settings/{tab?}', 'BusinessSettingsController@admin_landing_page_settings')->name('admin-landing-page-settings');
@@ -422,7 +321,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::delete('review/delete/{review}', 'BusinessSettingsController@review_destroy')->name('review-delete');
             Route::get('pages/react-landing-page-settings/{tab?}', 'BusinessSettingsController@react_landing_page_settings')->name('react-landing-page-settings');
             Route::POST('pages/react-landing-page-settings/{tab?}',
-            'BusinessSettingsController@update_react_landing_page_settings')->name('react-landing-page-settings');
+                'BusinessSettingsController@update_react_landing_page_settings')->name('react-landing-page-settings');
             Route::DELETE('react-landing-page-settings/{tab}/{key}', 'BusinessSettingsController@delete_react_landing_page_settings')->name('react-landing-page-settings-delete');
             Route::get('review-react-status/{id}/{status}', 'BusinessSettingsController@review_react_status')->name('review-react-status');
             Route::get('pages/react-landing-page-settings/testimonials/review-react-list/edit/{id}', 'BusinessSettingsController@review_react_edit')->name('review-react-edit');
@@ -437,6 +336,12 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('landing-page-settings/{tab?}', 'BusinessSettingsController@landing_page_settings')->name('landing-page-settings');
             Route::POST('landing-page-settings/{tab}', 'BusinessSettingsController@update_landing_page_settings')->name('landing-page-settings');
             Route::DELETE('landing-page-settings/{tab}/{key}', 'BusinessSettingsController@delete_landing_page_settings')->name('landing-page-settings-delete');
+
+            // Centerlize login
+            Route::group(['prefix' => 'login-settings', 'as' => 'login-settings.'], function () {
+                Route::get('login-setup', 'BusinessSettingsController@login_settings')->name('index');
+                Route::post('login-setup/update', 'BusinessSettingsController@login_settings_update')->name('update');
+            });
 
             Route::get('login-url-setup', 'BusinessSettingsController@login_url_page')->name('login_url_page');
             Route::post('login-url-setup/update', 'BusinessSettingsController@login_url_page_update')->name('login_url_update');
@@ -486,6 +391,12 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('social-media/status-update', 'SocialMediaController@social_media_status_update')->name('social-media.status-update');
             Route::resource('pages/social-media', 'SocialMediaController');
 
+
+            Route::get('notification-setup', 'BusinessSettingsController@notification_setup')->name('notification_setup');
+            Route::get('notification-status-change/{key}/{user_type}/{type}', 'BusinessSettingsController@notification_status_change')->name('notification_status_change');
+
+
+
             Route::group(['prefix' => 'file-manager', 'as' => 'file-manager.'], function () {
                 Route::get('/download/{file_name}/{storage?}', 'FileManagerController@download')->name('download');
                 Route::get('/index/{folder_path?}/{storage?}', 'FileManagerController@index')->name('index');
@@ -493,6 +404,10 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::delete('/delete/{file_path}', 'FileManagerController@destroy')->name('destroy');
             });
 
+            Route::group(['prefix' => 'external-system', 'as' => 'external-system.'], function () {
+                Route::get('drivemond-configuration', 'ExternalConfigurationController@index')->name('drivemond-configuration');
+                Route::post('update-drivemond-configuration', 'ExternalConfigurationController@updateDrivemondConfiguration')->name('update-drivemond-configuration');
+            });
             Route::group(['prefix' => 'third-party', 'as' => 'third-party.'], function () {
                 Route::get('sms-module', 'SMSModuleController@sms_index')->name('sms-module');
                 Route::post('sms-module-update/{sms_module}', 'SMSModuleController@sms_update')->name('sms-module-update');
@@ -514,6 +429,9 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 //recaptcha
                 Route::get('recaptcha', 'BusinessSettingsController@recaptcha_index')->name('recaptcha_index');
                 Route::post('recaptcha-update', 'BusinessSettingsController@recaptcha_update')->name('recaptcha_update');
+                //firebase-otp
+                Route::get('firebase-otp', 'BusinessSettingsController@firebase_otp_index')->name('firebase_otp_index');
+                Route::post('firebase-otp-update', 'BusinessSettingsController@firebase_otp_update')->name('firebase_otp_update');
                 //file_system
                 Route::get('storage-connection', 'BusinessSettingsController@storage_connection_index')->name('storage_connection_index');
                 Route::post('storage-connection-update/{name}', 'BusinessSettingsController@storage_connection_update')->name('storage_connection_update');
@@ -544,6 +462,8 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::post('remove-key/{lang}', 'LanguageController@translate_key_remove')->name('remove-key');
                 Route::get('delete/{lang}', 'LanguageController@delete')->name('delete');
                 Route::any('auto-translate/{lang}', 'LanguageController@auto_translate')->name('auto-translate');
+                Route::get('auto-translate-all/{lang}', 'LanguageController@auto_translate_all')->name('auto_translate_all');
+
             });
 
             Route::get('order-cancel-reasons/status/{id}/{status}', 'OrderCancelReasonController@status')->name('order-cancel-reasons.status');
@@ -551,6 +471,11 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('order-cancel-reasons/store', 'OrderCancelReasonController@store')->name('order-cancel-reasons.store');
             Route::put('order-cancel-reasons/update', 'OrderCancelReasonController@update')->name('order-cancel-reasons.update');
             Route::delete('order-cancel-reasons/destroy/{id}', 'OrderCancelReasonController@destroy')->name('order-cancel-reasons.destroy');
+
+            Route::post('automated-message/store', 'AutomatedMessageController@store')->name('automated_message.store');
+            Route::put('automated-message/update', 'AutomatedMessageController@update')->name('automated_message.update');
+            Route::get('automated-message/status/{id}/{status}', 'AutomatedMessageController@status')->name('automated_message.status');
+            Route::delete('automated-message/destroy/{id}', 'AutomatedMessageController@destroy')->name('automated_message.destroy');
 
             Route::group(['namespace' => 'System','prefix' => 'system-addon', 'as' => 'system-addon.', 'middleware'=>['module:user_management']], function () {
                 Route::get('/', 'AddonController@index')->name('index');
@@ -571,14 +496,12 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get('add-fund', 'CustomerWalletController@add_fund_view')->name('add-fund');
                 Route::post('add-fund', 'CustomerWalletController@add_fund');
                 Route::get('report', 'CustomerWalletController@report')->name('report');
-
-
             });
             Route::group(['middleware' => ['module:customer_management']], function () {
 
                 // Subscribed customer Routes
                 Route::get('subscribed', 'CustomerController@subscribedCustomers')->name('subscribed');
-                Route::post('subscriber-search', 'CustomerController@subscriberMailSearch')->name('subscriberMailSearch');
+                // Route::post('subscriber-search', 'CustomerController@subscriberMailSearch')->name('subscriberMailSearch');
                 Route::get('subscriber-search', 'CustomerController@subscribed_customer_export')->name('subscriber-export');
 
                 Route::get('loyalty-point/report', 'LoyaltyPointController@report')->name('loyalty-point.report');
@@ -611,6 +534,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::post('customer-store', 'POSController@customer_store')->name('customer-store');
                 Route::post('add-delivery-address', 'POSController@addDeliveryInfo')->name('add-delivery-address');
                 Route::get('data', 'POSController@extra_charge')->name('extra_charge');
+                Route::get('get-user-data', 'POSController@getUserData')->name('getUserData');
             });
         });
 
@@ -640,7 +564,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::post('store-summary-report-search', 'ReportController@store_summary_search')->name('store-summary-report-search');
             Route::get('store-summary-report-export', 'ReportController@store_summary_export')->name('store-summary-report-export');
             Route::get('store-wise-sales-report', 'ReportController@store_sales_report')->name('store-sales-report');
-            Route::post('store-wise-sales-report-search', 'ReportController@store_sales_search')->name('store-sales-report-search');
             Route::get('store-wise-sales-report-export', 'ReportController@store_sales_export')->name('store-sales-report-export');
             Route::get('store-wise-order-report', 'ReportController@store_order_report')->name('store-order-report');
             Route::post('store-wise-order-report-search', 'ReportController@store_order_search')->name('store-order-report-search');
@@ -706,18 +629,13 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                     Route::post('set-date', 'CustomerWalletController@set_date')->name('set-date');
                     Route::get('report', 'CustomerWalletController@report')->name('report');
                     Route::get('export', 'CustomerWalletController@export')->name('export');
-
-                    //        show wallet to bank req list
-                    Route::get('/show-wallet-transfer-list/{status?}', [WalletMethodController::class, 'showList'])->name('show-wallet-transfer-list');
-                    Route::get('/change-wallet-to-bank-req-status/{walletToBank}/{status?}', [WalletMethodController::class, 'changeWalletToBankStatus'])->name('change-wallet-to-bank-req-status');
-
                 });
 
                 Route::group(['middleware' => ['module:customer_management']], function () {
 
                     // Subscribed customer Routes
                     Route::get('subscribed', 'CustomerController@subscribedCustomers')->name('subscribed');
-                    Route::post('subscriber-search', 'CustomerController@subscriberMailSearch')->name('subscriberMailSearch');
+                    // Route::post('subscriber-search', 'CustomerController@subscriberMailSearch')->name('subscriberMailSearch');
                     Route::get('subscriber-search', 'CustomerController@subscribed_customer_export')->name('subscriber-export');
 
                     Route::get('loyalty-point/report', 'LoyaltyPointController@report')->name('loyalty-point.report');
@@ -777,7 +695,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::post('store-summary-report-search', 'ReportController@store_summary_search')->name('store-summary-report-search');
                 Route::get('store-summary-report-export', 'ReportController@store_summary_export')->name('store-summary-report-export');
                 Route::get('store-wise-sales-report', 'ReportController@store_sales_report')->name('store-sales-report');
-                Route::post('store-wise-sales-report-search', 'ReportController@store_sales_search')->name('store-sales-report-search');
                 Route::get('store-wise-sales-report-export', 'ReportController@store_sales_export')->name('store-sales-report-export');
                 Route::get('store-wise-order-report', 'ReportController@store_order_report')->name('store-order-report');
                 Route::post('store-wise-order-report-search', 'ReportController@store_order_search')->name('store-order-report-search');
@@ -817,6 +734,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get('get-Withdraw-Details', 'VendorController@getWithdrawDetails')->name('getWithdrawDetails');
 
             });
+
             Route::group(['prefix' => 'withdraw-method', 'as' => 'withdraw-method.'], function () {
                 Route::get('list', 'WithdrawalMethodController@list')->name('list');
                 Route::get('create', 'WithdrawalMethodController@create')->name('create');
@@ -827,22 +745,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::post('status-update', 'WithdrawalMethodController@status_update')->name('status-update');
                 Route::post('default-status-update', 'WithdrawalMethodController@default_status_update')->name('default-status-update');
                 Route::get('get-method-info', 'WithdrawalMethodController@getMethodInfo')->name('getMethodInfo');
-
-            });
-            Route::group(['prefix' => 'store', 'as' => 'store.','middleware' => ['module:withdraw_list']], function () {
-                Route::group(['prefix' => 'offline_payment', 'as' => 'offline_payment.'], function () {
-                    Route::get('list/{status}', 'OfflinePaymentMethodController@store_offline_verification_list')->name('store_offline_verification_list');
-                    Route::get('company-list/{status}', 'OfflinePaymentMethodController@company_offline_verification_list')->name('company_offline_verification_list');
-                    Route::get('verifications', 'OfflinePaymentMethodController@offline_payment_verification')->name('verifications');
-
-                });
-            });
-            Route::group(['prefix' => 'delivery_man', 'as' => 'delivery_man.','middleware' => ['module:withdraw_list']], function () {
-                Route::group(['prefix' => 'offline_payment', 'as' => 'offline_payment.'], function () {
-                    Route::get('list/{status}', 'OfflinePaymentMethodController@delivery_man_offline_verification_list')->name('delivery_man_offline_verification_list');
-                    Route::get('verifications', 'OfflinePaymentMethodController@delivery_man_offline_payment_verification')->name('verifications');
-
-                });
             });
 
             Route::group(['prefix' => 'store-disbursement', 'as' => 'store-disbursement.', 'middleware' => ['module:account']], function () {

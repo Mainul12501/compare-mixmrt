@@ -4,10 +4,6 @@
     <link rel="stylesheet" href="{{ asset('public/assets/admin/css/toastr.css') }}">
     <link rel="stylesheet" href="{{ asset('public/assets/admin/css/view-pages/vendor-registration.css') }}">
     <link rel="stylesheet" href="{{ asset('public/assets/landing/css/select2.min.css') }}"/>
-    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/style.css') }}">
-
-    <link rel="stylesheet" href="{{asset('/public/assets/admin/css/intlTelInput.css')}}"/>
-
 @endpush
 @section('content')
     <section class="m-0 py-5">
@@ -25,7 +21,7 @@
         id="form-id">
         @csrf
         <div class="card __card mb-3">
-            <div class="card-header d-flex justify-content-between flex align-items-center ">
+            <div class="card-header">
                 <h5 class="card-title">
                     <svg width="20" x="0" y="0" viewBox="0 0 68 68" class="store-svg-logo" xml:space="preserve">
                         <g>
@@ -72,12 +68,6 @@
                         </g>
                     </svg> {{ translate('messages.store_info') }}
                 </h5>
-
-                            @php($store_agreement = \App\Models\BusinessSetting::where('key', 'store_agreement')->first())
-                            @if ($store_agreement)
-                            <a href="{{route('restaurant.download-store-agreement')}}" class="text-center mr-3 mb-4 cmn--btn border-0 outline-0"> <strong>{{ translate('messages.download_Agreement') }} </strong> </a>
-                            @endif
-
             </div>
             <div class="card-body p-4">
                 @if($language)
@@ -323,106 +313,6 @@
                         </div>
 
 
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-12">
-                    <div class="card shadow--card-2">
-                        <div class="card-header">
-                            <h5 class="card-title">
-                                <span class="card-header-icon mr-1"><i class="tio-dashboard"></i></span>
-                                <span>{{ translate('messages.additional_information') }}</span>
-                            </h5>
-                        </div>
-                        <div class="card-body d-flex justify-content-center align-items-center">
-
-                            <div class="row g-12 w-100 d-flex justify-content-start align-items-center">
-
-
-
-                                <div class="col-md-4 col-lg-4 col-sm-12">
-                                    <div class="form-group">
-                                        <label class="input-label"
-                                            for="tex_id">{{ translate('messages.Tax_Id') }}</label>
-                                        <input type="text" id="tax_id"
-                                            name="tax_id" class="form-control __form-control"
-                                            placeholder="{{ translate('messages.Tax_Id') }}"
-                                            value="{{ old('tax_id') }}" required>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4 col-lg-4 col-sm-12">
-                                    <div class="form-group">
-                                        <label class="input-label"
-                                            for="reg_no">{{ translate('messages.registration_number') }}</label>
-                                        <input type="text" id="reg_no"
-                                            name="register_no" class="form-control __form-control"
-                                            placeholder="{{ translate('messages.registration_number') }}"
-                                            value="{{ old('registration_number') }}" required>
-                                    </div>
-                                </div>
-
-
-
-                                <div class="col-3 card p-5 mx-5">
-                                    <label class="__custom-upload-img">
-                                        <label class="form-label">
-                                            {{ translate('tax_document') }}
-                                        </label>
-
-                                        <div class="text-center">
-                                            <img class="img--110 onerror-image" id="tax_document_view"
-                                                data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                src="{{ asset('public/assets/admin/img/important-file-upload.png') }}"
-                                                alt="tax_document" />
-                                        </div>
-
-                                        <input type="file" name="tax_document" id="tax_document" required
-                                            class="custom-file-input"
-                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                    </label>
-                                </div>
-                                <div class="col-3 card p-5 mx-5">
-                                    <label class="__custom-upload-img">
-                                        <label class="form-label">
-                                            {{ translate('registration_document') }}
-                                        </label>
-
-                                        <div class="text-center">
-                                            <img class="img--110 onerror-image" id="registration_document_view"
-                                                data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                src="{{ asset('public/assets/admin/img/important-file-upload.png') }}"
-                                                alt="registration_document" />
-                                        </div>
-
-                                        <input type="file" name="registration_document" id="registration_document" required
-                                            class="custom-file-input"
-                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                    </label>
-                                </div>
-                                <div class="col-4 card p-5 mx-5">
-                                    <label class="__custom-upload-img">
-                                        <label class="form-label">
-                                            {{ translate('agreement/contact document  ') }}
-                                        </label>
-
-                                        <div class="text-center">
-                                            <img class="img--110 onerror-image" id="agreement_document_view"
-                                                data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                                src="{{ asset('public/assets/admin/img/important-file-upload.png') }}"
-                                                alt="agreement_document" />
-                                        </div>
-
-                                        <input type="file" name="agreement_document" id="agreement_document" required
-                                            class="custom-file-input"
-                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                    </label>
-                                </div>
-
-
-                            </div>
-
                     </div>
                 </div>
             </div>
@@ -555,72 +445,14 @@
 
     @endsection
     @push('script_2')
-        <script src="{{asset('public/assets/admin/js/intlTelInputCdn.min.js')}}"></script>
-        <script src="{{asset('public/assets/admin/js/intlTelInputCdn-jquery.min.js')}}"></script>
+
         <script src="{{ asset('public/assets/admin/js/spartan-multi-image-picker.js') }}"></script>
         <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
         <script
             src="https://maps.googleapis.com/maps/api/js?key={{ \App\Models\BusinessSetting::where('key', 'map_api_key')->first()->value }}&libraries=drawing,places&v=3.45.8">
         </script>
-
-<script>
-    $("#tax_document").change(function() {
-        var fallbackImageUrl = $("#tax_document_view").data("onerror-image");
-        $("#tax_document_view").on("error", function() {
-            $(this).attr("src", fallbackImageUrl);
-        });
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $("#tax_document_view").attr("src", e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-    $("#registration_document").change(function() {
-        var fallbackImageUrl = $("#registration_document_view").data("onerror-image");
-        $("#registration_document_view").on("error", function() {
-            $(this).attr("src", fallbackImageUrl);
-        });
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $("#registration_document_view").attr("src", e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-    $("#agreement_document").change(function() {
-        var fallbackImageUrl = $("#agreement_document_view").data("onerror-image");
-        $("#agreement_document_view").on("error", function() {
-            $(this).attr("src", fallbackImageUrl);
-        });
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $("#agreement_document_view").attr("src", e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-</script>
         <script type="text/javascript">
             "use strict";
-            @php($country=\App\Models\BusinessSetting::where('key','country')->first())
-            let phone = $("#phone").intlTelInput({
-                utilsScript: "{{asset('public/assets/admin/js/intlTelInputCdn-utils.min.js')}}",
-                autoHideDialCode: true,
-                autoPlaceholder: "ON",
-                dropdownContainer: document.body,
-                formatOnDisplay: true,
-                hiddenInput: "phone",
-                initialCountry: "{{$country?$country->value:auto}}",
-                placeholderNumberType: "MOBILE",
-                separateDialCode: true
-            });
             @php($default_location = \App\Models\BusinessSetting::where('key', 'default_location')->first())
             @php($default_location = $default_location->value ? json_decode($default_location->value, true) : 0)
             let myLatlng = {

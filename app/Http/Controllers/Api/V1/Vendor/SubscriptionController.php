@@ -12,6 +12,7 @@ use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
 use App\Mail\SubscriptionCancel;
 use App\Models\StoreSubscription;
+use Illuminate\Support\Facades\DB;
 use App\Models\SubscriptionPackage;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
@@ -179,8 +180,25 @@ class SubscriptionController extends Controller
         ]);
 
         try {
-            $store=Store::where('id',$request->store_id)->select(['id','name','email'])->first();
-            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1') {
+            $store=Store::where('id',$request->store_id)->first();
+            if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                $data = [
+                    'title' => translate('subscription_canceled'),
+                    'description' => translate('Your_subscription_has_been_canceled'),
+                    'order_id' => '',
+                    'image' => '',
+                    'type' => 'subscription',
+                    'order_status' => '',
+                ];
+                Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                DB::table('user_notifications')->insert([
+                    'data' => json_encode($data),
+                    'vendor_id' => $store?->vendor_id,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+            if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1' && Helpers::getNotificationStatusData('store','store_subscription_cancel','mail_status' ,$store?->id)) {
                 Mail::to($store->email)->send(new SubscriptionCancel($store->name));
             }
         } catch (\Exception $ex) {

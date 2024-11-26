@@ -174,11 +174,11 @@
             nav:false,
             dots:false,
             items: 3,
-            center: true,
+            // center: true,
             // autoplay:true,
             // autoplayTimeout:2500,
             // autoplayHoverPause:true,
-            startPosition: 0,
+            startPosition: 1,
 
             responsive:{
                 0: {

@@ -108,18 +108,12 @@ class Category extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('category',$value);
-                    }else{
-                        return Helpers::local_storage_link('category',$value);
-                    }
+                    return Helpers::get_full_url('category',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('category',$value);
+        return Helpers::get_full_url('category',$value,'public');
     }
 
     protected static function boot()

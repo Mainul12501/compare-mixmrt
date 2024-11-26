@@ -32,8 +32,7 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-4 col-sm-6">
-                                    <div>    
-                                        <input id="store_type"  type="hidden"  name="store_type" class="form-control" value="{{ \App\CentralLogics\Helpers::get_store_data()->store_type}}">                                 
+                                    <div>
                                         <label class="input-label" for="f_name">{{translate('messages.first_name')}}</label>
                                         <input id="f_name"  type="text"  name="f_name" class="form-control" placeholder="{{translate('messages.first_name')}}"
                                                 required>
@@ -53,22 +52,6 @@
                                                 required>
                                     </div>
                                 </div>
-                          @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'company')
-                          <div class="col-md-4 col-sm-6">
-                            <div class="form-group m-0">
-                                <label class="input-label"
-                                    for="exampleFormControlInput1">{{ translate('messages.Vehicle') }}</label>
-                                <select name="vehicle_id" class="form-control js-select2-custom h--45px" required
-                                    data-placeholder="{{ translate('messages.select_vehicle') }}">
-                                    <option value="" readonly="true" hidden="true">{{ translate('messages.select_vehicle') }}</option>
-                                    @foreach (\App\Models\DMVehicle::where('status',1)->get(['id','type']) as $v)
-                                                <option value="{{ $v->id }}" >{{ $v->type }}
-                                                </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                          @endif
                                 <div class="col-md-4 col-sm-6">
                                     <div>
                                         <label class="input-label" for="identity_type">{{translate('messages.identity_type')}}</label>
@@ -113,38 +96,16 @@
                             <small class="text-danger">* ( {{translate('messages.ratio')}} 1:1 )</small></h5>
                         </div>
                         <div class="card-body d-flex flex-column">
-                            <div class="text-center">
-                                <img class="img--110 min-height-170px min-width-170px onerror-image" id="viewer"
-                                data-onerror-image="{{ asset('public/assets/admin/img/upload.png') }}"
-                                    src="{{ asset('public/assets/admin/img/upload-img.png') }}"
-                                    alt="logo image" />
+                            <div class="text-center my-auto py-3">
+                                <img class="img--100" id="viewer" src="{{asset('public/assets/admin/img/400x400/img2.jpg')}}" alt="delivery-man image"/>
                             </div>
-
                             <div class="custom-file">
-                                <input type="file" name="image" id="deliveryman_image" class="custom-file-input read-url"
+                                <input type="file" name="image" id="customFileEg1" class="custom-file-input read-url"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                <label class="custom-file-label" for="deliveryman_image">{{translate('messages.choose_file')}}</label>
+                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-4 p-3">
-                    <label class="__custom-upload-img">
-                        <label class="form-label">
-                            {{ translate('agreement/contact document') }}
-                        </label>
-
-                        <div class="text-center">
-                            <img class="img--110 onerror-image" id="agreement_document_view"
-                                data-onerror-image="{{ asset('public/assets/admin/img/important-file.png') }}"
-                                src="{{ asset('public/assets/admin/img/important-file-upload.png') }}"
-                                alt="registration_document" />
-                        </div>
-
-                        <input type="file" name="agreement_document" id="agreement_document" required
-                            class="custom-file-input"
-                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff, .pdf, .doc, .docx|image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                    </label>
                 </div>
                 <div class="col-md-12">
                     <div class="card">
@@ -314,9 +275,7 @@
                 }
             });
         });
-    $("#deliveryman_image").change(function () {
-        readURL(this, 'viewer');
-    });
+
         $('#reset_btn').click(function(){
             $('#viewer').attr('src','{{asset('public/assets/admin/img/400x400/img2.jpg')}}');
             $("#coba").empty().spartanMultiImagePicker({
@@ -354,20 +313,4 @@
         });
         })
     </script>
-            <script>
-                $("#agreement_document").change(function() {
-                var fallbackImageUrl = $("#agreement_document_view").data("onerror-image");
-                $("#agreement_document_view").on("error", function() {
-                    $(this).attr("src", fallbackImageUrl);
-                });
-                var file = this.files[0];
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        $("#agreement_document_view").attr("src", e.target.result);
-                    }
-                    reader.readAsDataURL(file);
-                }
-                  });
-                </script>
 @endpush

@@ -7,7 +7,6 @@
 @endpush
 
 @section('content')
-@php($offline_payments = \App\Models\OfflinePaymentMethod::where('status', 1)->latest()->paginate(config('default_pagination')))
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
@@ -99,37 +98,19 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">{{translate('messages.Pay')}}  </h5>
+                    <h5 class="modal-title" id="exampleModalLabel">{{translate('messages.Pay_Via_Online')}}  </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
 
                 </div>
-           {{-- <div class="row">
-            <div class="col-md-6">
-                <a class="btn btn--primary d-flex gap-1 align-items-center text-nowrap"  href="javascript:" data-toggle="modal" data-target="#payment_model">{{translate('messages.Pay_Now')}}
-                    <span class="form-label-secondary  d-flex" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Adjust_the_payable_&_withdrawable_balance_with_your_wallet_(Cash_in_Hand)_or_click_‘Pay_Now’.')}}"> <i class="tio-info-outined"> </i> </span> </span></a>
-               </div>
-               <div class="col-md-6">
-                <a class="btn btn--primary d-flex gap-1 align-items-center text-nowrap"  href="javascript:" data-toggle="modal" data-target="#payment_model">{{translate('messages.Pay_Now')}}
-                    <span class="form-label-secondary  d-flex" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('Adjust_the_payable_&_withdrawable_balance_with_your_wallet_(Cash_in_Hand)_or_click_‘Pay_Now’.')}}"> <i class="tio-info-outined"> </i> </span> </span></a>
-               </div>
-           </div> --}}
-                <form action="{{ route('vendor.wallet.make_payment') }}" method="get" class="needs-validation">
+                <form action="{{ route('vendor.wallet.make_payment') }}" method="POST" class="needs-validation">
                     <div class="modal-body">
                         @csrf
-                        <label for="" class="d-flex align-items-start gap-3 mb-1">
-                            {{ translate('messages.payment_method') }}
-                        </label>
-                        <select name="payment_method" class="form-control" id="payment_method">
-                            <option value="0" disabled>{{ translate('messages.select_payment_type') }}</option>
-                            <option value="offline">{{ translate('messages.Pay_Via_offline') }}</option>
-                            <option value="online">{{ translate('messages.Pay_Via_Online') }}</option>
-                        </select>
                         <input type="hidden" value="{{ \App\CentralLogics\Helpers::get_store_id() }}" name="store_id"/>
-                        <input type="hidden" value="{{ abs($wallet->collected_cash) }}" name="amount"/>
-                        {{-- <h5 class="mb-5 "><input type="radio" required name="payment_method" value="online_payment"> {{ translate('Pay_Via_Online') }} &nbsp; <small>({{ translate('Faster_&_secure_way_to_pay_bill') }})</small></h5> --}}
-                        <div class="row g-3 mt-3 online_payment d-none" id="online_payment">
+                        <input type="hidden" value="{{  abs($wallet->collected_cash) }}" name="amount"/>
+                        <h5 class="mb-5 ">{{ translate('Pay_Via_Online') }} &nbsp; <small>({{ translate('Faster_&_secure_way_to_pay_bill') }})</small></h5>
+                        <div class="row g-3">
                             @forelse ($data as $item)
                                 <div class="col-sm-6">
                                     <div class="d-flex gap-3 align-items-center">
@@ -137,22 +118,6 @@
                                         <label for="{{$item['gateway'] }}" class="d-flex align-items-center gap-3 mb-0">
                                             <img height="24" src="{{ asset('storage/app/public/payment_modules/gateway_image/'. $item['gateway_image']) }}" alt="">
                                             {{ $item['gateway_title'] }}
-                                        </label>
-                                    </div>
-                                </div>
-                            @empty
-                                <h1>{{ translate('no_payment_gateway_found') }}</h1>
-                            @endforelse
-                        </div>
-                        {{-- <h5 class="mt-5 "><input type="radio" required name="payment_method" value="offline_payment">{{ translate('Pay_Via_offline') }} &nbsp; <small>({{ translate('Faster_&_secure_way_to_pay_bill') }})</small></h5> --}}
-                        <div class="row g-3 mt-3 offline_payment d-none" id="offline_payment">
-                            @forelse ($offline_payments as $item)
-                                <div class="col-sm-6">
-                                    <div class="d-flex gap-3 align-items-center">
-                                        <input type="radio" required id="{{$item['method_name'] }}" name="payment_gateway" value="{{$item['method_name'] }}">
-                                        <label for="{{$item['method_name'] }}" class="d-flex align-items-center gap-3 mb-0">
-                                            
-                                            {{ $item['method_name'] }}
                                         </label>
                                     </div>
                                 </div>
@@ -247,5 +212,11 @@ $('.payment-warning').on('click',function (event ){
                     ProgressBar: true
                 });
         });
+$(document).ready(function() {
+    $("#withdraw_form").on("submit", function(event) {
+        $('#set_disable').attr('disabled', true);
+
+    });
+});
     </script>
 @endpush

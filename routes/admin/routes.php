@@ -18,6 +18,7 @@ use App\Enums\ViewPaths\Admin\DeliveryMan;
 use App\Enums\ViewPaths\Admin\WalletBonus;
 use App\Enums\ViewPaths\Admin\Notification;
 use App\Enums\ViewPaths\Admin\CommonCondition;
+use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\Item\UnitController;
 use App\Http\Controllers\Admin\Zone\ZoneController;
 use App\Http\Controllers\Admin\Item\AddonController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Admin\Customer\WalletBonusController;
 use App\Http\Controllers\Admin\Item\CommonConditionController;
 use App\Http\Controllers\Admin\DeliveryMan\DmVehicleController;
 use App\Http\Controllers\Admin\DeliveryMan\DeliveryManController;
+use App\Http\Controllers\Admin\Promotion\AdvertisementController;
 use App\Http\Controllers\Admin\Notification\NotificationController;
 use App\Http\Controllers\Admin\Subscription\SubscriptionController;
 
@@ -43,7 +45,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
     Route::get(Zone::GET_ALL_ZONE_COORDINATES[URI].'/{id?}', [ZoneController::class, 'getAllZoneCoordinates'])->name('zone.zoneCoordinates');
 
     Route::group(['middleware' => ['admin', 'current-module']], function () {
-
+        Route::get('store/get-store-ratings', [VendorController::class,'get_store_ratings'])->name('store.get-store-ratings');
         Route::group(['prefix' => 'category', 'as' => 'category.'], function () {
             Route::get(Category::NAME_LIST[URI], [CategoryController::class, 'getNameList'])->name('get-all');
             Route::group(['middleware' => ['module:category']], function () {
@@ -163,6 +165,28 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get(Brand::STATUS[URI].'/{id}/{status}', [BrandController::class,'updateStatus'])->name('status');
         });
 
+
+        Route::group([ 'prefix' => 'advertisement', 'as' => 'advertisement.' ,'middleware' => ['module:advertisement']], function () {
+
+            Route::get('/', [AdvertisementController::class,'index'])->name('index');
+            Route::get('create/', [AdvertisementController::class,'create'])->name('create');
+            Route::get('details/{advertisement}', [AdvertisementController::class,'show'])->name('show');
+            Route::get('{advertisement}/edit', [AdvertisementController::class,'edit'])->name('edit');
+            Route::post('store', [AdvertisementController::class,'store'])->name('store');
+            Route::put('update/{advertisement}', [AdvertisementController::class,'update'])->name('update');
+            Route::delete('delete/{id}', [AdvertisementController::class,'destroy'])->name('destroy');
+
+            Route::get('/status', [AdvertisementController::class,'status'])->name('status');
+            Route::get('/paidStatus', [AdvertisementController::class,'paidStatus'])->name('paidStatus');
+            Route::get('/priority', [AdvertisementController::class,'priority'])->name('priority');
+            Route::get('/requests', [AdvertisementController::class,'requestList'])->name('requestList');
+            Route::get('/copy-advertisement/{advertisement}', [AdvertisementController::class,'copyAdd'])->name('copyAdd');
+            Route::get('/updateDate/{advertisement}', [AdvertisementController::class,'updateDate'])->name('updateDate');
+            Route::post('/copy-add-post/{advertisement}', [AdvertisementController::class,'copyAddPost'])->name('copyAddPost');
+
+        });
+
+
         Route::group(['prefix' => 'business-settings', 'as' => 'business-settings.'], function () {
 
             Route::group(['prefix' => 'subscription' ,'middleware' => ['module:subscription']], function () {
@@ -223,7 +247,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get(Module::TYPE[URI], [ModuleController::class, 'getType'])->name('type');
                 Route::post(Module::SEARCH[URI], [ModuleController::class, 'search'])->name('search');
                 Route::get(Module::EXPORT[URI], [ModuleController::class, 'exportList'])->name('export');
-                Route::get(Module::SHOW[URI].'/{id}', [ModuleController::class, 'show'])->name('show');
+                Route::get(Module::SHOW[URI].'/{id}', [ModuleController::class, 'show'])->name('show')->withoutMiddleware('module:module');
             });
         });
 
@@ -272,7 +296,6 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                     Route::get(DeliveryMan::ADD[URI], [DeliveryManController::class, 'getAddView'])->name('add');
                     Route::post(DeliveryMan::ADD[URI], [DeliveryManController::class, 'add'])->name('store');
                     Route::get(DeliveryMan::LIST[URI], [DeliveryManController::class, 'index'])->name('list');
-                    Route::get('dm-pending-disbursement-requests', [DeliveryManController::class, 'pending_method_requests'])->name('dm-pending-disbursement-requests');
                     Route::get(DeliveryMan::NEW[URI], [DeliveryManController::class, 'getNewDeliveryManView'])->name('new');
                     Route::get(DeliveryMan::DENY[URI], [DeliveryManController::class, 'getDeniedDeliveryManView'])->name('deny');
                     Route::get(DeliveryMan::PREVIEW[URI].'/{id}/{tab?}', [DeliveryManController::class, 'getPreview'])->name('preview');

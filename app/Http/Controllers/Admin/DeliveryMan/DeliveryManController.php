@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Admin\DeliveryMan;
 
-use App\Models\DisbursementWithdrawalMethod;
 use Exception;
 use App\Models\Order;
 use Illuminate\View\View;
 use App\Mail\DmSuspendMail;
 use Illuminate\Http\Request;
+use App\CentralLogics\Helpers;
 use App\Mail\DmSelfRegistration;
 use App\Traits\NotificationTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use App\Models\DisbursementDetails;
 use App\Services\DeliveryManService;
 use Brian2694\Toastr\Facades\Toastr;
@@ -41,8 +42,6 @@ use App\Contracts\Repositories\ConversationRepositoryInterface;
 use App\Enums\ViewPaths\Admin\DeliveryMan as DeliveryManViewPath;
 use App\Contracts\Repositories\OrderTransactionRepositoryInterface;
 use App\Contracts\Repositories\UserNotificationRepositoryInterface;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
 
 class DeliveryManController extends BaseController
 {
@@ -58,12 +57,6 @@ class DeliveryManController extends BaseController
         protected DeliveryManService $deliveryManService,
     )
     {
-    }
-
-    public function pending_method_requests()
-    {
-        $disbursementWithdrawlMethods = DisbursementWithdrawalMethod::where('pending_status', 1)->where('delivery_man_id', '!=', null)->with('store', 'deliveryMan', 'withdrawalMethod')->paginate(config('default_pagination'));
-        return view('admin-views.delivery-man.pending_method_requests', compact('disbursementWithdrawlMethods'));
     }
 
     public function index(?Request $request): View|Collection|LengthAwarePaginator|null
@@ -108,7 +101,7 @@ class DeliveryManController extends BaseController
         return view(DeliveryManViewPath::NEW[VIEW], compact('deliveryMen','zone','searchBy'));
     }
 
-    public function getDeniedDeliveryManView(Request $request)/*: View*/
+    public function getDeniedDeliveryManView(Request $request): View
     {
         $searchBy = $request->query('search_by');
         $zoneId = $request->query('zone_id', 'all');
@@ -188,12 +181,13 @@ class DeliveryManController extends BaseController
 
     public function updateStatus(Request $request,UserNotificationRepositoryInterface $notificationRepo): RedirectResponse
     {
-        $deliveryMan = $this->deliveryManRepo->update(id: $request['id'] ,data: ['status'=>$request['status'], 'reason' => $request->reason]);
+        $deliveryMan = $this->deliveryManRepo->update(id: $request['id'] ,data: ['status'=>$request['status']]);
 
 
             if($request['status'] == 0)
             {   $deliveryMan->auth_token = null;
-                if(isset($deliveryMan->fcm_token))
+
+                if(isset($deliveryMan->fcm_token) &&  Helpers::getNotificationStatusData('deliveryman','deliveryman_account_block','push_notification_status'))
                 {
                     $data = [
                         'title' => translate('messages.suspended'),
@@ -214,12 +208,31 @@ class DeliveryManController extends BaseController
                 else{
                     Toastr::warning(translate('messages.push_notification_failed'));
                 }
+            } else{
+                if( Helpers::getNotificationStatusData('deliveryman','deliveryman_account_unblock','push_notification_status') && isset($deliveryMan->fcm_token))
+                {
+                    $data = [
+                        'title' => translate('messages.Account_activation'),
+                        'description' => translate('messages.your_account_has_been_activated'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type'=> 'unblock'
+                    ];
+                    Helpers::send_push_notif_to_device($deliveryMan->fcm_token, $data);
+
+                    DB::table('user_notifications')->insert([
+                        'data'=> json_encode($data),
+                        'delivery_man_id'=>$deliveryMan->id,
+                        'created_at'=>now(),
+                        'updated_at'=>now()
+                    ]);
+                }
             }
             try {
-                if (config('mail.status') && getWebConfigStatus('suspend_mail_status_dm') == '1' &&  $request['status'] == 0) {
+                if (config('mail.status') && getWebConfigStatus('suspend_mail_status_dm') == '1' &&  $request['status'] == 0 && Helpers::getNotificationStatusData('deliveryman','deliveryman_account_block','mail_status') ) {
                     Mail::to($deliveryMan['email'])->send(new DmSuspendMail('suspend',$deliveryMan['f_name']));
                 }
-                elseif(config('mail.status') && getWebConfigStatus('unsuspend_mail_status_dm') == '1' &&  $request['status'] != 0){
+                elseif(config('mail.status') && getWebConfigStatus('unsuspend_mail_status_dm') == '1' &&  $request['status'] != 0 && Helpers::getNotificationStatusData('deliveryman','deliveryman_account_unblock','mail_status')){
                     Mail::to($deliveryMan['email'])->send(new DmSuspendMail('unsuspend',$deliveryMan['f_name']));
                 }
             }  catch (Exception) {
@@ -319,14 +332,13 @@ class DeliveryManController extends BaseController
 
     }
 
-    public function getPreview(Request $request, int|string $id, string $tab='info')
+    public function getPreview(Request $request, int|string $id, string $tab='info'): View
     {
         $deliveryMan = $this->deliveryManRepo->getFirstWhere(params: ['type' => 'zone_wise','id' => $id], relations: ['reviews']);
-        $disbursementWithdrawalMethods = DisbursementWithdrawalMethod::where(['delivery_man_id' => $id])->get();
         if($tab == 'info')
         {
             $reviews = $this->dmReviewRepo->getListWhere(filters: ['delivery_man_id'=>$id], dataLimit: config('default_pagination'));
-            return view(DeliveryManViewPath::INFO[VIEW], compact('deliveryMan', 'reviews', 'disbursementWithdrawalMethods'));
+            return view(DeliveryManViewPath::INFO[VIEW], compact('deliveryMan', 'reviews'));
         }
         else if($tab == 'transaction')
         {
@@ -360,7 +372,7 @@ class DeliveryManController extends BaseController
             $conversations = [];
         }
 
-        return view(DeliveryManViewPath::CONVERSATION[VIEW], compact('conversations','deliveryMan', 'disbursementWithdrawalMethods'));
+        return view(DeliveryManViewPath::CONVERSATION[VIEW], compact('conversations','deliveryMan'));
 
     }
 
@@ -433,19 +445,19 @@ class DeliveryManController extends BaseController
 
     public function updateApplication(Request $request): RedirectResponse
     {
-        $deliveryMan = $this->deliveryManRepo->update(id: $request['id'] ,data: ['application_status'=>$request['status'], 'reason' => $request->reason]);
+        $deliveryMan = $this->deliveryManRepo->update(id: $request['id'] ,data: ['application_status'=>$request['status']]);
         if($request['status'] == 'approved') $this->deliveryManRepo->update(id: $request['id'] ,data: ['status'=>1]);
         try{
             if($request['status']=='approved'){
 
                 $mail_status = getWebConfigStatus('approve_mail_status_dm');
-                if(config('mail.status') && $mail_status == '1'){
+                if(config('mail.status') && $mail_status == '1'  && Helpers::getNotificationStatusData('deliveryman','deliveryman_registration_approval','mail_status')){
                     Mail::to($deliveryMan->email)->send(new DmSelfRegistration('approved',$deliveryMan->f_name.' '.$deliveryMan->l_name));
                 }
             }else{
 
                 $mail_status = getWebConfigStatus('deny_mail_status_dm');
-                if(config('mail.status') && $mail_status == '1'){
+                if(config('mail.status') && $mail_status == '1' && Helpers::getNotificationStatusData('deliveryman','deliveryman_registration_deny','mail_status')){
                     Mail::to($deliveryMan->email)->send(new DmSelfRegistration('denied', $deliveryMan->f_name.' '.$deliveryMan->l_name));
                 }
             }
@@ -482,12 +494,6 @@ class DeliveryManController extends BaseController
             return Excel::download(new DisbursementHistoryExport($data), 'Disbursementlist.xlsx');
         } else if ($request->type == 'csv') {
             return Excel::download(new DisbursementHistoryExport($data), 'Disbursementlist.csv');
-        }
-    }
-    public function download_document($fileName){
-        $path = '/delivery-man/';
-        if (Storage::disk('public')->exists($path . $fileName)) {
-            return Response::download(storage_path('app/public/delivery-man/' . $fileName));
         }
     }
 }

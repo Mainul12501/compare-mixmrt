@@ -47,6 +47,7 @@ return [
             'table' => 'cache',
             'connection' => null,
             'lock_connection' => null,
+            'serializer' => 'json',
         ],
 
         'file' => [

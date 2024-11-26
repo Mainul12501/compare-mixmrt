@@ -180,12 +180,7 @@ active
                                 <td class="px-4 text-center">{{ $k + $subscribers->firstItem() }}</td>
                                 <td class="px-4">
                                     <a href="{{route('admin.store.view', $subscriber->id)}}" alt="view restaurant" class="table-rest-info">
-                                        <img src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                            $subscriber,'logo',
-                                            asset('storage/app/public/store').'/'.$subscriber->logo ?? '',
-                                            asset('public/assets/admin/img/100x100/1.png'),
-                                            'store/'
-                                        ) }}" >
+                                        <img src="{{ $subscriber->logo_full_url ?? asset('public/assets/admin/img/100x100/1.png') }}" >
                                         <div class="info">
                                             <span class="d-block text-title">
                                                 {{ $subscriber->name }}<br>
@@ -198,7 +193,7 @@ active
                                     </a>
                                 </td>
                                 <td class="px-4">
-                                    <div>{{ $subscriber?->store_sub_update_application?->package?->package_name }}</div>
+                                    <div>{{ $subscriber?->store_sub_update_application?->package?->package_name  ?? translate('Package_Not_Found!')}}</div>
                                 </td>
                                 <td class="px-4">
                                     <div class="text-title">{{  \App\CentralLogics\Helpers::format_currency($subscriber?->store_sub_update_application?->package?->price) }}</div>

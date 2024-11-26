@@ -19,6 +19,12 @@ class DataSetting extends Model
         // 'status' => 'integer',
     ];
 
+    protected $fillable = [
+        'key',
+        'type',
+        'value'
+    ];
+
     public function translations()
     {
         return $this->morphMany(Translation::class, 'translationable');

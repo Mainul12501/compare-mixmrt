@@ -102,7 +102,7 @@
                             <div class="text-center py-3 my-auto">
                                 <img class="img--100 onerror-image" id="viewer"
                                 data-onerror-image="{{asset('/public/assets/admin/img/admin.png')}}"
-                                src="{{\App\CentralLogics\Helpers::get_image_helper($employee,'image', asset('storage/app/public/admin/').'/'.$employee['image'], asset('public/assets/admin/img/admin.png'), 'admin/') }}" alt="Employee thumbnail"/>
+                                src="{{ $employee['image_full_url'] }}" alt="Employee thumbnail"/>
                             </div>
                             <div class="custom-file">
                                 <input type="file" name="image" id="customFileUpload" class="custom-file-input"

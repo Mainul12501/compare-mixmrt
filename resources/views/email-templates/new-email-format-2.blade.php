@@ -148,14 +148,15 @@ width: 24px;
             <tr>
                 <td class="main-table-td">
                     <img class="mail-img-1"
-                    src="{{\App\CentralLogics\Helpers::get_image_helper( $data, 'logo', asset('storage/app/public/email_template/').'/'.data_get($data, 'logo'), asset('public/assets/admin/img/emai_demo_template_2.png'), 'email_template/') }}"
+                    src="{{ $data['logo_full_url'] ?? asset('/public/assets/admin/img/blank1.png') }}"
                     id="logoViewer" alt="">
-                    
+
                     <h2 id="mail-title" class="mt-2">{{ $title?? translate('Main_Title_or_Subject_of_the_Mail') }}</h2>
                     <div class="mb-1" id="mail-body">{!! $body?? translate('Hi_Sabrina,') !!}</div>
                     @if ($data?->button_url)
                     <span class="d-block text-center" style="margin-top: 16px">
-                    <a href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+                                        <a type="button" href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>
+
                     </span>
                     @endif                   <hr>
                     <div class="mb-2" id="mail-footer">

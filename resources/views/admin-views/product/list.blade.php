@@ -170,7 +170,7 @@
                     <!-- End Unfold -->
                     @if (Config::get('module.current_module_type') != 'food')
                     <div>
-                        <a href="{{ route('admin.report.stock-report') }}" class="btn btn--primary font-regular">{{translate('messages.limited_stock')}}</a>
+                        <a href="{{ route('admin.report.stock-report') }}" class="btn btn--primary font-regular">{{translate('messages.Low_Stock_List')}}</a>
                     </div>
                     @endif
                     @if (\App\CentralLogics\Helpers::get_mail_status('product_approval'))
@@ -208,6 +208,9 @@
                         <th class="border-0">{{translate('sl')}}</th>
                         <th class="border-0">{{translate('messages.name')}}</th>
                         <th class="border-0">{{translate('messages.category')}}</th>
+                        @if (Config::get('module.current_module_type') != 'food')
+                        <th class="border-0">{{translate('messages.quantity')}}</th>
+                        @endif
                         <th class="border-0">{{translate('messages.store')}}</th>
                         <th class="border-0 text-center">{{translate('messages.price')}}</th>
                         <th class="border-0 text-center">{{translate('messages.status')}}</th>
@@ -223,12 +226,7 @@
                                 <a class="media align-items-center" href="{{route('admin.item.view',[$item['id']])}}">
                                     <img class="avatar avatar-lg mr-3 onerror-image"
 
-                                    src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                        $item,'image',
-                                        asset('storage/app/public/product').'/'.$item['image'] ?? '',
-                                        asset('public/assets/admin/img/160x160/img2.jpg'),
-                                        'product/'
-                                    ) }}"
+                                    src="{{ $item['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
 
                                     data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->name}} image">
                                     <div title="{{ $item['name'] }}" class="media-body">
@@ -239,6 +237,14 @@
                             <td title="{{ $item?->category?->name }}">
                             {{Str::limit($item->category?$item->category->name:translate('messages.category_deleted'),20,'...')}}
                             </td>
+                            @if (Config::get('module.current_module_type') != 'food')
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="text-hover-primary fw-medium mb-0">{{$item->stock}}</h5>
+                                    <span data-toggle="modal"  data-id="{{ $item->id }}"  data-target="#update-quantity" class="text-primary tio-add-circle fs-22 cursor-pointer update-quantity"></span>
+                                </div>
+                            </td>
+                            @endif
                             <td>
                                 @if ($item->store)
                                 <a title="{{ $item?->store?->name }}" href="{{route('admin.store.view', $item->store->id)}}" class="table-rest-info" alt="view store"> {{  Str::limit($item->store->name, 20, '...') }}</a>
@@ -297,6 +303,30 @@
             <!-- End Table -->
         </div>
         <!-- End Card -->
+    </div>
+
+    {{-- Add Quantity Modal --}}
+    <div class="modal fade update-quantity-modal" id="update-quantity" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body pt-0">
+
+                    <form action="{{route('admin.item.stock-update')}}" method="post">
+                        @csrf
+                        <div class="mt-2 rest-part w-100"></div>
+                        <div class="btn--container justify-content-end">
+                            <button type="reset" data-dismiss="modal" aria-label="Close" class="btn btn--reset">{{translate('cancel')}}</button>
+                            <button type="submit" id="submit_new_customer" class="btn btn--primary">{{translate('update_stock')}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
 @endsection
@@ -452,5 +482,36 @@
                 }
             }
         });
+
+        $('.update-quantity').on('click', function (){
+        let val = $(this).data('id');
+        $.get({
+            url: '{{ route('admin.item.get_stock') }}',
+            data: { id: val },
+            dataType: 'json',
+            success: function (data) {
+                $('.rest-part').empty().html(data.view);
+                update_qty();
+            },
+        });
+    })
+
+    function update_qty() {
+            let total_qty = 0;
+            let qty_elements = $('input[name^="stock_"]');
+            for (let i = 0; i < qty_elements.length; i++) {
+                total_qty += parseInt(qty_elements.eq(i).val());
+            }
+            if(qty_elements.length > 0)
+            {
+
+                $('input[name="current_stock"]').attr("readonly", 'readonly');
+                $('input[name="current_stock"]').val(total_qty);
+            }
+            else{
+                $('input[name="current_stock"]').attr("readonly", false);
+            }
+        }
+
     </script>
 @endpush

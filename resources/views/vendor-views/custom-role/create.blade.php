@@ -158,13 +158,6 @@
                             <label class="form-check-label input-label " for="chat">{{translate('messages.chat')}}</label>
                         </div>
                     </div>
-                    {{-- <div class="check-item">
-                        <div class="form-group form-check form--check">
-                            <input type="checkbox" name="modules[]" value="parcel" class="form-check-input"
-                                    id="parcel">
-                            <label class="form-check-label input-label " for="parcel">{{translate('messages.parcel')}}</label>
-                        </div>
-                    </div> --}}
                 </div>
                 <div class="btn--container justify-content-end mt-4">
                     <button type="reset" class="btn btn--reset">{{translate('messages.reset')}}</button>

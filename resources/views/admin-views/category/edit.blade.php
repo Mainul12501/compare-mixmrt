@@ -96,7 +96,7 @@ active
                                 </label>
                                 <label class="text-center my-auto position-relative d-inline-block">
                                     <img class="img--176 border" id="viewer"
-                                    src="{{\App\CentralLogics\Helpers::get_image_helper($category,'image', asset('storage/app/public/category/').'/'.$category['image'], asset('public/assets/admin/img/upload-img.png'), 'category/') }}"
+                                    src="{{ $category['image_full_url'] }}"
                                         data-onerror-image="{{asset('public/assets/admin/img/upload-img.png')}}"
                                         alt=""/>
                                     <div class="icon-file-group">
@@ -129,7 +129,7 @@ active
         "use strict";
         $('#reset_btn').click(function(){
             $('#module_id').val("{{ $category->module_id }}").trigger('change');
-            $('#viewer').attr('src', "{{\App\CentralLogics\Helpers::get_image_helper($category,'image', asset('storage/app/public/category/').'/'.$category['image'], asset('public/assets/admin/img/upload-img.png'), 'category/') }}");
+            $('#viewer').attr('src', "{{ $category['image_full_url'] }}");
         })
         $("#customFileEg1").change(function() {
             readURL(this);

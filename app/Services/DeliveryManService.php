@@ -28,9 +28,7 @@ class DeliveryManService
         } else {
             $identityImage = json_encode([]);
         }
-        $agreement_document_extension = $request->file('agreement_document')->extension();
-        
-       $agreement_document = $this->upload('delivery-man/', $agreement_document_extension, $request->file('agreement_document'));
+
         return [
             'f_name' => $request->f_name,
             'l_name' => $request->l_name,
@@ -44,7 +42,6 @@ class DeliveryManService
             'image' => $imageName,
             'active' => 0,
             'earning' => $request->earning,
-            'agreement_document' => $agreement_document,
             'password' => bcrypt($request->password),
         ];
     }
@@ -73,12 +70,6 @@ class DeliveryManService
             $identityImage = $deliveryMan['identity_image'];
         }
 
-        if($request->file('agreement_document')){
-            $agreement_document_extension = $request->file('agreement_document')->extension();
-            $agreement_document = $this->updateAndUpload('delivery-man/', $deliveryMan->agreement_document, $agreement_document_extension, $request->file('agreement_document'));
-           }else{
-            $agreement_document = $deliveryMan['agreement_document'];
-           }
         return [
             "f_name" => $request->f_name,
             "l_name" => $request->l_name,
@@ -91,7 +82,6 @@ class DeliveryManService
             "identity_image" => $identityImage,
             "image" => $imageName,
             "earning" => $request->earning,
-            'agreement_document' => $agreement_document,
             "password" => strlen($request->password)>1?bcrypt($request->password):$deliveryMan['password'],
             "application_status" => in_array($deliveryMan['application_status'], ['pending','denied']) ? 'approved' : $deliveryMan['application_status'],
             "status" => in_array($deliveryMan['application_status'], ['pending','denied']) ? 1 : $deliveryMan['status'],

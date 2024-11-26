@@ -123,12 +123,7 @@
                                         <label class="upload-img-3 m-0">
                                             <div class="img">
                                                 <img
-                                                src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                                    $banner,'image',
-                                                    asset('storage/app/public/why_choose').'/'.$banner['image'] ?? '',
-                                                    asset('/public/assets/admin/img/aspect-1.png'),
-                                                    'why_choose/'
-                                                ) }}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" alt="" class="img__aspect-1 min-w-187px max-w-187px onerror-image">
+                                                src="{{ $banner['image_full_url'] ?? asset('/public/assets/admin/img/aspect-1.png') }}" data-onerror-image="{{asset('/public/assets/admin/img/aspect-1.png')}}" alt="" class="img__aspect-1 min-w-187px max-w-187px onerror-image">
                                             </div>
                                               <input type="file"  name="image" hidden>
                                         </label>

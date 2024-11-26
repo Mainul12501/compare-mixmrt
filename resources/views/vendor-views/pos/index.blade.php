@@ -437,6 +437,9 @@
                                                 100) / 100;
 
                                             document.getElementById('distance').value = distancMileResult;
+                                            document.getElementById('address').value =response.destinationAddresses[1];
+
+
                                         <?php
                                         $module_wise_delivery_charge = $store_data->zone->modules()->where('modules.id', $store_data->module_id)->first();
 

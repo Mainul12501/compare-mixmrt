@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Admin\System;
 
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
-use App\CentralLogics\SMS_module;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use App\Http\Controllers\Controller;
 use Brian2694\Toastr\Facades\Toastr;
@@ -15,11 +13,9 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\Factory;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Contracts\Foundation\Application;
-use Modules\Gateways\Traits\SmsGateway;
 
 class AddonController extends Controller
 {

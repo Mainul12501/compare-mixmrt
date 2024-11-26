@@ -13,8 +13,9 @@ class ModuleWiseWhyChoose extends Model
 {
     use HasFactory;
 
-        protected $casts = [
+    protected $casts = [
         'status' => 'integer',
+        'module_id' => 'integer',
     ];
 
     protected $appends = ['image_full_url'];
@@ -56,18 +57,12 @@ class ModuleWiseWhyChoose extends Model
         if (count($this->storage) > 0) {
             foreach ($this->storage as $storage) {
                 if ($storage['key'] == 'image') {
-
-                    if($storage['value'] == 's3'){
-
-                        return Helpers::s3_storage_link('why_choose',$value);
-                    }else{
-                        return Helpers::local_storage_link('why_choose',$value);
-                    }
+                    return Helpers::get_full_url('why_choose',$value,$storage['value']);
                 }
             }
         }
 
-        return Helpers::local_storage_link('why_choose',$value);
+        return Helpers::get_full_url('why_choose',$value,'public');
     }
 
     public function storage()

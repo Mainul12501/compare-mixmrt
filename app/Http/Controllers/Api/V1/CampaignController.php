@@ -60,7 +60,7 @@ class CampaignController extends Controller
         }
         try {
             $campaign = Campaign::with(['stores'=>function($q)use($zone_id,$longitude,$latitude){
-                $q->withOpen($longitude??0,$latitude??0)->where('campaign_status','confirmed')->when(config('module.current_module_data'), function($query){
+                $q->withOpen($longitude??0,$latitude??0)->Active()->where('campaign_status','confirmed')->when(config('module.current_module_data'), function($query){
                     $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
                         $query->where('modules.id', config('module.current_module_data')['id']);
                     });
@@ -92,8 +92,10 @@ class CampaignController extends Controller
             ], 200);
         }
         $zone_id= $request->header('zoneId');
+        $item_campaign_default_status = \App\Models\BusinessSetting::where('key', 'item_campaign_default_status')->first()?->value ??  1;
+        $item_campaign_sort_by_general = \App\Models\PriorityList::where('name', 'item_campaign_sort_by_general')->where('type','general')->first()?->value ?? '';
         try {
-            $campaigns = ItemCampaign::active()
+            $query = ItemCampaign::active()
             ->whereHas('module.zones', function($query)use($zone_id){
                 $query->whereIn('zones.id', json_decode($zone_id, true));
             })
@@ -104,7 +106,32 @@ class CampaignController extends Controller
                     });
                 })->whereIn('zone_id', json_decode($zone_id, true));
             })
-            ->running()->active()->get();
+            ->running();
+
+            if($item_campaign_default_status == 1){
+                $query = $query->latest();
+
+            } else{
+                if ($item_campaign_sort_by_general == 'order_count') {
+                    $query = $query->withCount([
+                        'orderdetails' => function ($query) {
+                                $query->whereHas('order', function ($query) {
+                                    return $query->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled']);
+                                });
+                        },
+                    ])->orderByDesc('orderdetails_count');
+                } elseif ($item_campaign_sort_by_general == 'a_to_z') {
+                    $query = $query->orderBy('title');
+                } elseif ($item_campaign_sort_by_general == 'z_to_a') {
+                    $query = $query->orderByDesc('title');
+                } elseif ($item_campaign_sort_by_general == 'end_first') {
+                    $query = $query->orderBy('end_date');
+                } elseif ($item_campaign_sort_by_general == 'latest_created') {
+                    $query = $query->latest();
+                }
+            }
+
+            $campaigns =  $query->get();
             $campaigns= Helpers::product_data_formatting($campaigns, true, false, app()->getLocale());
             return response()->json($campaigns, 200);
         } catch (\Exception $e) {

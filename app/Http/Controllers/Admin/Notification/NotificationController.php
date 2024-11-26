@@ -56,7 +56,7 @@ class NotificationController extends BaseController
         $notification->image = $notification->toArray()['image_full_url'];
 
         try {
-            $this->sendPushNotificationToTopic($notification, $topic, 'general');
+            $this->sendPushNotificationToTopic($notification, $topic, 'push_notification');
         } catch (Exception) {
             Toastr::warning(translate('messages.push_notification_failed'));
         }
@@ -81,7 +81,7 @@ class NotificationController extends BaseController
         $notification->image = $notification->toArray()['image_full_url'];
 
         try {
-            $this->sendPushNotificationToTopic($notification, $topic, 'general');
+            $this->sendPushNotificationToTopic($notification, $topic, 'push_notification');
         } catch (Exception) {
             Toastr::warning(translate('messages.push_notification_failed'));
         }

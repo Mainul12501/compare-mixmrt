@@ -10,12 +10,7 @@
                         <div>
                             <img class="avatar avatar-xxl avatar-4by3 onerror-image aspect-ratio-1 h-unset"
 
-                            src="{{ \App\CentralLogics\Helpers::get_image_helper(
-                                $item,'image',
-                                asset('storage/app/public/product').'/'.$item['image'] ?? '',
-                                asset('public/assets/admin/img/160x160/img2.jpg'),
-                                'product/'
-                            ) }}"
+                            src="{{ $item['image_full_url'] ?? asset('public/assets/admin/img/160x160/img2.jpg') }}"
                                 data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                                 alt="Image Description">
                         </div>

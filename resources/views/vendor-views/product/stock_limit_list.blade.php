@@ -1,35 +1,21 @@
 
 @extends('layouts.vendor.app')
 
-@section('title',translate('messages.stock_limit_list'))
+@section('title',translate('messages.Low_Stock_List'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
 @section('content')
+@php($store_data=\App\CentralLogics\Helpers::get_store_data())
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-filter-list"></i> {{translate('messages.stock_limit_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$items->total()}}</span></h1>
+                    <h1 class="page-header-title"><i class="tio-filter-list"></i> {{translate('messages.Low_Stock_List')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$items->total()}}</span></h1>
                 </div>
-                @if ($toggle_veg_non_veg)
-                <!-- Veg/NonVeg filter -->
-                <div class="col-sm-auto mb-1 mb-sm-0">
-                    <select name="type" data-url="{{url()->full()}}" data-filter="type" data-placeholder="{{translate('messages.all')}}" class="form-control h--37px set-filter">
-                        <option value="all" {{$type=='all'?'selected':''}}>{{translate('messages.all')}}</option>
-                        <option value="veg" {{$type=='veg'?'selected':''}}>{{translate('messages.veg')}}</option>
-                        <option value="non_veg" {{$type=='non_veg'?'selected':''}}>{{translate('messages.non_veg')}}</option>
-                    </select>
-                </div>
-                <!-- End Veg/NonVeg filter -->
-                @endif
-                <div class="col-sm-auto">
-                    <a href="{{route('vendor.item.add-new')}}" class="btn btn--primary m-0 pull-right h--37px d-flex align-items-center justify-content-center"><i class="tio-add-circle"></i> {{translate('messages.add_new_item')}}</a>
-                </div>
-
             </div>
         </div>
         <!-- End Page Header -->
@@ -48,7 +34,18 @@
                         <!-- End Search -->
                     </form>
                     <!-- Unfold -->
-                    <div class="hs-unfold mr-2 min--250">
+                    @if ($store_data->module->module_type == 'food' && $toggle_veg_non_veg)
+                    <div class="col-sm-auto mb-1 mb-sm-0">
+                        <select name="type" data-url="{{url()->full()}}" data-filter="type" data-placeholder="{{translate('messages.all')}}" class="form-control h--37px set-filter">
+                            <option value="all" {{$type=='all'?'selected':''}}>{{translate('messages.all')}}</option>
+                            <option value="veg" {{$type=='veg'?'selected':''}}>{{translate('messages.veg')}}</option>
+                            <option value="non_veg" {{$type=='non_veg'?'selected':''}}>{{translate('messages.non_veg')}}</option>
+                        </select>
+                    </div>
+                    <!-- End Veg/NonVeg filter -->
+                    @endif
+
+                    <div class="hs-unfold  min--250">
                         <select name="category_id" id="category" data-url="{{url()->full()}}" data-filter="category_id" data-placeholder="{{translate('messages.select_category')}}" class="js-data-example-ajax form-control set-filter">
                             @if($category)
                                 <option value="{{$category->id}}" selected>{{$category->name}} ({{$category->position == 0?translate('messages.main'):translate('messages.sub')}})</option>
@@ -57,6 +54,7 @@
                             @endif
                         </select>
                     </div>
+
                     <!-- End Unfold -->
 
                     <!-- Unfold -->
@@ -171,7 +169,7 @@
                             <td>{{$key+$items->firstItem()}}</td>
                             <td>
                                 <a class="media align-items-center" href="{{route('vendor.item.view',[$item['id']])}}">
-                                    <img class="avatar avatar-lg mr-3 onerror-image" src="{{\App\CentralLogics\Helpers::get_image_helper($item,'image', asset('storage/app/public/product/').'/'.$item['image'], asset('public/assets/admin/img/160x160/img2.jpg'), 'product/') }}"
+                                    <img class="avatar avatar-lg mr-3 onerror-image" src="{{ $item['image_full_url'] }}"
                                          data-onerror-image="{{asset('public/assets/admin/img/160x160/img2.jpg')}}" alt="{{$item->name}} image">
                                     <div class="media-body">
                                         <h5 class="text-hover-primary mb-0">{{Str::limit($item['name'],20,'...')}}</h5>
@@ -185,7 +183,7 @@
                                 {{\App\CentralLogics\Helpers::format_currency($item['price'])}}
                             </td>
                             <td>
-                                <div class=" text-center">
+                                <div class="text-center">
                                     {{($item['stock'])}}
                                 </div>
                             </td>
@@ -225,18 +223,22 @@
 @endsection
 
 
-<div class="modal fade" id="update-quantity" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal fade update-quantity-modal" id="update-quantity" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-body py-2">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body pt-0">
+
                 <form action="{{route('vendor.item.stock-update')}}" method="post">
                     @csrf
                     <div class="mt-2 rest-part w-100"></div>
                     <div class="btn--container justify-content-end">
-                        <button type="button" class="btn btn--danger" data-dismiss="modal" aria-label="Close">
-                            {{translate('messages.close')}}
-                        </button>
-                        <button class="btn btn--primary" type="submit">{{translate('messages.update')}}</button>
+                        <button type="reset" data-dismiss="modal" aria-label="Close" class="btn btn--reset">{{translate('cancel')}}</button>
+                        <button type="submit" id="submit_new_customer" class="btn btn--primary">{{translate('update_stock')}}</button>
                     </div>
                 </form>
             </div>

@@ -22,11 +22,60 @@
                         <span>{{translate('messages.dashboard')}}</span>
                     </h1>
                 </div>
-                <div class="col-sm text-sm-right">
-                    <span class="d-inline-flex align-items-center">
-                        <span class="mr-2">{{translate('messages.followup')}}</span>
-                        <i class="tio-restaurant fz-30px"></i>
-                    </span>
+                <div class="col-sm ">
+                    @if (isset($out_of_stock_count) &&   $out_of_stock_count  > 1 )
+                            <div class="alert __alert-4 m-0 py-1 px-2  max-w-450px hide-warning d-none" role="alert">
+                                <div class="alert-inner">
+                                    <img class="rounded mr-1"  width="25" src="{{ asset('/public/assets/admin/img/invalid-icon.png') }}" alt="">
+                                    <div class="cont">
+                                        <h4 class="mb-2">{{ translate('Warning!') }} </h4>{{  ( $out_of_stock_count -1).'+ '.  translate('more_products_are_low_on_Stock.') }}
+                                        <br>
+                                        <a data-id="stock_out_reminder_close_btn"  class="text-primary text-underline reming_me_later">{{ translate('Remind_Me_Later') }}</a>  &nbsp; &nbsp; <a href="{{ route('vendor.item.stock-limit-list') }}" class="text-primary text-underline">{{ translate('Click_To_View') }}</a>
+                                    </div>
+                                </div>
+                                <button class="position-absolute right-0 top-0 py-2 px-2 bg-transparent border-0 outline-none shadow-none reming_me_later"  type="button">
+                                    <i class="tio-clear fz--18"></i>
+                                </button>
+                            </div>
+
+                            @elseif (isset($out_of_stock_count)  &&  $out_of_stock_count  == 1  && isset($item))
+                            <div class="alert __alert-4 m-0 py-1 px-2  max-w-450px hide-warning d-none" role="alert">
+                                <div class="alert-inner">
+                                    <img class="aspect-1-1 mr-1 object--contain rounded" width="100" src="{{ $item?->image_full_url ?? asset('/public/assets/admin/img/100x100/food-default-image.png') }}" alt="">
+                                    <div class="cont">
+                                        <h4 class="mb-2">{{ $item?->name }} </h4>{{  translate('This product is low stock.') }}
+                                        <br>
+                                        <a
+                                        data-id="stock_out_reminder_close_btn"  class="text-primary text-underline reming_me_later">{{ translate('Remind_Me_Later') }}</a>  &nbsp; &nbsp; <a href="{{ route('vendor.item.stock-limit-list') }}" class="text-primary text-underline">{{ translate('Click_To_View') }}</a>
+                                    </div>
+                                </div>
+                                <button class="position-absolute right-0 top-0 py-2 px-2 bg-transparent border-0 outline-none shadow-none reming_me_later"  type="button">
+                                    <i class="tio-clear fz--18"></i>
+                                </button>
+                            </div>
+
+                        @endif
+
+
+
+
+                    <div class="promo-card-2">
+                        <img src="{{asset('public/assets/admin/img/promo-arrow.png')}}" class="shapes" alt="">
+                        <div class="left">
+                            <img src="{{asset('public/assets/admin/img/promo.png')}}" width="40" class="mw-100" alt="">
+                            <div class="inner">
+                                <div class="d-flex flex-wrap flex-md-nowrap align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <h4 class="m-0 text-white">{{ translate('Want_to_get_highlighted?') }}</h4>
+                                        <p class="m-0 text-white">
+                                            {{ translate('Create_ads_to_get_highlighted_on_the_app_and_web_browser') }}
+                                        </p>
+                                    </div>
+                                    <a href="{{ route('vendor.advertisement.create') }}" class="btn btn-white text-nowrap font-semibold text-dark">{{ translate('Create_Ads') }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,12 +125,10 @@
                                         <span class="legend-indicator chart-bg-2"></span>
                                         {{translate('messages.total_earning')}} : <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($earning))}}</span>
                                     </span>
-                              @if(\App\CentralLogics\Helpers::get_store_data()->store_type == 'store')
-                              <span class="h5 m-0 fz--11 d-flex align-items-center mb-2 mb-md-0">
-                                <span class="legend-indicator chart-bg-3"></span>
-                                {{translate('messages.commission_given')}} : <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($commission))}}</span>
-                            </span>
-                              @endif
+                                    <span class="h5 m-0 fz--11 d-flex align-items-center mb-2 mb-md-0">
+                                        <span class="legend-indicator chart-bg-3"></span>
+                                        {{translate('messages.commission_given')}} : <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($commission))}}</span>
+                                    </span>
                                 </div>
 
                             </div>
@@ -169,24 +216,22 @@
                 </div>
                 <!-- End Card -->
             </div>
-        @if(!$parcel_company)
-        
-        <div class="col-lg-6 mt-3">
-            <!-- Card -->
-            <div class="card h-100" id="top-selling-items-view">
-                @include('vendor-views.partials._top-selling-items',['top_sell'=>$data['top_sell']])
-            </div>
-            <!-- End Card -->
-        </div>
 
-        <div class="col-lg-6 mt-3">
-            <!-- Card -->
-            <div class="card h-100" id="top-rated-items-view">
-                @include('vendor-views.partials._most-rated-items',['most_rated_items'=>$data['most_rated_items']])
+            <div class="col-lg-6 mt-3">
+                <!-- Card -->
+                <div class="card h-100" id="top-selling-items-view">
+                    @include('vendor-views.partials._top-selling-items',['top_sell'=>$data['top_sell']])
+                </div>
+                <!-- End Card -->
             </div>
-            <!-- End Card -->
-        </div> 
-        @endif
+
+            <div class="col-lg-6 mt-3">
+                <!-- Card -->
+                <div class="card h-100" id="top-rated-items-view">
+                    @include('vendor-views.partials._most-rated-items',['most_rated_items'=>$data['most_rated_items']])
+                </div>
+                <!-- End Card -->
+            </div>
 
 
         </div>
@@ -214,16 +259,15 @@
     <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script>
     <script
         src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+
 @endpush
 
 
 @push('script_2')
     <script>
-
+"use strict";
         $('#free-trial-modal').modal('show');
 
-        // INITIALIZATION OF CHARTJS
-        // =======================================================
         Chart.plugins.unregister(ChartDataLabels);
 
         $('.js-chart').each(function () {
@@ -284,5 +328,17 @@
             // change url page with new params
             window.history.pushState('page2', 'Title', '{{url()->current()}}?' + params);
         }
+
+        $(document).on('click', '.reming_me_later', function () {
+            $('.hide-warning').hide();
+            document.cookie = "stock_out_reminder_close_btn=accepted; path=/";
+        });
+        if(document.cookie.indexOf("stock_out_reminder_close_btn=accepted") === -1){
+            $('.hide-warning').removeClass('d-none')
+        }
+        if(document.cookie.indexOf("stock_out_reminder_close_btn=accepted") !== -1){
+            $('.hide-warning').hide();
+        }
+
     </script>
 @endpush

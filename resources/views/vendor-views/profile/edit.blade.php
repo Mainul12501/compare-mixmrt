@@ -88,7 +88,7 @@
                             <img id="viewer"
                                  data-onerror-image="{{asset('public/assets/back-end/img/160x160/img1.jpg')}}"
                                  class="avatar-img onerror-image"
-                                 src="{{\App\CentralLogics\Helpers::get_image_helper($data,'image', asset('storage/app/public/seller/').'/'.$data->image, asset('public/assets/back-end/img/160x160/img1.jpg'), 'seller/') }}"
+                                 src="{{ $data->image_full_url }}"
                                  alt="Image">
                         </label>
                         <!-- End Avatar -->
